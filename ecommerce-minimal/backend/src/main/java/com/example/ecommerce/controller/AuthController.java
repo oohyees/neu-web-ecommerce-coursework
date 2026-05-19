@@ -130,6 +130,34 @@ public class AuthController {
         return ApiResponse.ok(null);
     }
 
+    @PostMapping("/admin/users")
+    public ApiResponse<?> createUser(@RequestBody Map<String, String> body) {
+        if (body.get("username") == null || body.get("password") == null) return ApiResponse.fail("用户名和密码必填");
+        User user = new User();
+        user.setUsername(body.get("username"));
+        user.setPassword(body.get("password"));
+        user.setNickname(body.getOrDefault("nickname", ""));
+        user.setEmail(body.getOrDefault("email", ""));
+        user.setPhone(body.getOrDefault("phone", ""));
+        authService.register(user);
+        return ApiResponse.ok(Map.of("id", user.getId()));
+    }
+
+    @PutMapping("/admin/users/{id}")
+    public ApiResponse<?> updateUser(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        authService.getAuthMapper().updateUser(id,
+                body.getOrDefault("nickname", ""),
+                body.getOrDefault("email", ""),
+                body.getOrDefault("phone", ""));
+        return ApiResponse.ok(null);
+    }
+
+    @DeleteMapping("/admin/users/{id}")
+    public ApiResponse<?> deleteUser(@PathVariable Long id) {
+        authService.getAuthMapper().deleteUser(id);
+        return ApiResponse.ok(null);
+    }
+
     @PostMapping("/logout")
     public ApiResponse<?> logout(@RequestBody Map<String, String> body) {
         String token = body.get("token");

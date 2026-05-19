@@ -26,4 +26,7 @@ public interface AuthMapper {
     int insertAdmin(@Param("username") String username, @Param("password") String password, @Param("nickname") String nickname, @Param("email") String email, @Param("phone") String phone, @Param("role") String role);
     int updateAdmin(@Param("id") Long id, @Param("nickname") String nickname, @Param("email") String email, @Param("phone") String phone, @Param("role") String role);
     int deleteAdmin(Long id);
+    // 用户管理（admin 侧）
+    int deleteUser(Long id);
+    int updateUser(@Param("id") Long id, @Param("nickname") String nickname, @Param("email") String email, @Param("phone") String phone);
 }
