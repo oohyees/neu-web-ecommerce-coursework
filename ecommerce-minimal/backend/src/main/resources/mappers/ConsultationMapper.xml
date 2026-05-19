@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.ConsultationMapper">
+  <select id="findByUserId" resultType="com.example.ecommerce.model.CustomerConsultation">select * from customer_consultation where user_id=#{userId} order by id desc</select>
+  <select id="findAll" resultType="com.example.ecommerce.model.CustomerConsultation">select * from customer_consultation order by id desc</select>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">insert into customer_consultation(user_id,subject,content,status,created_at) values(#{userId},#{subject},#{content},#{status},#{createdAt})</insert>
+  <update id="reply">update customer_consultation set reply=#{reply},status='REPLIED' where id=#{id}</update>
+  <update id="markProcessed">update customer_consultation set status='PROCESSED' where id=#{id}</update>
+</mapper>

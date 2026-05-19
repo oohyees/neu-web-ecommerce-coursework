@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.ActivityNoticeMapper">
+  <select id="findEnabled" resultType="com.example.ecommerce.model.ActivityNotice">select * from activity_notice where enabled=1 order by id desc</select>
+  <select id="findAll" resultType="com.example.ecommerce.model.ActivityNotice">
+    select * from activity_notice
+    <where><if test="keyword != null and keyword != ''">title like concat('%',#{keyword},'%')</if></where>
+    order by id desc
+  </select>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">insert into activity_notice(title,content,enabled,created_at) values(#{title},#{content},#{enabled},#{createdAt})</insert>
+  <update id="update">update activity_notice set title=#{title},content=#{content},enabled=#{enabled} where id=#{id}</update>
+  <delete id="delete">delete from activity_notice where id=#{id}</delete>
+</mapper>

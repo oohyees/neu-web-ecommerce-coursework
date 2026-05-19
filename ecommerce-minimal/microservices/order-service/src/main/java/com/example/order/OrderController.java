@@ -1,0 +1,3 @@
+package com.example.order;
+import org.springframework.jdbc.core.JdbcTemplate;import org.springframework.web.bind.annotation.*;import java.util.List;
+@RestController public class OrderController{private final JdbcTemplate jdbc; public OrderController(JdbcTemplate jdbc){this.jdbc=jdbc;} @GetMapping("/api/orders") public List<java.util.Map<String,Object>> orders(@RequestParam Long userId){return jdbc.queryForList("select id,order_no,total_amount,status,payment_status from orders where user_id=? order by id desc",userId);} @GetMapping("/api/orders/{id}/items") public List<java.util.Map<String,Object>> items(@PathVariable Long id){return jdbc.queryForList("select product_name,spec_text,quantity,subtotal from order_item where order_id=?",id);}}

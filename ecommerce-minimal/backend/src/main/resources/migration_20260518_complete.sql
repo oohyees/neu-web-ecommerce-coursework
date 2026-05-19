@@ -1,0 +1,73 @@
+ALTER TABLE user ADD COLUMN avatar_url VARCHAR(255) NULL AFTER phone;
+ALTER TABLE product ADD COLUMN detail_html TEXT NULL AFTER image_url;
+ALTER TABLE product ADD COLUMN params_text VARCHAR(500) NULL AFTER detail_html;
+
+CREATE TABLE IF NOT EXISTS product_spec (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  product_id BIGINT NOT NULL,
+  spec_name VARCHAR(64) NOT NULL,
+  spec_value VARCHAR(128) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS coupon (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(128) NOT NULL,
+  threshold_amount DECIMAL(10,2) NOT NULL,
+  discount_amount DECIMAL(10,2) NOT NULL,
+  enabled TINYINT NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS promotion (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  product_id BIGINT NOT NULL,
+  title VARCHAR(128) NOT NULL,
+  promotion_type VARCHAR(32) NOT NULL,
+  promotion_price DECIMAL(10,2),
+  promotion_stock INT,
+  start_at DATETIME NOT NULL,
+  end_at DATETIME NOT NULL,
+  enabled TINYINT NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS verification_code (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  email VARCHAR(128) NOT NULL,
+  code VARCHAR(16) NOT NULL,
+  purpose VARCHAR(32) NOT NULL,
+  expires_at DATETIME NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS order_logistics (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_id BIGINT NOT NULL,
+  content VARCHAR(255) NOT NULL,
+  created_at DATETIME NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_coupon (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  coupon_id BIGINT NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'UNUSED',
+  claimed_at DATETIME NOT NULL,
+  used_at DATETIME,
+  UNIQUE KEY uk_user_coupon (user_id, coupon_id)
+);
+
+CREATE TABLE IF NOT EXISTS activity_notice (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(128) NOT NULL,
+  content VARCHAR(500) NOT NULL,
+  enabled TINYINT NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS customer_consultation (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  subject VARCHAR(128) NOT NULL,
+  content VARCHAR(500) NOT NULL,
+  reply VARCHAR(500),
+  status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+  created_at DATETIME NOT NULL
+);

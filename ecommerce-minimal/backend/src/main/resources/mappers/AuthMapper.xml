@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.AuthMapper">
+    <select id="findUser" resultType="com.example.ecommerce.model.User">
+        select * from user where username = #{username} and password = #{password}
+    </select>
+    <select id="findUserById" resultType="com.example.ecommerce.model.User">
+        select * from user where id = #{id}
+    </select>
+    <select id="findUserByUsername" resultType="com.example.ecommerce.model.User">
+        select * from user where username = #{username}
+    </select>
+    <select id="findUserByEmail" resultType="com.example.ecommerce.model.User">
+        select * from user where email = #{email}
+    </select>
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="id">
+        insert into user(username, password, nickname, email, phone, avatar_url)
+        values(#{username}, #{password}, #{nickname}, #{email}, #{phone}, #{avatarUrl})
+    </insert>
+    <update id="updateProfile">
+        update user set nickname = #{nickname}, email = #{email}, phone = #{phone}, avatar_url = #{avatarUrl}
+        where id = #{id}
+    </update>
+    <update id="updatePassword">update user set password=#{password} where email=#{email}</update>
+    <update id="updatePasswordById">update user set password=#{newPassword} where id=#{id} and password=#{oldPassword}</update>
+    <select id="findUsers" resultType="com.example.ecommerce.model.User">
+        select * from user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                username like concat('%',#{keyword},'%') or nickname like concat('%',#{keyword},'%') or phone like concat('%',#{keyword},'%')
+            </if>
+        </where>
+        order by id desc limit #{size} offset #{offset}
+    </select>
+    <select id="countUsers" resultType="int">
+        select count(*) from user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                username like concat('%',#{keyword},'%') or nickname like concat('%',#{keyword},'%') or phone like concat('%',#{keyword},'%')
+            </if>
+        </where>
+    </select>
+    <update id="updateEnabled">update user set enabled=#{enabled} where id=#{id}</update>
+    <select id="findAdminProfileByCredentials" resultType="map">
+        select id,username,nickname,email,phone,role from admin_user where username = #{username} and password = #{password}
+    </select>
+    <update id="updateAdminPassword">update admin_user set password=#{newPassword} where id=#{id} and password=#{oldPassword}</update>
+    <select id="findAdminProfile" resultType="map">select id,username,nickname,email,phone,role from admin_user where id=#{id}</select>
+    <update id="updateAdminProfile">update admin_user set nickname=#{nickname},email=#{email},phone=#{phone} where id=#{id}</update>
+    <!-- 管理员账号管理 -->
+    <select id="findAdmins" resultType="map">
+        select id,username,nickname,email,phone,role from admin_user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                username like concat('%',#{keyword},'%') or nickname like concat('%',#{keyword},'%')
+            </if>
+        </where>
+        order by id desc
+    </select>
+    <insert id="insertAdmin">
+        insert into admin_user(username,password,nickname,email,phone,role)
+        values(#{username},#{password},#{nickname},#{email},#{phone},#{role})
+    </insert>
+    <update id="updateAdmin">
+        update admin_user set nickname=#{nickname},email=#{email},phone=#{phone},role=#{role}
+        where id=#{id}
+    </update>
+    <delete id="deleteAdmin">delete from admin_user where id=#{id}</delete>
+</mapper>

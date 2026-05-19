@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.CartMapper">
+    <insert id="upsert">
+        insert into cart_item(user_id, product_id, spec_text, quantity)
+        values(#{userId}, #{productId}, #{specText}, #{quantity})
+        on duplicate key update quantity = quantity + values(quantity)
+    </insert>
+    <select id="findByUserId" resultType="com.example.ecommerce.model.CartItemView">
+        select p.id as product_id, p.name as product_name, c.spec_text, p.image_url, p.price, c.quantity,
+               p.price * c.quantity as subtotal
+        from cart_item c
+        join product p on p.id = c.product_id
+        where c.user_id = #{userId}
+        order by c.id
+    </select>
+    <update id="updateQuantity">
+        update cart_item set quantity = #{quantity}
+        where user_id = #{userId} and product_id = #{productId}
+    </update>
+    <delete id="deleteItem">
+        delete from cart_item where user_id = #{userId} and product_id = #{productId}
+    </delete>
+    <delete id="clearByUserId">
+        delete from cart_item where user_id = #{userId}
+    </delete>
+    <delete id="deleteSelected">
+        delete from cart_item where user_id=#{userId} and product_id in
+        <foreach collection="productIds" item="id" open="(" close=")" separator=",">#{id}</foreach>
+    </delete>
+</mapper>
