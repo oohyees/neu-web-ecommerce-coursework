@@ -6,7 +6,7 @@
     </AdminPageHeader>
 
     <section class="toolbar-panel">
-      <el-input v-model="keyword" placeholder="搜索账号/昵称/手机号" style="width:260px" clearable @keyup.enter="load" />
+      <el-input v-model="keyword" placeholder="搜索账号/昵称/邮箱/手机号" style="width:280px" clearable @keyup.enter="load" />
       <el-button type="danger" @click="load">搜索</el-button>
     </section>
 
@@ -15,13 +15,14 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="username" label="账号" min-width="120" />
         <el-table-column prop="nickname" label="昵称" min-width="120" />
+        <el-table-column prop="email" label="邮箱" min-width="180" />
         <el-table-column prop="phone" label="手机号" min-width="130" />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.enabled ? 'success' : 'info'" size="small">{{ row.enabled ? '启用' : '禁用' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="220">
+        <el-table-column label="操作" min-width="260">
           <template #default="{ row }">
             <div class="table-actions">
               <el-button link size="small" @click="openDetail(row)">详情</el-button>

@@ -27,7 +27,7 @@
         select * from user
         <where>
             <if test="keyword != null and keyword != ''">
-                username like concat('%',#{keyword},'%') or nickname like concat('%',#{keyword},'%') or phone like concat('%',#{keyword},'%')
+                username like concat('%',#{keyword},'%') or nickname like concat('%',#{keyword},'%') or email like concat('%',#{keyword},'%') or phone like concat('%',#{keyword},'%')
             </if>
         </where>
         order by id desc limit #{size} offset #{offset}
@@ -36,7 +36,7 @@
         select count(*) from user
         <where>
             <if test="keyword != null and keyword != ''">
-                username like concat('%',#{keyword},'%') or nickname like concat('%',#{keyword},'%') or phone like concat('%',#{keyword},'%')
+                username like concat('%',#{keyword},'%') or nickname like concat('%',#{keyword},'%') or email like concat('%',#{keyword},'%') or phone like concat('%',#{keyword},'%')
             </if>
         </where>
     </select>
