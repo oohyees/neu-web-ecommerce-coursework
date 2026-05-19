@@ -1,0 +1,23 @@
+# 依赖
+node_modules/
+target/
+
+# 构建产物
+dist/
+
+# Playwright / Chrome 浏览器缓存（运行时自动生成，体积巨大）
+.chrome-cdp/
+.playwright-mcp/
+
+# 页面截图 / 快照（验证时生成，非源码）
+*.png
+*.yml
+
+# 环境变量
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
