@@ -5,13 +5,18 @@ target/
 # 构建产物
 dist/
 
-# Playwright / Chrome 浏览器缓存（运行时自动生成，体积巨大）
-.chrome-cdp/
+# Chrome 浏览器缓存（Playwright 运行时生成，体积巨大）
+.chrome-*/
 .playwright-mcp/
 
 # 页面截图 / 快照（验证时生成，非源码）
-*.png
-*.yml
+*-page.png
+*-state.png
+*-snapshot.yml
+**/chrome-*.png
+
+# 参考代码（非本项目源码）
+_refs/
 
 # 环境变量
 .env
