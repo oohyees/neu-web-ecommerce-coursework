@@ -19,8 +19,8 @@ INSERT INTO product_category (parent_id, name, sort_order) VALUES
 (7, '桌面办公', 1);
 
 INSERT INTO banner (title, image_url, link_url, sort_order) VALUES
-('真实商品精选', '/catalog/B076LRJ528.webp', '/products/1', 1),
-('办公桌面推荐', '/catalog/B08F2Z6RJB.webp', '/products/2', 2);
+('机械键盘限时特惠', '/catalog/B076LRJ528.webp', '/products/1', 1),
+('电竞鼠标办公升级', '/catalog/B08F2Z6RJB.webp', '/products/2', 2);
 
 INSERT INTO announcement (title, content, created_at) VALUES
 ('真实商品目录已更新', '当前目录使用公开商品样本整理，商品图与商品信息均可追溯来源。', NOW());
@@ -62,6 +62,37 @@ INSERT INTO product (category_id, name, price, stock, sales, is_on_sale, image_u
 (8, 'Drawealth Touch Control Traditional Table Lamp Set of 2,3-Way Dimmable Farmhouse Bedside Table Lamps with 2 USB...', 79.99, 41, 9, 1, '/catalog/B09MDNKLM7.webp', 'Product Description .aplus-v2 { display: block; margin-left: auto; margin-right: auto; } .aplus-v2 .aplus-3p-fixed-width { width: 970px; } .aplus-v2 .aplus-3p-fixed-width.aplus-module-wrapper { margin-left: auto; margin-right: auto; } .aplus-v2 { display:block; margin-left:auto; margin-right:auto; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; } /* Undo this for tech-specs because it...', '品牌: Drawealth; 型号: ‎T0085; 制造商: ‎Lightxury'),
 (8, 'Simple Designs LT3039-PRP 14.17” Contemporary Mosaic Tiled Glass Genie Standard Table Lamp with Matching Fabric Shade...', 22.24, 42, 12, 1, '/catalog/B00G7QRJKK.webp', 'Available in variety of matching shade/base options! Product Details - Uses 1 x 40W Type B10 E12 Candelabra Base bulb **BULB IS NOT INCLUDED** - Made of resin, iron, glass, grout, PVC and shade is of fabric. - Rotary switch is located on the cord of lamp. - No assembly required! Simply attach shade to base of lamp. Additional Specs Lamp weighs 2.29 lbs Shade measures Dia: 8.25" Includes 5'' white plug in cord Fit...', '品牌: Simple Designs; 型号: LT3039-PRP; 制造商: LighTunes'),
 (8, 'Brother TN-620 DCP-8080 8085 HL-5340D 5350 5370 MFC-8480 8680 8690 8890 Toner -Cartridge (Black) in Retail Packaging,...', 73.98, 43, 15, 1, '/catalog/B00JPBZOJ2.webp', 'The use of Brother Genuine replacement toner cartridges like the TN-620 produces sharp, black and white pages with the quality you expect from Brother products. The Brother TN-620 replacement laser black toner cartridge is for use with 10 Brother products. This professional cartridge is intelligently engineered to work in seamless unison without compromising the quality of the print. The Brother Genuine TN-620...', '品牌: Brother; 型号: ‎TN620; 制造商: ‎BROTHER');
+
+UPDATE product SET name = 'Koolertron 单手机械键盘 Keyboard', detail_html = '48 键可编程机械键盘，支持宏配置与办公快捷键，适合桌面效率和游戏控制。' WHERE id = 1;
+UPDATE product SET name = 'Razer DeathAdder V2 电竞鼠标 Mouse', detail_html = '20K DPI 光学传感器，轻量化人体工学设计，支持 Chroma 灯效。' WHERE id = 2;
+UPDATE product SET name = 'R-Go Split 人体工学分体键盘', detail_html = '分体式键盘可自然摆放，帮助减轻长时间输入造成的腕部压力。' WHERE id = 3;
+UPDATE product SET name = 'Allsop 记忆棉护腕鼠标垫', detail_html = '记忆棉腕托与大面积鼠标区域，适合办公桌面长期使用。' WHERE id = 4;
+UPDATE product SET name = 'YSAGi 大号皮革桌垫', detail_html = '防水耐磨桌垫，可覆盖键盘、鼠标和笔记本区域，桌面更整洁。' WHERE id = 5;
+UPDATE product SET name = 'EMINTA 双面防水办公桌垫', detail_html = '双面 PU 皮革材质，边缘加固，适合办公和居家桌面。' WHERE id = 6;
+UPDATE product SET name = 'Aothia 软木双面桌垫', detail_html = '软木与皮革双面设计，提供自然触感和稳定鼠标操作。' WHERE id = 7;
+UPDATE product SET name = 'EKSA AI 降噪蓝牙耳麦', detail_html = 'AI 环境噪声消除，适合会议、客服和远程办公。' WHERE id = 8;
+UPDATE product SET name = 'MusiBaby 防水蓝牙音箱', detail_html = '便携防水音箱，支持蓝牙连接和双机配对，适合户外与家庭使用。' WHERE id = 9;
+UPDATE product SET name = 'JOLIKE 32GB 触屏音乐播放器', detail_html = '2.4 英寸触控屏，支持蓝牙、FM、录音与本地音乐播放。' WHERE id = 10;
+UPDATE product SET name = 'Sony XP500 便携派对音箱', detail_html = '大功率无线音箱，支持长续航、快速充电和户外聚会使用。' WHERE id = 11;
+UPDATE product SET name = 'Razer Kraken 7.1 游戏耳机', detail_html = 'THX 7.1 环绕声与可伸缩降噪麦克风，适合游戏和语音沟通。' WHERE id = 12;
+UPDATE product SET name = 'Coleman 防水免提蓝牙音箱', detail_html = '小巧便携，支持防水和免提通话，适合户外与浴室场景。' WHERE id = 13;
+UPDATE product SET name = 'IOGEAR 双口 HDMI KVM 切换器', detail_html = '一套键盘鼠标控制两台设备，支持 HDMI 高清输出和音频切换。' WHERE id = 14;
+UPDATE product SET name = 'GearIT 高速 HDMI 连接线套装', detail_html = '支持 4K 60Hz、HDR 和高速传输，适合显示器、电视和主机连接。' WHERE id = 15;
+UPDATE product SET name = 'Seagate 18TB 外置硬盘', detail_html = '大容量桌面级外置硬盘，适合备份、影音和办公资料归档。' WHERE id = 16;
+UPDATE product SET name = 'GearIT 六类网线 24 条装', detail_html = '预制六类网络跳线，适合办公室、机房和家庭网络整理。' WHERE id = 17;
+UPDATE product SET name = 'Linksys Hydra 6 WiFi 6 路由器', detail_html = '双频 WiFi 6 路由器，支持 Mesh 扩展和高速无线覆盖。' WHERE id = 18;
+UPDATE product SET name = 'Seagate Ultra Touch 500GB 移动固态硬盘', detail_html = '轻薄便携 SSD，支持 USB-C 连接，适合文件备份和移动办公。' WHERE id = 19;
+UPDATE product SET name = 'MAIWO M.2 SSD 移动硬盘盒', detail_html = '支持 NVMe/SATA M.2 固态硬盘，USB 3.2 高速传输，工具免拆。' WHERE id = 20;
+UPDATE product SET name = 'Swingline 经典桌面订书机', detail_html = '全金属结构，稳定耐用，适合办公室和学习场景。' WHERE id = 21;
+UPDATE product SET name = 'Rotring 600 金属圆珠笔', detail_html = '经典六角金属笔身，书写顺滑，可替换笔芯。' WHERE id = 22;
+UPDATE product SET name = 'Dunwell 12 袋资料展示册', detail_html = 'A4 文件收纳与展示册，适合报告、合同和作品集整理。' WHERE id = 23;
+UPDATE product SET name = 'Xerox 黄色高容量碳粉盒', detail_html = '适配 Xerox 打印设备，适合高频彩色打印场景。' WHERE id = 24;
+UPDATE product SET name = 'Safco 五层网格文件架', detail_html = '钢制网格文件架，可垂直收纳文件夹、资料和办公用品。' WHERE id = 25;
+UPDATE product SET name = 'Avery 经济型三孔文件夹', detail_html = '标准三孔活页夹，适合资料归档和课程文件整理。' WHERE id = 26;
+UPDATE product SET name = 'Treva 10 英寸折叠桌面风扇', detail_html = '两档风速，可电池供电或接入适配器，适合桌面降温。' WHERE id = 27;
+UPDATE product SET name = 'Drawealth 触控调光台灯套装', detail_html = '双台灯套装，支持触控调光和 USB 充电，适合卧室和书桌。' WHERE id = 28;
+UPDATE product SET name = 'Simple Designs 马赛克玻璃台灯', detail_html = '装饰性玻璃灯身与布艺灯罩，适合桌面和床头照明。' WHERE id = 29;
+UPDATE product SET name = 'Brother TN-620 黑色碳粉盒', detail_html = 'Brother 原装替换碳粉盒，打印清晰稳定，适合办公文档输出。' WHERE id = 30;
 
 INSERT INTO product_spec (product_id, spec_name, spec_value) VALUES
 (1, '品牌', 'Koolertron'),
@@ -222,8 +253,8 @@ INSERT INTO feedback (user_id, content, reply, status, created_at) VALUES
 INSERT INTO orders (order_no, user_id, address_id, total_amount, status, payment_status, payment_method, logistics_status, refund_status, created_at) VALUES
 ('ORD202605190001', 1, 1, 174.19, 'CREATED', 'UNPAID', 'MOCK_PAY', '待支付', 'NONE', '2026-05-19 09:30:00');
 INSERT INTO order_item (order_id, product_id, product_name, spec_text, unit_price, quantity, subtotal) VALUES
-(1, 1, 'Koolertron One Handed Programmable Mechanical Keyboard...', '品牌:Koolertron|型号:AE-SMKD7', 85.99, 2, 171.98),
-(1, 2, 'Razer DeathAdder V2 Gaming Mouse...', '品牌:Razer|型号:RZ01-03210300-R3M1', 58.20, 1, 58.20);
+(1, 1, 'Koolertron 单手机械键盘', '品牌:Koolertron|型号:AE-SMKD7', 85.99, 2, 171.98),
+(1, 2, 'Razer DeathAdder V2 电竞鼠标', '品牌:Razer|型号:RZ01-03210300-R3M1', 58.20, 1, 58.20);
 INSERT INTO order_logistics (order_id, content, created_at) VALUES
 (1, '订单已创建', '2026-05-19 09:30:00');
 
@@ -231,7 +262,7 @@ INSERT INTO order_logistics (order_id, content, created_at) VALUES
 INSERT INTO orders (order_no, user_id, address_id, total_amount, status, payment_status, payment_method, logistics_status, refund_status, created_at) VALUES
 ('ORD202605190002', 1, 1, 389.00, 'CREATED', 'PAID', 'ALIPAY', '待发货', 'NONE', '2026-05-19 14:20:00');
 INSERT INTO order_item (order_id, product_id, product_name, spec_text, unit_price, quantity, subtotal) VALUES
-(2, 11, 'Sony SRS-XP500 X-Series Wireless Portable Speaker...', '品牌:Sony|型号:SRSXP500', 389.00, 1, 389.00);
+(2, 11, 'Sony XP500 便携派对音箱', '品牌:Sony|型号:SRSXP500', 389.00, 1, 389.00);
 INSERT INTO order_logistics (order_id, content, created_at) VALUES
 (2, '订单已创建', '2026-05-19 14:20:00'),
 (2, '订单已支付', '2026-05-19 14:22:00');
@@ -240,8 +271,8 @@ INSERT INTO order_logistics (order_id, content, created_at) VALUES
 INSERT INTO orders (order_no, user_id, address_id, total_amount, status, payment_status, payment_method, logistics_status, refund_status, created_at) VALUES
 ('ORD202605180003', 1, 1, 95.98, 'SHIPPED', 'PAID', 'WECHAT', '运输中', 'NONE', '2026-05-18 10:05:00');
 INSERT INTO order_item (order_id, product_id, product_name, spec_text, unit_price, quantity, subtotal) VALUES
-(3, 8, 'Trucker Bluetooth Headsets...', '品牌:EKSA|型号:H1', 84.99, 1, 84.99),
-(3, 4, 'Allsop Mouse Pad Pro Memory Foam Mouse Pad...', '品牌:Allsop|型号:ASP30203', 10.99, 1, 10.99);
+(3, 8, 'EKSA AI 降噪蓝牙耳麦', '品牌:EKSA|型号:H1', 84.99, 1, 84.99),
+(3, 4, 'Allsop 记忆棉护腕鼠标垫', '品牌:Allsop|型号:ASP30203', 10.99, 1, 10.99);
 INSERT INTO order_logistics (order_id, content, created_at) VALUES
 (3, '订单已创建', '2026-05-18 10:05:00'),
 (3, '订单已支付', '2026-05-18 10:06:00'),

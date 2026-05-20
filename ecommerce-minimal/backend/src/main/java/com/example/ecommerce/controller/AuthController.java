@@ -49,11 +49,16 @@ public class AuthController {
         String throttleKey="verify:throttle:"+purpose+":"+email;
         if(Boolean.TRUE.equals(redisTemplate.hasKey(throttleKey))) return ApiResponse.fail("发送过于频繁，请稍后再试");
         String code=String.valueOf((int)(Math.random()*900000)+100000);
+        boolean demoMode=false;
         try { mailService.sendVerificationCode(email,code,purpose); }
+        catch (IllegalStateException ex) {
+            code="123456";
+            demoMode=true;
+        }
         catch (Exception ex) { return ApiResponse.fail("验证码发送失败："+ex.getMessage()); }
         redisTemplate.opsForValue().set("verify:"+purpose+":"+email,code,java.time.Duration.ofMinutes(10));
         redisTemplate.opsForValue().set(throttleKey,"1",java.time.Duration.ofMinutes(1));
-        return ApiResponse.ok(null);
+        return ApiResponse.ok(demoMode ? Map.of("demoMode", true, "demoCode", code) : null);
     }
 
     @PostMapping("/register/email")
