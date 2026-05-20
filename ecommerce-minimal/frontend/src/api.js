@@ -9,8 +9,12 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response?.status === 401) {
-      localStorage.clear()
-      window.location.href = '/'
+      localStorage.removeItem('token')
+      localStorage.removeItem('userId')
+      localStorage.removeItem('nickname')
+      localStorage.removeItem('adminId')
+      localStorage.removeItem('role')
+      window.location.href = '/login'
     }
     return Promise.reject(error)
   }

@@ -3,23 +3,23 @@
 ## 浏览器截图
 
 - 用户端：
-  - `evidence-user-home.png`
-  - `evidence-user-products.png`
-  - `evidence-user-cart.png`
-  - `evidence-user-checkout.png`
-  - `evidence-user-orders.png`
-  - `evidence-user-consultations.png`
+  - `evidence/evidence-user-home.png`
+  - `evidence/evidence-user-products.png`
+  - `evidence/evidence-user-cart.png`
+  - `evidence/evidence-user-checkout.png`
+  - `evidence/evidence-user-orders.png`
+  - `evidence/evidence-user-consultations.png`
 - 管理端：
-  - `evidence-admin-dashboard.png`
-  - `evidence-admin-products.png`
-  - `evidence-admin-orders.png`
-  - `evidence-admin-consultations.png`
+  - `evidence/evidence-admin-dashboard.png`
+  - `evidence/evidence-admin-products.png`
+  - `evidence/evidence-admin-orders.png`
+  - `evidence/evidence-admin-consultations.png`
 - 响应式：
-  - `evidence-responsive-390.png`
-  - `evidence-responsive-768.png`
+  - `evidence/evidence-responsive-390.png`
+  - `evidence/evidence-responsive-768.png`
 - Docker 前端：
-  - `evidence-docker-main-frontend.png`
-  - `evidence-docker-microservices-frontend.png`
+  - `evidence/evidence-docker-main-frontend.png`
+  - `evidence/evidence-docker-microservices-frontend.png`
 
 ## 本轮已复测
 

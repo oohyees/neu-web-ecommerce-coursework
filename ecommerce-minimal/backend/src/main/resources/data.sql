@@ -198,3 +198,52 @@ INSERT INTO product_review (user_id, product_id, rating, content, image_url, cre
 (1, 28, 4, 'Nice lamp, but like others stated, they are smaller than expected. One thing to note, the LED bulbs it comes with aren''t great. I replaced them with LED dimmable frosted bulbs and the lamps look better, and touch control seems to even work better', '', NOW()),
 (1, 29, 4, 'Love this lamp !!', '', NOW()),
 (1, 30, 5, 'We''ve been using compatibles before and noticed the quality went bad after printing a few hundreds so we bought this original toner instead. What a difference and how easy to install.I''ve been giving this toner cartridge a pretty good workout in my home office for nearly ten months. I don''t run a business here, but some of my volunteer work has been paper-intensive - including drafting revisions of lengthy documents. My Exactly what I needed!But It Works! Tried low cost...', '', NOW());
+
+-- 补全缺少的产品规格
+INSERT INTO product_spec (product_id, spec_name, spec_value) VALUES
+(7, '型号', 'Aothia-Cork'),
+(27, '型号', 'NPL10CPG');
+
+-- 购物车
+INSERT INTO cart_item (user_id, product_id, spec_text, quantity) VALUES
+(1, 2, '品牌:Razer|型号:RZ01-03210300-R3M1', 2),
+(1, 4, '品牌:Allsop|型号:ASP30203', 1);
+
+-- 收藏
+INSERT INTO product_favorite (user_id, product_id) VALUES
+(1, 11),
+(1, 13);
+
+-- 反馈
+INSERT INTO feedback (user_id, content, reply, status, created_at) VALUES
+(1, '希望能增加更多支付方式，比如银联云闪付。', '感谢反馈，银联支付已在支付页面开放，欢迎使用。', 'REPLIED', NOW());
+
+-- 种子订单 #1：待支付
+INSERT INTO orders (order_no, user_id, address_id, total_amount, status, payment_status, payment_method, logistics_status, refund_status, created_at) VALUES
+('ORD202605190001', 1, 1, 174.19, 'CREATED', 'UNPAID', 'MOCK_PAY', '待支付', 'NONE', '2026-05-19 09:30:00');
+INSERT INTO order_item (order_id, product_id, product_name, spec_text, unit_price, quantity, subtotal) VALUES
+(1, 1, 'Koolertron One Handed Programmable Mechanical Keyboard...', '品牌:Koolertron|型号:AE-SMKD7', 85.99, 2, 171.98),
+(1, 2, 'Razer DeathAdder V2 Gaming Mouse...', '品牌:Razer|型号:RZ01-03210300-R3M1', 58.20, 1, 58.20);
+INSERT INTO order_logistics (order_id, content, created_at) VALUES
+(1, '订单已创建', '2026-05-19 09:30:00');
+
+-- 种子订单 #2：已支付待发货
+INSERT INTO orders (order_no, user_id, address_id, total_amount, status, payment_status, payment_method, logistics_status, refund_status, created_at) VALUES
+('ORD202605190002', 1, 1, 389.00, 'CREATED', 'PAID', 'ALIPAY', '待发货', 'NONE', '2026-05-19 14:20:00');
+INSERT INTO order_item (order_id, product_id, product_name, spec_text, unit_price, quantity, subtotal) VALUES
+(2, 11, 'Sony SRS-XP500 X-Series Wireless Portable Speaker...', '品牌:Sony|型号:SRSXP500', 389.00, 1, 389.00);
+INSERT INTO order_logistics (order_id, content, created_at) VALUES
+(2, '订单已创建', '2026-05-19 14:20:00'),
+(2, '订单已支付', '2026-05-19 14:22:00');
+
+-- 种子订单 #3：已发货待收货
+INSERT INTO orders (order_no, user_id, address_id, total_amount, status, payment_status, payment_method, logistics_status, refund_status, created_at) VALUES
+('ORD202605180003', 1, 1, 95.98, 'SHIPPED', 'PAID', 'WECHAT', '运输中', 'NONE', '2026-05-18 10:05:00');
+INSERT INTO order_item (order_id, product_id, product_name, spec_text, unit_price, quantity, subtotal) VALUES
+(3, 8, 'Trucker Bluetooth Headsets...', '品牌:EKSA|型号:H1', 84.99, 1, 84.99),
+(3, 4, 'Allsop Mouse Pad Pro Memory Foam Mouse Pad...', '品牌:Allsop|型号:ASP30203', 10.99, 1, 10.99);
+INSERT INTO order_logistics (order_id, content, created_at) VALUES
+(3, '订单已创建', '2026-05-18 10:05:00'),
+(3, '订单已支付', '2026-05-18 10:06:00'),
+(3, '商家已发货，快递单号 SF1234567890', '2026-05-18 15:30:00'),
+(3, '快件已到达沈阳分拣中心', '2026-05-19 08:00:00');

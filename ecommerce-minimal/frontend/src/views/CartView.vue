@@ -70,9 +70,13 @@
         </article>
       </section>
 
-      <EmptyState v-if="!items.length" title="购物车是空的" description="去商品列表挑选心仪的商品吧。">
+      <EmptyState v-if="loadError" title="加载失败" description="购物车数据加载失败，请检查网络后重试。">
+        <el-button type="danger" @click="load">重新加载</el-button>
+      </EmptyState>
+      <EmptyState v-else-if="!loading && !items.length" title="购物车是空的" description="去商品列表挑选心仪的商品吧。">
         <el-button type="danger" @click="$router.push('/products')">去逛逛</el-button>
       </EmptyState>
+      <div v-if="loading" class="loading-state">加载中...</div>
 
       <footer v-if="items.length" class="settlement">
         <div class="settlement-left">
@@ -88,20 +92,33 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api'
 import { useSessionStore } from '../store'
 import ShopLayout from '../layouts/ShopLayout.vue'
 import EmptyState from '../components/EmptyState.vue'
 
+const router = useRouter()
 const items = ref([])
 const selected = ref([])
+const loading = ref(true)
+const loadError = ref(false)
 const session = useSessionStore()
 const tableRef = ref()
 const selectedTotal = computed(() => selected.value.reduce((sum, i) => sum + Number(i.subtotal), 0).toFixed(2))
 
 async function load() {
-  items.value = (await api.get('/cart', { params: { userId: session.userId } })).data.data || []
+  loading.value = true
+  loadError.value = false
+  try {
+    items.value = (await api.get('/cart', { params: { userId: session.userId } })).data.data || []
+  } catch {
+    loadError.value = true
+    items.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
 async function updateQuantity(productId, quantity) {
@@ -135,7 +152,7 @@ function toggleMobile(row, checked) {
 }
 function checkout() {
   sessionStorage.setItem('checkoutProductIds', JSON.stringify(selected.value.map(i => i.productId)))
-  window.location.href = '/checkout'
+  router.push('/checkout')
 }
 function imgFallback(e) {
   e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect fill="%23f3f4f6" width="80" height="80"/><text x="40" y="40" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="10">暂无图片</text></svg>'
@@ -160,6 +177,10 @@ onMounted(load)
 }
 h1, p { margin: 0; }
 p { color: var(--muted); margin-top: 4px; }
+
+.loading-state {
+  text-align: center; padding: 60px 20px; color: var(--muted); font-size: 15px;
+}
 
 .bulk {
   display: flex;

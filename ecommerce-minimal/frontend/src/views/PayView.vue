@@ -8,8 +8,8 @@
         </div>
 
         <div class="order-info">
-          <div><span>订单号</span><strong>{{ order.order.orderNo }}</strong></div>
-          <div><span>应付金额</span><b class="price">&yen;{{ order.order.totalAmount }}</b></div>
+          <div><span>订单号</span><strong>{{ orderData.orderNo }}</strong></div>
+          <div><span>应付金额</span><b class="price">&yen;{{ orderData.payableAmount }}</b></div>
         </div>
 
         <el-divider>选择支付方式</el-divider>
@@ -37,20 +37,98 @@
             <span class="qrcode-icon">📱</span>
             <strong>{{ method === 'ALIPAY' ? '支付宝' : method === 'WECHAT' ? '微信' : '银联' }}扫码支付</strong>
             <p>请使用{{ method === 'ALIPAY' ? '支付宝' : method === 'WECHAT' ? '微信' : '银联云闪付' }}扫描二维码完成支付</p>
-            <p class="price">应付金额：&yen;{{ order.order.totalAmount }}</p>
+            <p class="price">应付金额：&yen;{{ orderData.payableAmount }}</p>
+
             <div class="scan-area">
-              <div class="qr-placeholder">
-                <span>扫码支付模拟</span>
-                <small>课程演示用途</small>
+              <div class="qr-code">
+                <!-- 模拟二维码图案 -->
+                <svg viewBox="0 0 29 29" class="qr-svg">
+                  <!-- 定位图案 -->
+                  <rect x="0" y="0" width="9" height="1" fill="#111" /><rect x="0" y="0" width="1" height="9" fill="#111" />
+                  <rect x="2" y="2" width="5" height="5" fill="#111" /><rect x="3" y="3" width="3" height="3" fill="#fff" />
+                  <rect x="0" y="7" width="9" height="1" fill="#111" /><rect x="7" y="0" width="1" height="9" fill="#111" />
+                  <rect x="20" y="0" width="9" height="1" fill="#111" /><rect x="20" y="0" width="1" height="9" fill="#111" />
+                  <rect x="22" y="2" width="5" height="5" fill="#111" /><rect x="23" y="3" width="3" height="3" fill="#fff" />
+                  <rect x="20" y="7" width="9" height="1" fill="#111" /><rect x="27" y="0" width="1" height="9" fill="#111" />
+                  <rect x="0" y="20" width="9" height="1" fill="#111" /><rect x="0" y="20" width="1" height="9" fill="#111" />
+                  <rect x="2" y="22" width="5" height="5" fill="#111" /><rect x="3" y="23" width="3" height="3" fill="#fff" />
+                  <rect x="0" y="27" width="9" height="1" fill="#111" /><rect x="7" y="20" width="1" height="9" fill="#111" />
+                  <!-- 随机数据区 -->
+                  <rect x="10" y="0" width="1" height="1" fill="#111" /><rect x="12" y="0" width="1" height="1" fill="#111" />
+                  <rect x="15" y="0" width="1" height="1" fill="#111" /><rect x="18" y="0" width="1" height="1" fill="#111" />
+                  <rect x="10" y="2" width="1" height="1" fill="#111" /><rect x="14" y="2" width="1" height="1" fill="#111" />
+                  <rect x="16" y="2" width="1" height="1" fill="#111" /><rect x="11" y="3" width="1" height="1" fill="#111" />
+                  <rect x="13" y="3" width="1" height="1" fill="#111" /><rect x="17" y="3" width="1" height="1" fill="#111" />
+                  <rect x="10" y="4" width="1" height="1" fill="#111" /><rect x="15" y="4" width="1" height="1" fill="#111" />
+                  <rect x="12" y="5" width="1" height="1" fill="#111" /><rect x="18" y="5" width="1" height="1" fill="#111" />
+                  <rect x="10" y="6" width="1" height="1" fill="#111" /><rect x="14" y="6" width="1" height="1" fill="#111" />
+                  <rect x="16" y="6" width="1" height="1" fill="#111" /><rect x="11" y="7" width="1" height="1" fill="#111" />
+                  <rect x="13" y="7" width="1" height="1" fill="#111" /><rect x="17" y="7" width="1" height="1" fill="#111" />
+                  <rect x="10" y="9" width="1" height="1" fill="#111" /><rect x="13" y="9" width="1" height="1" fill="#111" />
+                  <rect x="16" y="9" width="1" height="1" fill="#111" /><rect x="18" y="9" width="1" height="1" fill="#111" />
+                  <rect x="11" y="10" width="1" height="1" fill="#111" /><rect x="14" y="10" width="1" height="1" fill="#111" />
+                  <rect x="10" y="11" width="1" height="1" fill="#111" /><rect x="14" y="11" width="1" height="1" fill="#111" />
+                  <rect x="18" y="11" width="1" height="1" fill="#111" /><rect x="12" y="12" width="1" height="1" fill="#111" />
+                  <rect x="16" y="12" width="1" height="1" fill="#111" /><rect x="10" y="13" width="1" height="1" fill="#111" />
+                  <rect x="15" y="13" width="1" height="1" fill="#111" /><rect x="11" y="14" width="1" height="1" fill="#111" />
+                  <rect x="14" y="14" width="1" height="1" fill="#111" /><rect x="17" y="14" width="1" height="1" fill="#111" />
+                  <rect x="10" y="15" width="1" height="1" fill="#111" /><rect x="16" y="15" width="1" height="1" fill="#111" />
+                  <rect x="12" y="16" width="1" height="1" fill="#111" /><rect x="18" y="16" width="1" height="1" fill="#111" />
+                  <rect x="14" y="17" width="1" height="1" fill="#111" /><rect x="10" y="18" width="1" height="1" fill="#111" />
+                  <rect x="15" y="18" width="1" height="1" fill="#111" /><rect x="12" y="19" width="1" height="1" fill="#111" />
+                  <rect x="16" y="19" width="1" height="1" fill="#111" /><rect x="18" y="19" width="1" height="1" fill="#111" />
+                  <rect x="11" y="20" width="1" height="1" fill="#111" /><rect x="14" y="20" width="1" height="1" fill="#111" />
+                  <rect x="17" y="20" width="1" height="1" fill="#111" /><rect x="10" y="21" width="1" height="1" fill="#111" />
+                  <rect x="15" y="21" width="1" height="1" fill="#111" /><rect x="12" y="22" width="1" height="1" fill="#111" />
+                  <rect x="18" y="22" width="1" height="1" fill="#111" /><rect x="11" y="23" width="1" height="1" fill="#111" />
+                  <rect x="14" y="23" width="1" height="1" fill="#111" /><rect x="16" y="23" width="1" height="1" fill="#111" />
+                  <rect x="10" y="24" width="1" height="1" fill="#111" /><rect x="17" y="24" width="1" height="1" fill="#111" />
+                  <rect x="13" y="25" width="1" height="1" fill="#111" /><rect x="15" y="25" width="1" height="1" fill="#111" />
+                  <rect x="12" y="26" width="1" height="1" fill="#111" /><rect x="18" y="26" width="1" height="1" fill="#111" />
+                  <rect x="10" y="27" width="1" height="1" fill="#111" /><rect x="16" y="27" width="1" height="1" fill="#111" />
+                  <rect x="11" y="28" width="1" height="1" fill="#111" /><rect x="14" y="28" width="1" height="1" fill="#111" />
+                  <rect x="17" y="28" width="1" height="1" fill="#111" /><rect x="20" y="9" width="1" height="1" fill="#111" />
+                  <rect x="22" y="9" width="1" height="1" fill="#111" /><rect x="25" y="9" width="1" height="1" fill="#111" />
+                  <rect x="28" y="9" width="1" height="1" fill="#111" /><rect x="20" y="11" width="1" height="1" fill="#111" />
+                  <rect x="24" y="11" width="1" height="1" fill="#111" /><rect x="27" y="11" width="1" height="1" fill="#111" />
+                  <rect x="21" y="12" width="1" height="1" fill="#111" /><rect x="26" y="12" width="1" height="1" fill="#111" />
+                  <rect x="23" y="13" width="1" height="1" fill="#111" /><rect x="25" y="13" width="1" height="1" fill="#111" />
+                  <rect x="28" y="13" width="1" height="1" fill="#111" /><rect x="20" y="14" width="1" height="1" fill="#111" />
+                  <rect x="22" y="14" width="1" height="1" fill="#111" /><rect x="24" y="15" width="1" height="1" fill="#111" />
+                  <rect x="26" y="15" width="1" height="1" fill="#111" /><rect x="21" y="16" width="1" height="1" fill="#111" />
+                  <rect x="27" y="16" width="1" height="1" fill="#111" /><rect x="23" y="17" width="1" height="1" fill="#111" />
+                  <rect x="25" y="17" width="1" height="1" fill="#111" /><rect x="28" y="17" width="1" height="1" fill="#111" />
+                  <rect x="20" y="18" width="1" height="1" fill="#111" /><rect x="22" y="19" width="1" height="1" fill="#111" />
+                  <rect x="24" y="19" width="1" height="1" fill="#111" /><rect x="26" y="19" width="1" height="1" fill="#111" />
+                  <rect x="21" y="20" width="1" height="1" fill="#111" /><rect x="23" y="20" width="1" height="1" fill="#111" />
+                  <rect x="25" y="21" width="1" height="1" fill="#111" /><rect x="27" y="21" width="1" height="1" fill="#111" />
+                  <rect x="20" y="22" width="1" height="1" fill="#111" /><rect x="22" y="23" width="1" height="1" fill="#111" />
+                  <rect x="28" y="23" width="1" height="1" fill="#111" /><rect x="24" y="24" width="1" height="1" fill="#111" />
+                  <rect x="26" y="24" width="1" height="1" fill="#111" /><rect x="21" y="25" width="1" height="1" fill="#111" />
+                  <rect x="23" y="26" width="1" height="1" fill="#111" /><rect x="27" y="26" width="1" height="1" fill="#111" />
+                  <rect x="25" y="27" width="1" height="1" fill="#111" /><rect x="28" y="27" width="1" height="1" fill="#111" />
+                  <rect x="21" y="28" width="1" height="1" fill="#111" /><rect x="24" y="28" width="1" height="1" fill="#111" />
+                  <!-- 中间 Logo 区域 -->
+                  <rect x="11" y="11" width="7" height="7" fill="#fff" stroke="#e60023" stroke-width="0.5" />
+                  <text x="14.5" y="16" text-anchor="middle" font-size="4" fill="#e60023" font-weight="bold">支</text>
+                </svg>
+                <!-- 扫描线动画 -->
+                <div class="scan-line"></div>
               </div>
             </div>
+
+            <div class="qr-timer">
+              <span class="timer-dot"></span>
+              请在 <b>{{ countdown }}</b> 秒内完成支付
+            </div>
+
             <el-button type="danger" size="large" @click="confirmPay" :loading="confirming">确认支付</el-button>
-            <p class="hint">此为模拟支付，点击"确认支付"即可完成订单</p>
+            <p class="hint">课程模拟支付演示 · 点击按钮即完成支付</p>
           </div>
         </div>
 
         <el-button type="danger" size="large" class="pay-btn" @click="startPay" v-if="!paying" :disabled="!method">
-          确认支付 &yen;{{ order.order.totalAmount }}
+          确认支付 &yen;{{ orderData.payableAmount }}
         </el-button>
 
         <div class="pay-footer">
@@ -71,7 +149,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { api } from '../api'
@@ -82,16 +160,37 @@ const route = useRoute(), router = useRouter()
 const order = ref(null), loading = ref(true)
 const method = ref('ALIPAY')
 const paying = ref(false), confirming = ref(false)
+const countdown = ref(300)
+let timer = null
 
-function startPay() { paying.value = true }
+const orderData = computed(() => {
+  const o = order.value?.order
+  return {
+    orderNo: o?.orderNo || '',
+    payableAmount: o?.totalAmount || '0.00'
+  }
+})
+
+function startPay() {
+  paying.value = true
+  countdown.value = 300
+  timer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(timer)
+      paying.value = false
+      ElMessage.warning('支付超时，请重新选择支付方式')
+    }
+  }, 1000)
+}
 
 async function confirmPay() {
   confirming.value = true
   try {
     const orderId = route.params.id
     await api.put(`/orders/${orderId}/pay`)
-    // 记录支付方式
     await api.put(`/orders/${orderId}/pay-gateway`, { method: method.value })
+    clearInterval(timer)
     ElMessage.success('支付成功！')
     router.push(`/orders?status=PAID`)
   } catch {
@@ -106,6 +205,10 @@ onMounted(async () => {
     order.value = (await api.get(`/orders/${route.params.id}`)).data.data
   } catch { /* order not found */ }
   loading.value = false
+})
+
+onBeforeUnmount(() => {
+  if (timer) clearInterval(timer)
 })
 </script>
 
@@ -150,12 +253,48 @@ onMounted(async () => {
 .qrcode-box { padding: 24px; background: #f8fafc; border-radius: var(--radius); }
 .qrcode-icon { font-size: 48px; display: block; margin-bottom: 8px; }
 .scan-area {
-  width: 180px; height: 180px; margin: 16px auto;
+  width: 200px; height: 200px; margin: 18px auto 0;
   display: grid; place-items: center;
-  background: #fff; border: 2px dashed var(--line); border-radius: var(--radius);
+  background: #fff; border: 2px solid var(--line); border-radius: var(--radius);
+  position: relative;
 }
-.qr-placeholder { text-align: center; color: var(--muted); }
-.qr-placeholder small { display: block; margin-top: 6px; font-size: 12px; }
+
+.qr-code {
+  width: 170px; height: 170px; position: relative;
+}
+.qr-svg {
+  width: 100%; height: 100%;
+}
+.scan-line {
+  position: absolute; left: 8px; right: 8px; height: 2px;
+  background: linear-gradient(90deg, transparent, #e60023, transparent);
+  box-shadow: 0 0 8px rgba(230, 0, 35, .5);
+  border-radius: 1px;
+  animation: scanMove 2.5s ease-in-out infinite;
+}
+@keyframes scanMove {
+  0% { top: 8px; }
+  50% { top: calc(100% - 10px); }
+  100% { top: 8px; }
+}
+
+.qr-timer {
+  margin: 14px 0 8px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 13px; color: var(--muted);
+}
+.qr-timer b {
+  color: var(--brand); font-size: 16px; min-width: 24px; text-align: center;
+}
+.timer-dot {
+  display: inline-block; width: 8px; height: 8px;
+  background: var(--success); border-radius: 50%;
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
 .hint { color: var(--muted); font-size: 13px; margin-top: 12px; }
 
 .pay-btn { width: 100%; height: 48px; font-size: 17px; font-weight: 700; margin-top: 8px; }

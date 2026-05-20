@@ -9,7 +9,7 @@
 ## 已采用路线
 
 - 继续保留现有工程作主线，但直接吸收成熟资源范式
-- 已拉入参考仓库到 `_refs/`：
+- 已拉入参考仓库到 `.refs/`：
   - `vue-element-plus-admin`
   - `mall`
   - `mall-swarm`

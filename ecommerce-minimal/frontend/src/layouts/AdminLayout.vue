@@ -5,7 +5,7 @@
         <strong>EC</strong>
         <span>商城运营后台</span>
       </div>
-      <el-menu :default-active="$route.path" router>
+      <el-menu :default-active="$route.path" :default-openeds="openedMenus" router>
         <el-menu-item index="/admin/dashboard">
           <span>数据看板</span>
         </el-menu-item>
@@ -49,10 +49,23 @@
   </el-container>
 </template>
 <script setup>
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '../store'
 import { api } from '../api'
-const router = useRouter(), session = useSessionStore()
+const route = useRoute(), router = useRouter(), session = useSessionStore()
+
+const menuRouteMap = {
+  'products': 'goods', 'categories': 'goods', 'reviews': 'goods',
+  'orders': 'orders', 'consultations': 'orders', 'feedback': 'orders',
+  'banners': 'content', 'promotions': 'content', 'announcements': 'content', 'activity-notices': 'content',
+  'users': 'system', 'admins': 'system', 'profile': 'system'
+}
+const openedMenus = computed(() => {
+  const key = Object.keys(menuRouteMap).find(k => route.path.includes('/admin/' + k))
+  return key ? [menuRouteMap[key]] : []
+})
+
 async function logout() {
   try { await api.post('/auth/logout', { token: localStorage.getItem('token') || '' }) } catch {}
   session.logout(); router.push('/admin/login')

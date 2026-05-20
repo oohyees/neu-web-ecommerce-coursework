@@ -1,28 +1,28 @@
 <template>
   <AdminLayout>
     <AdminPageHeader title="数据看板" eyebrow="Dashboard" subtitle="汇总商城用户、订单、销售额和待处理事项。">
-      <el-button @click="download">导出统计</el-button>
+      <el-button @click="download" :loading="downloading">导出统计</el-button>
     </AdminPageHeader>
 
     <section class="metric-grid">
       <article class="metric-card">
         <span class="metric-label">用户数</span>
-        <strong>{{ metricData.userCount }}</strong>
+        <strong>{{ metricData.userCount ?? '-' }}</strong>
         <p>注册用户总量</p>
       </article>
       <article class="metric-card">
         <span class="metric-label">订单数</span>
-        <strong>{{ metricData.orderCount }}</strong>
+        <strong>{{ metricData.orderCount ?? '-' }}</strong>
         <p>累计订单</p>
       </article>
       <article class="metric-card">
         <span class="metric-label">销售额</span>
-        <strong>&yen;{{ metricData.salesAmount }}</strong>
+        <strong>&yen;{{ metricData.salesAmount ?? '-' }}</strong>
         <p>累计实付金额</p>
       </article>
       <article class="metric-card">
         <span class="metric-label">今日销售额</span>
-        <strong>&yen;{{ metricData.todaySalesAmount }}</strong>
+        <strong>&yen;{{ metricData.todaySalesAmount ?? '-' }}</strong>
         <p>今日交易表现</p>
       </article>
     </section>
@@ -30,15 +30,18 @@
     <section class="workbench">
       <div class="chart-card wide">
         <h3>近7日销售趋势</h3>
-        <div ref="trendEl" class="chart"></div>
+        <div ref="trendEl" class="chart" v-show="hasTrendData"></div>
+        <div v-if="!hasTrendData" class="chart-placeholder">{{ dataReady ? '暂无销售数据，创建订单后将自动生成趋势图' : '数据加载中...' }}</div>
       </div>
       <div class="chart-card">
         <h3>订单状态分布</h3>
-        <div ref="statusEl" class="chart"></div>
+        <div ref="statusEl" class="chart" v-show="hasStatusData"></div>
+        <div v-if="!hasStatusData" class="chart-placeholder">{{ dataReady ? '暂无订单数据，有订单后将自动展示分布' : '数据加载中...' }}</div>
       </div>
       <div class="chart-card">
         <h3>热销商品排行</h3>
-        <div ref="hotEl" class="chart"></div>
+        <div ref="hotEl" class="chart" v-show="hasHotData"></div>
+        <div v-if="!hasHotData" class="chart-placeholder">{{ dataReady ? '暂无商品排行数据' : '数据加载中...' }}</div>
       </div>
       <aside class="todo-card">
         <h3>待处理事项</h3>
@@ -52,128 +55,164 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import * as echarts from 'echarts'
+import { ElMessage } from 'element-plus'
 import { api } from '../api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 
 const data = ref({})
+const dataReady = ref(false)
+const downloading = ref(false)
 const trendEl = ref()
 const hotEl = ref()
 const statusEl = ref()
 
-// 默认Mock数据，避免全部显示0
-const fallbackData = {
-  userCount: 128,
-  orderCount: 356,
-  salesAmount: '89240.00',
-  todaySalesAmount: '1680.00',
-  salesTrend: [
-    { day: '05-13', amount: 2100 }, { day: '05-14', amount: 1850 }, { day: '05-15', amount: 2400 },
-    { day: '05-16', amount: 1680 }, { day: '05-17', amount: 3200 }, { day: '05-18', amount: 2780 },
-    { day: '05-19', amount: 1680 }
-  ],
-  orderStatus: [
-    { status: '待支付', value: 12 }, { status: '待发货', value: 8 },
-    { status: '待收货', value: 15 }, { status: '已完成', value: 310 },
-    { status: '已取消', value: 11 }
-  ],
-  hotProducts: [
-    { name: '蓝牙耳机', sales: 86 }, { name: '机械键盘', sales: 72 }, { name: '无线蓝牙鼠标', sales: 58 },
-    { name: 'USB 扩展坞', sales: 45 }, { name: '桌面收纳架', sales: 32 }
-  ],
-  refundRequests: 3,
-  pendingReplies: 5,
-  pendingConsultations: 2
-}
-
 const metricData = computed(() => ({
-  userCount: data.value.userCount || fallbackData.userCount,
-  orderCount: data.value.orderCount || fallbackData.orderCount,
-  salesAmount: data.value.salesAmount || fallbackData.salesAmount,
-  todaySalesAmount: data.value.todaySalesAmount || fallbackData.todaySalesAmount
+  userCount: data.value.userCount,
+  orderCount: data.value.orderCount,
+  salesAmount: data.value.salesAmount,
+  todaySalesAmount: data.value.todaySalesAmount
 }))
 
+const hasTrendData = computed(() => data.value.salesTrend && data.value.salesTrend.length > 0)
+const hasStatusData = computed(() => data.value.orderStatus && data.value.orderStatus.length > 0)
+const hasHotData = computed(() => data.value.hotProducts && data.value.hotProducts.length > 0)
+
 const pending = computed(() => {
-  const orderStatus = data.value.orderStatus?.length ? data.value.orderStatus : fallbackData.orderStatus
+  const orderStatus = data.value.orderStatus || []
   return {
-    ship: orderStatus.find(i => i.status === '待发货')?.value || 0,
-    refund: data.value.refundRequests || fallbackData.refundRequests,
-    reply: data.value.pendingReplies || fallbackData.pendingReplies,
-    consultation: data.value.pendingConsultations || fallbackData.pendingConsultations
+    ship: orderStatus.find(i => i.status === 'PAID' || i.status === '待发货')?.value || 0,
+    refund: data.value.refundRequests || 0,
+    reply: data.value.pendingReplies || 0,
+    consultation: data.value.pendingConsultations || 0
   }
 })
 
 async function download() {
-  const response = await api.get('/admin/dashboard/export', { responseType: 'blob' })
-  const url = URL.createObjectURL(response.data)
-  const a = document.createElement('a')
-  a.href = url; a.download = 'dashboard.xlsx'; a.click()
-  URL.revokeObjectURL(url)
+  try {
+    downloading.value = true
+    const response = await api.get('/admin/dashboard/export', { responseType: 'blob' })
+    const url = URL.createObjectURL(response.data)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'dashboard.xlsx'; a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    ElMessage.error('导出失败，请稍后重试')
+  } finally {
+    downloading.value = false
+  }
 }
 
-const STATUS_NAMES = { CREATED: '待处理', SHIPPED: '已发货', COMPLETED: '已完成', CANCELLED: '已取消' }
-const STATUS_COLORS = { CREATED: '#d97706', SHIPPED: '#2563eb', COMPLETED: '#16a34a', CANCELLED: '#6b7280' }
+const STATUS_NAMES = { CREATED: '待处理', PAID: '已支付', SHIPPED: '已发货', COMPLETED: '已完成', CANCELLED: '已取消' }
+const STATUS_COLORS = { CREATED: '#d97706', PAID: '#2563eb', SHIPPED: '#6366f1', COMPLETED: '#16a34a', CANCELLED: '#6b7280' }
+
+// 跟踪所有 ECharts 实例以便清理
+const chartInstances = []
+
+function getOrCreateChart(domRef) {
+  const el = domRef.value
+  if (!el) return null
+  const existing = echarts.getInstanceByDom(el)
+  if (existing) { existing.clear(); return existing }
+  const instance = echarts.init(el)
+  chartInstances.push(instance)
+  return instance
+}
 
 function renderCharts() {
-  const trendData = data.value.salesTrend?.length ? data.value.salesTrend : fallbackData.salesTrend
-  const trend = [...trendData].reverse()
-  echarts.init(trendEl.value).setOption({
-    tooltip: { trigger: 'axis' },
-    grid: { left: '3%', right: '4%', bottom: '8%', top: '10%', containLabel: true },
-    xAxis: { type: 'category', data: trend.map(i => i.day), axisLine: { lineStyle: { color: '#e5e7eb' } } },
-    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } } },
-    series: [{
-      type: 'line', smooth: true, data: trend.map(i => i.amount),
-      areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-        { offset: 0, color: 'rgba(230,0,35,.25)' }, { offset: 1, color: 'rgba(230,0,35,.02)' }
-      ])},
-      lineStyle: { color: '#e60023', width: 2 },
-      itemStyle: { color: '#e60023' }
-    }]
-  })
+  if (!dataReady.value) return
 
-  const statusData = data.value.orderStatus?.length ? data.value.orderStatus : fallbackData.orderStatus
-  echarts.init(statusEl.value).setOption({
-    tooltip: { trigger: 'item' },
-    series: [{
-      type: 'pie', radius: ['48%', '75%'], center: ['50%', '55%'],
-      data: statusData.map(i => {
-        const name = STATUS_NAMES[i.status] || i.status
-        const color = STATUS_COLORS[i.status] || '#9ca3af'
-        return { name, value: i.value, itemStyle: { color } }
-      }),
-      label: { fontSize: 12 }, emphasis: { label: { fontWeight: 'bold' } }
-    }]
-  })
+  // 销售趋势
+  const trendData = data.value.salesTrend
+  if (trendData && trendData.length) {
+    const trendChart = getOrCreateChart(trendEl)
+    if (trendChart) {
+      trendChart.setOption({
+        tooltip: { trigger: 'axis' },
+        grid: { left: '3%', right: '4%', bottom: '8%', top: '10%', containLabel: true },
+        xAxis: { type: 'category', data: trendData.map(i => i.day), axisLine: { lineStyle: { color: '#e5e7eb' } } },
+        yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } } },
+        series: [{
+          type: 'line', smooth: true, data: trendData.map(i => i.amount),
+          areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(230,0,35,.25)' }, { offset: 1, color: 'rgba(230,0,35,.02)' }
+          ])},
+          lineStyle: { color: '#e60023', width: 2 },
+          itemStyle: { color: '#e60023' }
+        }]
+      })
+    }
+  }
 
-  const hotData = data.value.hotProducts?.length ? data.value.hotProducts : fallbackData.hotProducts
-  echarts.init(hotEl.value).setOption({
-    tooltip: { trigger: 'axis' },
-    grid: { left: '3%', right: '10%', bottom: '8%', top: '10%', containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: hotData.map(i => i.name.length > 6 ? i.name.slice(0, 6) + '…' : i.name),
-      axisLabel: { fontSize: 11 }
-    },
-    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } } },
-    series: [{
-      type: 'bar', data: hotData.map(i => i.sales),
-      itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-        { offset: 0, color: '#ff5c72' }, { offset: 1, color: '#e60023' }
-      ]), borderRadius: [4, 4, 0, 0] },
-      barWidth: '50%'
-    }]
-  })
+  // 订单状态分布
+  const statusData = data.value.orderStatus
+  if (statusData && statusData.length) {
+    const statusChart = getOrCreateChart(statusEl)
+    if (statusChart) {
+      statusChart.setOption({
+        tooltip: { trigger: 'item' },
+        series: [{
+          type: 'pie', radius: ['48%', '75%'], center: ['50%', '55%'],
+          data: statusData.map(i => {
+            const name = STATUS_NAMES[i.status] || i.status
+            const color = STATUS_COLORS[i.status] || '#9ca3af'
+            return { name, value: i.value, itemStyle: { color } }
+          }),
+          label: { fontSize: 12 }, emphasis: { label: { fontWeight: 'bold' } }
+        }]
+      })
+    }
+  }
+
+  // 热销商品排行
+  const hotData = data.value.hotProducts
+  if (hotData && hotData.length) {
+    const hotChart = getOrCreateChart(hotEl)
+    if (hotChart) {
+      hotChart.setOption({
+        tooltip: { trigger: 'axis' },
+        grid: { left: '3%', right: '10%', bottom: '8%', top: '10%', containLabel: true },
+        xAxis: {
+          type: 'category',
+          data: hotData.map(i => i.name.length > 6 ? i.name.slice(0, 6) + '…' : i.name),
+          axisLabel: { fontSize: 11 }
+        },
+        yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } } },
+        series: [{
+          type: 'bar', data: hotData.map(i => i.sales),
+          itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#ff5c72' }, { offset: 1, color: '#e60023' }
+          ]), borderRadius: [4, 4, 0, 0] },
+          barWidth: '50%'
+        }]
+      })
+    }
+  }
+}
+
+function handleResize() {
+  chartInstances.forEach(c => { try { c.resize() } catch { /* disposed */ } })
 }
 
 onMounted(async () => {
   try {
-    data.value = (await api.get('/admin/dashboard')).data.data || {}
-  } catch { /* use fallback data */ }
+    const res = await api.get('/admin/dashboard')
+    data.value = res.data.data || {}
+    dataReady.value = true
+  } catch {
+    dataReady.value = false
+  }
   await nextTick()
   renderCharts()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  chartInstances.forEach(c => { try { c.dispose() } catch { /* already disposed */ } })
+  chartInstances.length = 0
 })
 </script>
 
@@ -234,6 +273,15 @@ onMounted(async () => {
 
 .chart {
   height: 320px;
+}
+
+.chart-placeholder {
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .todo-card {

@@ -27,9 +27,11 @@
             <button v-for="word in hotwords" :key="word" @click="quickSearch(word)">{{ word }}</button>
           </div>
         </div>
-        <el-button class="cart-btn" size="large" @click="$router.push('/cart')">
-          <span class="cart-icon">🛒</span> 购物车
-        </el-button>
+        <el-badge :value="cartCount" :hidden="!cartCount" :max="99">
+          <el-button class="cart-btn" size="large" @click="$router.push('/cart')">
+            <span class="cart-icon">🛒</span> 购物车
+          </el-button>
+        </el-badge>
       </div>
     </header>
     <nav class="navline">
@@ -62,19 +64,29 @@
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '../store'
 import { api } from '../api'
 const router = useRouter(), session = useSessionStore()
 const keyword = ref('')
+const cartCount = ref(0)
 const hotwords = ['键盘', '鼠标', 'SSD', '耳机']
 function search() { router.push({ path: '/products', query: { keyword: keyword.value } }) }
 function quickSearch(word) { keyword.value = word; search() }
+async function fetchCartCount() {
+  if (!session.userId) { cartCount.value = 0; return }
+  try {
+    const items = (await api.get('/cart', { params: { userId: session.userId } })).data.data || []
+    cartCount.value = items.length
+  } catch { cartCount.value = 0 }
+}
 async function logout() {
   try { await api.post('/auth/logout', { token: localStorage.getItem('token') || '' }) } catch {}
   session.logout(); router.push('/login')
 }
+watch(() => session.userId, () => { fetchCartCount() })
+onMounted(() => { fetchCartCount() })
 </script>
 <style scoped>
 .shop-shell {

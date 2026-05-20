@@ -76,8 +76,8 @@
 
 ## 先读这些文档
 
-1. `HANDOFF.md`
-2. `PROJECT_STATE.md`
-3. `GAP_LOG.md`
-4. `ACCEPTANCE_REPORT.md`
-5. `ACCEPTANCE_CHECKLIST_2026.md`
+1. `docs/dev-log/HANDOFF.md`
+2. `docs/dev-log/PROJECT_STATE.md`
+3. `docs/dev-log/GAP_LOG.md`
+4. `docs/acceptance/ACCEPTANCE_REPORT.md`
+5. `docs/acceptance/ACCEPTANCE_CHECKLIST_2026.md`

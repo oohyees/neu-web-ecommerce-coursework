@@ -1,35 +1,36 @@
-# 依赖
+# ===== 依赖 =====
 node_modules/
 target/
 
-# 构建产物
+# ===== 构建产物 =====
 dist/
 
-# Chrome 浏览器缓存（Playwright 运行时生成，体积巨大）
-.chrome-*/
-.playwright-mcp/
-
-# 页面截图 / 快照（验证时生成，非源码）
-*-page.png
-*-state.png
-*-snapshot.yml
-**/chrome-*.png
-
-# 参考代码（非本项目源码）
-_refs/
-
-# 日志
+# ===== 日志（运行时生成，收拢在 logs/）=====
+logs/
 *.log
 
-# 数据库导出 dump
+# ===== Playwright / 浏览器运行时（截图验证时生成）=====
+.chrome-*/
+.playwright-mcp/
+*-snapshot.yml
+
+# ===== 页面截图（验证时生成，非源码）=====
+*-page.png
+*-state.png
+**/chrome-*.png
+
+# ===== 参考代码（只读，非本项目源码）=====
+.refs/
+
+# ===== 数据库导出 dump =====
 *backup*.sql
 *before-*.sql
 
-# 环境变量
+# ===== 环境变量 =====
 .env
 .env.local
 
-# IDE
+# ===== IDE =====
 .idea/
 .vscode/
 *.iml

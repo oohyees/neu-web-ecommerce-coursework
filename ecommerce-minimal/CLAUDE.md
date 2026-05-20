@@ -100,11 +100,11 @@ src/
 ## 文档导航
 
 接手后按顺序读：
-1. `HANDOFF.md` — 交接说明，当前真实进度
-2. `PROJECT_STATE.md` — 项目状态，已验证项与欠账
-3. `ACCEPTANCE_CHECKLIST_2026.md` — 按评分点的验收清单
-4. `GAP_LOG.md` — 已知未完成/暂缓项
-5. `SCORING_MAP.md` — 评分点→演示入口映射
+1. `docs/dev-log/HANDOFF.md` — 交接说明，当前真实进度
+2. `docs/dev-log/PROJECT_STATE.md` — 项目状态，已验证项与欠账
+3. `docs/acceptance/ACCEPTANCE_CHECKLIST_2026.md` — 按评分点的验收清单
+4. `docs/dev-log/GAP_LOG.md` — 已知未完成/暂缓项
+5. `docs/acceptance/SCORING_MAP.md` — 评分点→演示入口映射
 
 ## 工作约束
 
