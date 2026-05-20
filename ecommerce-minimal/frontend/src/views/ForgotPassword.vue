@@ -28,7 +28,13 @@ async function sendCode() {
   sending.value = true
   try {
     const { data } = await api.post('/auth/code', { email: form.value.email, purpose: 'RESET' })
-    data.success ? ElMessage.success('验证码已发送') : ElMessage.error(data.message)
+    if (!data.success) return ElMessage.error(data.message)
+    if (data.data?.demoCode) {
+      form.value.code = data.data.demoCode
+      ElMessage.success(`演示环境验证码：${data.data.demoCode}`)
+    } else {
+      ElMessage.success('验证码已发送')
+    }
   } finally { sending.value = false }
 }
 async function reset() {

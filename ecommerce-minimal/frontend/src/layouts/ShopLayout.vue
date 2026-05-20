@@ -222,6 +222,8 @@ onMounted(() => { fetchCartCount() })
 .navline {
   background: #fff;
   border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 .navline-inner {
   display: flex;
@@ -302,11 +304,17 @@ onMounted(() => { fetchCartCount() })
   }
   .navline-inner {
     gap: 0;
-    overflow-x: auto;
+    width: max-content;
+    min-width: 100%;
+    padding-right: 12px;
   }
   .navline a {
     flex: 0 0 auto;
-    padding: 0 14px;
+    min-width: 70px;
+    justify-content: center;
+    padding: 0 8px;
+    white-space: nowrap;
+    font-size: 14px;
   }
   .footer-grid {
     grid-template-columns: 1fr;

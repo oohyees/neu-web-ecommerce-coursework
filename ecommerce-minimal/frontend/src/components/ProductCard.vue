@@ -164,4 +164,30 @@ h3 {
   background: var(--brand-dark) !important;
   border-color: var(--brand-dark) !important;
 }
+
+@media (max-width: 540px) {
+  .image-box {
+    height: 150px;
+    padding: 10px;
+  }
+  .content {
+    padding: 10px;
+  }
+  h3 {
+    min-height: 38px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .meta {
+    font-size: 12px;
+  }
+  .price {
+    font-size: 17px;
+  }
+  .add-btn {
+    min-height: 36px;
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+}
 </style>

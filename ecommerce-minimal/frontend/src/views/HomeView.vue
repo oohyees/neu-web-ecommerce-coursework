@@ -202,13 +202,15 @@ onMounted(async () => {
 .hero-carousel {
   border-radius: var(--radius-lg);
   overflow: hidden;
+  background: linear-gradient(135deg, #fff7ed 0%, #fff1f2 45%, #eef2ff 100%);
 }
 
 .hero-carousel img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  background: #fff;
+  padding: 24px;
+  object-fit: contain;
+  background: transparent;
 }
 
 .banner-copy {
@@ -370,6 +372,26 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .home-hero {
     grid-template-columns: 1fr;
+  }
+  .banner-area {
+    order: -1;
+  }
+  .hero-carousel :deep(.el-carousel__container),
+  .banner-gradient {
+    height: 240px !important;
+  }
+  .hero-carousel img {
+    padding: 18px;
+  }
+  .banner-copy {
+    right: 14px;
+    bottom: 14px;
+    left: 14px;
+    justify-content: space-between;
+    padding: 10px 12px;
+  }
+  .banner-copy strong {
+    font-size: 14px;
   }
   .promo-grid {
     grid-template-columns: repeat(2, 1fr);
