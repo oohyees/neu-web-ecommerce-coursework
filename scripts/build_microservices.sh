@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-for service in ecommerce-common ecommerce-auth-service ecommerce-product-service ecommerce-order-service ecommerce-admin-service ecommerce-gateway; do
+for service in libs/common services/auth-service services/catalog-service services/order-service services/admin-service services/gateway; do
   echo "==> mvn package: $service"
   (cd "$ROOT/$service" && mvn -q -DskipTests package)
 done

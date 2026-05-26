@@ -1,7 +1,0 @@
-server:
-  port: 18090
-services:
-  auth: ${AUTH_SERVICE_URL:http://auth-service:18091}
-  product: ${PRODUCT_SERVICE_URL:http://product-service:18092}
-  order: ${ORDER_SERVICE_URL:http://order-service:18093}
-  admin: ${ADMIN_SERVICE_URL:http://admin-service:18094}

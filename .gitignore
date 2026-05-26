@@ -6,6 +6,7 @@ target/
 dist/
 submission/
 *.zip
+ecommerce-minimal/
 
 # ===== 日志（运行时生成，收拢在 logs/）=====
 logs/
