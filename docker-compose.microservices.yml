@@ -27,15 +27,33 @@ services:
       timeout: 3s
       retries: 20
 
+  nacos:
+    image: nacos/nacos-server:v2.3.2
+    platform: linux/amd64
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+      SPRING_DATASOURCE_PLATFORM: ""
+    ports:
+      - "18098:8848"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8848/nacos/v1/console/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
   auth-service:
     build: ./services/auth-service
     environment:
       DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       REDIS_HOST: redis
+      NACOS_SERVER_ADDR: nacos:8848
     depends_on:
       mysql:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      nacos:
         condition: service_healthy
     ports:
       - "18091:18091"
@@ -44,8 +62,11 @@ services:
     build: ./services/catalog-service
     environment:
       DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      NACOS_SERVER_ADDR: nacos:8848
     depends_on:
       mysql:
+        condition: service_healthy
+      nacos:
         condition: service_healthy
     ports:
       - "18092:18092"
@@ -54,8 +75,11 @@ services:
     build: ./services/order-service
     environment:
       DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      NACOS_SERVER_ADDR: nacos:8848
     depends_on:
       mysql:
+        condition: service_healthy
+      nacos:
         condition: service_healthy
     ports:
       - "18093:18093"
@@ -64,18 +88,41 @@ services:
     build: ./services/admin-service
     environment:
       DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      NACOS_SERVER_ADDR: nacos:8848
     depends_on:
       mysql:
+        condition: service_healthy
+      nacos:
         condition: service_healthy
     ports:
       - "18094:18094"
 
   gateway:
     build: ./services/gateway
+    environment:
+      REDIS_HOST: redis
+      NACOS_SERVER_ADDR: nacos:8848
     depends_on:
-      - auth-service
-      - catalog-service
-      - order-service
-      - admin-service
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      catalog-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      admin-service:
+        condition: service_started
     ports:
       - "18090:18090"
+
+  frontend:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.microservices
+    depends_on:
+      - gateway
+    ports:
+      - "18095:80"

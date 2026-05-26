@@ -1,7 +1,64 @@
 server:
   port: 18090
-services:
-  auth: ${AUTH_SERVICE_URL:http://auth-service:18091}
-  product: ${PRODUCT_SERVICE_URL:http://catalog-service:18092}
-  order: ${ORDER_SERVICE_URL:http://order-service:18093}
-  admin: ${ADMIN_SERVICE_URL:http://admin-service:18094}
+spring:
+  application:
+    name: ecommerce-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:nacos:8848}
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+      routes:
+        - id: auth-service
+          uri: lb://ecommerce-auth-service
+          predicates:
+            - Path=/api/auth,/api/auth/**
+          filters:
+            - StripPrefix=1
+        - id: catalog-products
+          uri: lb://ecommerce-catalog-service
+          predicates:
+            - Path=/api/products,/api/products/**
+          filters:
+            - StripPrefix=1
+        - id: catalog-categories
+          uri: lb://ecommerce-catalog-service
+          predicates:
+            - Path=/api/categories,/api/categories/**
+          filters:
+            - RewritePath=/api/categories(?<segment>/?.*), /categories$\{segment}
+        - id: catalog-home
+          uri: lb://ecommerce-catalog-service
+          predicates:
+            - Path=/api/home/**,/api/home
+          filters:
+            - StripPrefix=1
+        - id: catalog-public-extra
+          uri: lb://ecommerce-catalog-service
+          predicates:
+            - Path=/api/marketing,/api/marketing/**,/api/reviews,/api/reviews/**,/api/favorites,/api/favorites/**,/api/files,/api/files/**,/api/announcements,/api/announcements/**,/api/activity-notices,/api/activity-notices/**
+          filters:
+            - StripPrefix=1
+        - id: order-service
+          uri: lb://ecommerce-order-service
+          predicates:
+            - Path=/api/cart,/api/cart/**,/api/orders,/api/orders/**,/api/addresses,/api/addresses/**
+          filters:
+            - StripPrefix=1
+        - id: admin-service
+          uri: lb://ecommerce-admin-service
+          predicates:
+            - Path=/api/admin,/api/admin/**
+          filters:
+            - StripPrefix=1
