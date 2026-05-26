@@ -1,0 +1,9 @@
+server:
+  port: 18094
+spring:
+  application:
+    name: ecommerce-admin-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}

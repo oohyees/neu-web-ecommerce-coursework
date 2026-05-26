@@ -1,0 +1,79 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: ecommerce_minimal
+    ports:
+      - "18096:3306"
+    volumes:
+      - ./ecommerce-minimal/backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./ecommerce-minimal/backend/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "18097:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  auth-service:
+    build: ./ecommerce-auth-service
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      REDIS_HOST: redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "18091:18091"
+
+  product-service:
+    build: ./ecommerce-product-service
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "18092:18092"
+
+  order-service:
+    build: ./ecommerce-order-service
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "18093:18093"
+
+  admin-service:
+    build: ./ecommerce-admin-service
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "18094:18094"
+
+  gateway:
+    build: ./ecommerce-gateway
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - admin-service
+    ports:
+      - "18090:18090"
