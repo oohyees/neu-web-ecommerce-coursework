@@ -22,8 +22,8 @@
 | 进阶 | 导入导出 | ✅ | 商品/订单/看板 | `GET /api/*/export`, `POST /api/products/admin/import` | 商品CSV导入、商品Excel导出、订单Excel导出、看板Excel导出 |
 | 进阶 | 响应式/上传/分页 | ✅ | 全站 | `POST /api/files/upload` | @media 768px/1100px断点、图片上传、所有列表page/size分页 |
 | 拓展 | Redis 缓存 | ✅ | 后台 | `@Cacheable` 首页+商品详情, Session存Redis, 验证码节流 | Redis CLI验证缓存键 |
-| 拓展 | 微服务 | ✅ | `microservices/` | auth-service(8081), product-service(8082), order-service(8083) + Nginx(8088) | 三服务独立启动、网关转发 |
-| 拓展 | Docker | ✅ | 根目录 + `microservices/` | docker-compose.yml × 2 | 主栈(单体+前端+MySQL+Redis)、微服务栈(三服务+网关+前端) |
+| 拓展 | 微服务 | ✅ | `ecommerce-gateway`, `ecommerce-*-service`, `ecommerce-common`, `ecommerce-frontend` | gateway(18090), auth-service(18091), product-service(18092), order-service(18093), admin-service(18094) | 多工程独立构建、网关转发 |
+| 拓展 | Docker | ✅ | `ecommerce-minimal/` + 外层微服务工程 | `docker-compose.yml`, `../docker-compose.microservices.yml` | 主栈(单体+前端+MySQL+Redis)、微服务栈(网关+多服务+共享MySQL/Redis) |
 | 拓展 | Shiro | ✅ | 后台 | `ShiroRealm` + `ShiroConfig` (`@Profile("shiro")` 激活) | 认证鉴权框架运用 |
 | 拓展 | WebSocket | ✅ | 客服页 | `ChatWebSocketHandler` + `/ws/chat/{userId}` | 实时在线聊天 |
 
