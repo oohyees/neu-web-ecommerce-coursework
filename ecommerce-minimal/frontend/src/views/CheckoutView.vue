@@ -94,17 +94,23 @@ const discount = computed(() => activeCoupon.value && total.value >= activeCoupo
 const payable = computed(() => Math.max(0, total.value - discount.value).toFixed(2))
 
 async function load() {
-  const selectedIds = JSON.parse(sessionStorage.getItem('checkoutProductIds') || '[]')
-  items.value = (await api.get('/cart', { params: { userId: session.userId } })).data.data.filter(i => !selectedIds.length || selectedIds.includes(i.productId))
+  const selectedCartItemIds = JSON.parse(sessionStorage.getItem('checkoutCartItemIds') || '[]')
+  const selectedProductIds = JSON.parse(sessionStorage.getItem('checkoutProductIds') || '[]')
+  items.value = (await api.get('/cart')).data.data.filter(i => {
+    if (selectedCartItemIds.length) return selectedCartItemIds.includes(i.id)
+    return !selectedProductIds.length || selectedProductIds.includes(i.productId)
+  })
   addresses.value = (await api.get('/addresses', { params: { userId: session.userId } })).data.data || []
   coupons.value = (await api.get(`/marketing/coupons/user/${session.userId}`)).data.data || []
   const defaultAddress = addresses.value.find(a => a.isDefault) || addresses.value[0]
   if (defaultAddress) addressId.value = defaultAddress.id
 }
 async function submit() {
+  const cartItemIds = JSON.parse(sessionStorage.getItem('checkoutCartItemIds') || '[]')
   const productIds = JSON.parse(sessionStorage.getItem('checkoutProductIds') || '[]')
-  const { data } = await api.post('/orders', { userId: session.userId, addressId: addressId.value, productIds, couponId: couponId.value, paymentMethod: paymentMethod.value })
+  const { data } = await api.post('/orders', { addressId: addressId.value, cartItemIds, productIds, couponId: couponId.value, paymentMethod: paymentMethod.value })
   if (!data.success) return ElMessage.error(data.message)
+  sessionStorage.removeItem('checkoutCartItemIds')
   sessionStorage.removeItem('checkoutProductIds')
   ElMessage.success(`下单成功：${data.data.orderNo}`)
   router.push('/orders')

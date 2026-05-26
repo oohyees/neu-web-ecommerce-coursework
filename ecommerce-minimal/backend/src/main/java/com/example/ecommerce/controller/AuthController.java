@@ -1,9 +1,11 @@
 package com.example.ecommerce.controller;
 
 import com.example.ecommerce.common.ApiResponse;
+import com.example.ecommerce.common.CurrentSession;
 import com.example.ecommerce.model.User;
 import com.example.ecommerce.service.AuthService;
 import com.example.ecommerce.service.SessionService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -79,19 +81,20 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public ApiResponse<?> profile(@RequestParam Long userId) {
-        return ApiResponse.ok(authService.getUser(userId));
+    public ApiResponse<?> profile(HttpServletRequest request) {
+        return ApiResponse.ok(authService.getUser(CurrentSession.userId(request)));
     }
 
     @PutMapping("/profile")
-    public ApiResponse<?> updateProfile(@RequestBody User user) {
+    public ApiResponse<?> updateProfile(@RequestBody User user, HttpServletRequest request) {
+        user.setId(CurrentSession.userId(request));
         authService.updateProfile(user);
         return ApiResponse.ok(authService.getUser(user.getId()));
     }
 
     @PutMapping("/password")
-    public ApiResponse<?> changePassword(@RequestBody Map<String,String> body){
-        int updated=authService.updatePasswordById(Long.valueOf(body.get("userId")),body.get("oldPassword"),body.get("newPassword"));
+    public ApiResponse<?> changePassword(@RequestBody Map<String,String> body, HttpServletRequest request){
+        int updated=authService.updatePasswordById(CurrentSession.userId(request),body.get("oldPassword"),body.get("newPassword"));
         return updated==0?ApiResponse.fail("原密码错误"):ApiResponse.ok(null);
     }
 
@@ -106,16 +109,17 @@ public class AuthController {
     }
 
     @PutMapping("/admin/password")
-    public ApiResponse<?> changeAdminPassword(@RequestBody Map<String,String> body){
-        int updated=authService.updateAdminPassword(Long.valueOf(body.get("adminId")),body.get("oldPassword"),body.get("newPassword"));
+    public ApiResponse<?> changeAdminPassword(@RequestBody Map<String,String> body, HttpServletRequest request){
+        int updated=authService.updateAdminPassword(CurrentSession.adminId(request),body.get("oldPassword"),body.get("newPassword"));
         return updated==0?ApiResponse.fail("原密码错误"):ApiResponse.ok(null);
     }
     @GetMapping("/admin/profile")
-    public ApiResponse<?> adminProfile(@RequestParam Long adminId){return ApiResponse.ok(authService.getAdminProfile(adminId));}
+    public ApiResponse<?> adminProfile(HttpServletRequest request){return ApiResponse.ok(authService.getAdminProfile(CurrentSession.adminId(request)));}
     @PutMapping("/admin/profile")
-    public ApiResponse<?> updateAdminProfile(@RequestBody Map<String,String> body){
-        authService.updateAdminProfile(Long.valueOf(body.get("adminId")),body.get("nickname"),body.get("email"),body.get("phone"));
-        return ApiResponse.ok(authService.getAdminProfile(Long.valueOf(body.get("adminId"))));
+    public ApiResponse<?> updateAdminProfile(@RequestBody Map<String,String> body, HttpServletRequest request){
+        long adminId = CurrentSession.adminId(request);
+        authService.updateAdminProfile(adminId,body.get("nickname"),body.get("email"),body.get("phone"));
+        return ApiResponse.ok(authService.getAdminProfile(adminId));
     }
 
     @GetMapping("/admin/users")
@@ -181,7 +185,7 @@ public class AuthController {
         if (body.get("username") == null || body.get("password") == null) return ApiResponse.fail("用户名和密码必填");
         String role = body.getOrDefault("role", "ADMIN");
         if (!java.util.Set.of("ADMIN", "SUPER_ADMIN").contains(role)) return ApiResponse.fail("无效的角色");
-        authService.getAuthMapper().insertAdmin(body.get("username"), body.get("password"), body.getOrDefault("nickname", ""), body.getOrDefault("email", ""), body.getOrDefault("phone", ""), role);
+        authService.getAuthMapper().insertAdmin(body.get("username"), authService.encodePassword(body.get("password")), body.getOrDefault("nickname", ""), body.getOrDefault("email", ""), body.getOrDefault("phone", ""), role);
         return ApiResponse.ok(null);
     }
 

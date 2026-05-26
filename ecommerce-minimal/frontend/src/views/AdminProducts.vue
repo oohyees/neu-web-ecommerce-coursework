@@ -48,8 +48,8 @@
         </el-table-column>
       </el-table>
       <EmptyState v-else title="暂无商品数据" description="请先新增商品或调整筛选条件。" />
-      <div v-if="total > size" class="pager">
-        <el-pagination layout="prev, pager, next, total" :total="total" :page-size="size" :current-page="page" @current-change="changePage" />
+      <div v-if="filteredProducts.length > size" class="pager">
+        <el-pagination layout="prev, pager, next, total" :total="filteredProducts.length" :page-size="size" :current-page="page" @current-change="changePage" />
       </div>
     </section>
 
@@ -89,7 +89,6 @@ import AdminPageHeader from '../components/AdminPageHeader.vue'
 import EmptyState from '../components/EmptyState.vue'
 
 const products = ref([])
-const total = ref(0)
 const page = ref(1)
 const size = 10
 const categories = ref([])
@@ -107,7 +106,6 @@ const paginated = computed(() => {
 async function load() {
   const result = (await api.get('/products/admin/all', { params: { page: 1, size: 999 } })).data.data
   products.value = result.items || []
-  total.value = filteredProducts.value.length
   page.value = 1
   categories.value = (await api.get('/categories')).data.data || []
   if (!form.value.categoryId && categories.value.length) form.value.categoryId = categories.value[0].id

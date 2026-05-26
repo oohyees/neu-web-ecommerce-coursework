@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.util.Set;
+
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
     private final SessionService sessionService;
@@ -29,7 +31,9 @@ public class AuthInterceptor implements HandlerInterceptor {
                     || path.equals("/api/home/banners")
                     || path.equals("/api/announcements")
                     || path.equals("/api/activity-notices")
-                    || (path.startsWith("/api/marketing") && !path.startsWith("/api/marketing/admin"))
+                    || path.matches("/api/marketing/specs/\\d+")
+                    || path.equals("/api/marketing/coupons")
+                    || path.equals("/api/marketing/promotions")
                     || path.equals("/api/reviews")
                 ));
         if (publicPath) return true;
@@ -39,11 +43,13 @@ public class AuthInterceptor implements HandlerInterceptor {
             response.setStatus(401);
             return false;
         }
-        if (path.startsWith("/api/admin") && !java.util.Set.of("ADMIN","SUPER_ADMIN").contains(session.role())) {
+        if (isAdminPath(path, method) && !Set.of("ADMIN","SUPER_ADMIN").contains(session.role())) {
             response.setStatus(403);
             return false;
         }
-        boolean superAdminOnly = path.startsWith("/api/admin/users")
+        boolean superAdminOnly = path.startsWith("/api/auth/admin/users")
+                || path.startsWith("/api/auth/admin/admins")
+                || path.startsWith("/api/admin/users")
                 || path.startsWith("/api/admin/activity-notices")
                 || path.startsWith("/api/admin/announcements");
         if (superAdminOnly && !"SUPER_ADMIN".equals(session.role())) {
@@ -52,5 +58,14 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
         request.setAttribute("session", session);
         return true;
+    }
+
+    private boolean isAdminPath(String path, String method) {
+        return path.startsWith("/api/admin")
+                || path.startsWith("/api/auth/admin")
+                || path.startsWith("/api/products/admin")
+                || path.startsWith("/api/marketing/admin")
+                || path.startsWith("/api/reviews/admin")
+                || (path.startsWith("/api/home/banners") && !"GET".equalsIgnoreCase(method));
     }
 }

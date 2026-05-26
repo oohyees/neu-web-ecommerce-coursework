@@ -30,12 +30,13 @@ public class OrderService {
     }
 
     @Transactional
-    public String createOrder(Long userId, Long addressId, java.util.List<Long> productIds, Long couponId, String paymentMethod) {
+    public String createOrder(Long userId, Long addressId, java.util.List<Long> cartItemIds, java.util.List<Long> productIds, Long couponId, String paymentMethod) {
         List<CartItemView> items = cartMapper.findByUserId(userId).stream()
-                .filter(i -> productIds == null || productIds.isEmpty() || productIds.contains(i.getProductId()))
+                .filter(i -> (cartItemIds != null && !cartItemIds.isEmpty()) ? cartItemIds.contains(i.getId()) : (productIds == null || productIds.isEmpty() || productIds.contains(i.getProductId())))
                 .toList();
         if (items.isEmpty()) throw new IllegalStateException("购物车为空");
-        if (addressMapper.findById(addressId) == null) throw new IllegalStateException("收货地址不存在");
+        var address = addressMapper.findById(addressId);
+        if (address == null || !userId.equals(address.getUserId())) throw new IllegalStateException("收货地址不存在");
         BigDecimal subtotal = BigDecimal.ZERO;
         for(CartItemView item:items){
             var flash=marketingMapper.findActiveFlashSale(item.getProductId());
@@ -66,7 +67,8 @@ public class OrderService {
                     item.getPrice(), item.getQuantity(), item.getSubtotal());
         }
         if(couponId!=null && discount.compareTo(BigDecimal.ZERO)>0) marketingMapper.useCoupon(userId,couponId);
-        if(productIds == null || productIds.isEmpty()) cartMapper.clearByUserId(userId);
+        if(cartItemIds != null && !cartItemIds.isEmpty()) cartMapper.deleteSelectedItems(userId, cartItemIds);
+        else if(productIds == null || productIds.isEmpty()) cartMapper.clearByUserId(userId);
         else cartMapper.deleteSelected(userId, productIds);
         return orderNo;
     }

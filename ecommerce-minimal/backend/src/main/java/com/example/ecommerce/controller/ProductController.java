@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.util.Map;
 
 @RestController
@@ -21,11 +22,13 @@ public class ProductController {
     public ApiResponse<?> list(@RequestParam(required = false) Long categoryId,
                                @RequestParam(required = false) String keyword,
                                @RequestParam(required = false) String searchMode,
+                               @RequestParam(required = false) BigDecimal minPrice,
+                               @RequestParam(required = false) BigDecimal maxPrice,
                                @RequestParam(required = false) String sort,
                                @RequestParam(defaultValue = "1") Integer page,
                                @RequestParam(defaultValue = "9") Integer size) {
         int offset=(page-1)*size;
-        return ApiResponse.ok(Map.of("items",productMapper.findAll(categoryId, keyword, searchMode, sort, offset, size),"total",productMapper.countAll(categoryId, keyword, searchMode)));
+        return ApiResponse.ok(Map.of("items",productMapper.findAll(categoryId, keyword, searchMode, minPrice, maxPrice, sort, offset, size),"total",productMapper.countAll(categoryId, keyword, searchMode, minPrice, maxPrice)));
     }
 
     @GetMapping("/{id}")
@@ -38,11 +41,13 @@ public class ProductController {
     public ApiResponse<?> adminList(@RequestParam(required = false) Long categoryId,
                                     @RequestParam(required = false) String keyword,
                                     @RequestParam(required = false) String searchMode,
+                                    @RequestParam(required = false) BigDecimal minPrice,
+                                    @RequestParam(required = false) BigDecimal maxPrice,
                                     @RequestParam(required = false) String sort,
                                     @RequestParam(defaultValue = "1") Integer page,
                                     @RequestParam(defaultValue = "10") Integer size) {
         int offset=(page-1)*size;
-        return ApiResponse.ok(Map.of("items",productMapper.findAllForAdmin(categoryId, keyword, searchMode, sort, offset, size),"total",productMapper.countAllForAdmin(categoryId, keyword, searchMode)));
+        return ApiResponse.ok(Map.of("items",productMapper.findAllForAdmin(categoryId, keyword, searchMode, minPrice, maxPrice, sort, offset, size),"total",productMapper.countAllForAdmin(categoryId, keyword, searchMode, minPrice, maxPrice)));
     }
 
     @PostMapping("/admin")
@@ -75,7 +80,7 @@ public class ProductController {
         response.setHeader("Content-Disposition","attachment; filename=products.xlsx");
         Workbook wb=new XSSFWorkbook(); Sheet sheet=wb.createSheet("products"); String[] headers={"id","categoryId","name","price","stock","sales"};
         Row head=sheet.createRow(0); for(int i=0;i<headers.length;i++)head.createCell(i).setCellValue(headers[i]);
-        int r=1; for(var p:productMapper.findAllForAdmin(null,null,null,null,0,1000)){Row row=sheet.createRow(r++);row.createCell(0).setCellValue(p.getId());row.createCell(1).setCellValue(p.getCategoryId());row.createCell(2).setCellValue(p.getName());row.createCell(3).setCellValue(p.getPrice().doubleValue());row.createCell(4).setCellValue(p.getStock());row.createCell(5).setCellValue(p.getSales());}
+        int r=1; for(var p:productMapper.findAllForAdmin(null,null,null,null,null,null,0,1000)){Row row=sheet.createRow(r++);row.createCell(0).setCellValue(p.getId());row.createCell(1).setCellValue(p.getCategoryId());row.createCell(2).setCellValue(p.getName());row.createCell(3).setCellValue(p.getPrice().doubleValue());row.createCell(4).setCellValue(p.getStock());row.createCell(5).setCellValue(p.getSales());}
         wb.write(response.getOutputStream());wb.close();
     }
 

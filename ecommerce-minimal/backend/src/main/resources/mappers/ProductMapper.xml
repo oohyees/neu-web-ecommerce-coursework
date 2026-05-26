@@ -6,6 +6,8 @@
         <where>
             is_on_sale = 1
             <if test="categoryId != null">and category_id = #{categoryId}</if>
+            <if test="minPrice != null">and price &gt;= #{minPrice}</if>
+            <if test="maxPrice != null">and price &lt;= #{maxPrice}</if>
             <if test="keyword != null and keyword != ''">
                 <choose>
                     <when test="searchMode == 'exact'">and name = #{keyword}</when>
@@ -26,6 +28,8 @@
         <where>
             is_on_sale = 1
             <if test="categoryId != null">and category_id = #{categoryId}</if>
+            <if test="minPrice != null">and price &gt;= #{minPrice}</if>
+            <if test="maxPrice != null">and price &lt;= #{maxPrice}</if>
             <if test="keyword != null and keyword != ''">
                 <choose>
                     <when test="searchMode == 'exact'">and name = #{keyword}</when>
@@ -41,8 +45,16 @@
         select * from product
         <where>
             <if test="categoryId != null">category_id = #{categoryId}</if>
-            <if test="keyword != null and keyword != ''">
+            <if test="minPrice != null">
                 <if test="categoryId != null">and</if>
+                price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                <if test="categoryId != null or minPrice != null">and</if>
+                price &lt;= #{maxPrice}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                <if test="categoryId != null or minPrice != null or maxPrice != null">and</if>
                 <choose>
                     <when test="searchMode == 'exact'">name = #{keyword}</when>
                     <otherwise>name like concat('%', #{keyword}, '%')</otherwise>
@@ -76,8 +88,16 @@
         select count(*) from product
         <where>
             <if test="categoryId != null">category_id = #{categoryId}</if>
-            <if test="keyword != null and keyword != ''">
+            <if test="minPrice != null">
                 <if test="categoryId != null">and</if>
+                price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                <if test="categoryId != null or minPrice != null">and</if>
+                price &lt;= #{maxPrice}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                <if test="categoryId != null or minPrice != null or maxPrice != null">and</if>
                 <choose>
                     <when test="searchMode == 'exact'">name = #{keyword}</when>
                     <otherwise>name like concat('%', #{keyword}, '%')</otherwise>

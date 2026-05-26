@@ -200,7 +200,9 @@ CREATE TABLE customer_consultation (
 CREATE TABLE feedback (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   user_id BIGINT NOT NULL,
+  type VARCHAR(32),
   content VARCHAR(500) NOT NULL,
+  contact VARCHAR(128),
   reply VARCHAR(500),
   status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
   created_at DATETIME NOT NULL

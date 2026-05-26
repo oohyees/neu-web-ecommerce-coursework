@@ -18,12 +18,12 @@
         update user_address
         set receiver_name = #{receiverName}, phone = #{phone}, province = #{province}, city = #{city},
             district = #{district}, detail_address = #{detailAddress}, is_default = #{isDefault}
-        where id = #{id}
+        where id = #{id} and user_id = #{userId}
     </update>
     <delete id="delete">
-        delete from user_address where id = #{id}
+        delete from user_address where id = #{id} and user_id = #{userId}
     </delete>
     <update id="setDefault">
-        update user_address set is_default = 1 where id = #{id}
+        update user_address set is_default = 1 where id = #{id} and user_id = #{userId}
     </update>
 </mapper>

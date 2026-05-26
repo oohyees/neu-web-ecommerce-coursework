@@ -8,6 +8,7 @@
       <el-input v-model="keyword" placeholder="订单号 / 用户" style="width:240px" clearable @keyup.enter="load" />
       <el-select v-model="status" placeholder="订单状态" clearable style="width:160px" @change="load">
         <el-option label="待处理" value="CREATED" />
+        <el-option label="待发货" value="PAID" />
         <el-option label="已发货" value="SHIPPED" />
         <el-option label="已完成" value="COMPLETED" />
         <el-option label="已取消" value="CANCELLED" />
@@ -28,7 +29,7 @@
         <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
             <div class="table-actions">
-              <el-button v-if="row.status==='CREATED'" link type="danger" size="small" @click="ship(row.id)">发货</el-button>
+              <el-button v-if="row.status==='PAID'" link type="danger" size="small" @click="ship(row.id)">发货</el-button>
               <el-button v-if="row.refundStatus==='REQUESTED'" link size="small" @click="approveRefund(row.id)">同意退款</el-button>
               <el-button link size="small" @click="openDetail(row)">详情</el-button>
               <el-dropdown @command="cmd => updateStatus(row.id, cmd)">
@@ -36,6 +37,7 @@
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="CREATED">待处理</el-dropdown-item>
+                    <el-dropdown-item command="PAID">待发货</el-dropdown-item>
                     <el-dropdown-item command="SHIPPED">已发货</el-dropdown-item>
                     <el-dropdown-item command="COMPLETED">已完成</el-dropdown-item>
                     <el-dropdown-item command="CANCELLED">已取消</el-dropdown-item>

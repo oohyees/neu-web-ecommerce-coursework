@@ -23,6 +23,7 @@
               <template #append><el-button @click="load">搜索</el-button></template>
             </el-input>
           </div>
+          <el-segmented v-model="filters.searchMode" :options="searchModeOptions" @change="searchAgain" />
           <div class="price-filter">
             <el-input-number v-model="minPrice" :min="0" placeholder="最低价" controls-position="right" />
             <span class="price-gap">-</span>
@@ -71,7 +72,11 @@ const total = ref(0)
 const categories = ref([])
 const minPrice = ref(null)
 const maxPrice = ref(null)
-const filters = ref({ categoryId: null, keyword: '', sort: 'default', page: 1, size: 12 })
+const filters = ref({ categoryId: null, keyword: '', searchMode: 'fuzzy', sort: 'default', page: 1, size: 12 })
+const searchModeOptions = [
+  { label: '模糊', value: 'fuzzy' },
+  { label: '精准', value: 'exact' }
+]
 const sortOptions = [
   { label: '综合', value: 'default' },
   { label: '新品', value: 'newest' },
@@ -84,11 +89,11 @@ async function load() {
   const params = { page: filters.value.page, size: filters.value.size, sort: filters.value.sort }
   if (filters.value.categoryId) params.categoryId = filters.value.categoryId
   if (filters.value.keyword) params.keyword = filters.value.keyword
+  if (filters.value.keyword) params.searchMode = filters.value.searchMode
+  if (minPrice.value != null) params.minPrice = minPrice.value
+  if (maxPrice.value != null) params.maxPrice = maxPrice.value
   const result = (await api.get('/products', { params })).data.data
-  let items = result.items || []
-  if (minPrice.value != null) items = items.filter(p => Number(p.price) >= Number(minPrice.value))
-  if (maxPrice.value != null) items = items.filter(p => Number(p.price) <= Number(maxPrice.value))
-  products.value = items
+  products.value = result.items || []
   total.value = result.total || 0
 }
 
@@ -99,6 +104,7 @@ function changePage(page) {
 }
 function setCategory(categoryId) { filters.value.categoryId = categoryId; filters.value.page = 1; load() }
 function setSort(sort) { filters.value.sort = sort; filters.value.page = 1; load() }
+function searchAgain() { filters.value.page = 1; load() }
 
 async function add(product) {
   if (!session.userId) return ElMessage.warning('请先登录后加入购物车')

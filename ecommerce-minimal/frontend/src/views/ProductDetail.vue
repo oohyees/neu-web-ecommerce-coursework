@@ -125,7 +125,16 @@ async function add() {
 async function buyNow() {
   const ok = await add()
   if (!ok) return
-  sessionStorage.setItem('checkoutProductIds', JSON.stringify([Number(route.params.id)]))
+  const currentSpecText = specText.value
+  const productId = Number(route.params.id)
+  const cartItems = (await api.get('/cart')).data.data || []
+  const matchedItem = cartItems.find(i => i.productId === productId && (i.specText || '') === (currentSpecText || ''))
+  if (!matchedItem) {
+    ElMessage.error('未能定位刚加入购物车的商品，请稍后重试')
+    return
+  }
+  sessionStorage.setItem('checkoutCartItemIds', JSON.stringify([matchedItem.id]))
+  sessionStorage.removeItem('checkoutProductIds')
   router.push('/checkout')
 }
 async function toggleFavorite() {

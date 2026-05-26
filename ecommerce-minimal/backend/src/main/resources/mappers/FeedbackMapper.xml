@@ -3,7 +3,7 @@
 <mapper namespace="com.example.ecommerce.mapper.FeedbackMapper">
   <select id="findAll" resultType="com.example.ecommerce.model.Feedback">select * from feedback order by created_at desc,id desc</select>
   <select id="findByUserId" resultType="com.example.ecommerce.model.Feedback">select * from feedback where user_id=#{userId} order by created_at desc,id desc</select>
-  <insert id="insert" useGeneratedKeys="true" keyProperty="id">insert into feedback(user_id,content,reply,status,created_at) values(#{userId},#{content},#{reply},#{status},#{createdAt})</insert>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">insert into feedback(user_id,type,content,contact,reply,status,created_at) values(#{userId},#{type},#{content},#{contact},#{reply},#{status},#{createdAt})</insert>
   <update id="reply">update feedback set reply=#{reply},status=#{status} where id=#{id}</update>
   <update id="markProcessed">update feedback set status='PROCESSED' where id=#{id}</update>
 </mapper>

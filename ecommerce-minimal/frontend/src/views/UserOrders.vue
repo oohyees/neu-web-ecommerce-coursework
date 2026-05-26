@@ -83,7 +83,7 @@ const detailVisible = ref(false)
 async function load() {
   const params = { userId: session.userId }
   if (filterKey.value === 'UNPAID') params.paymentStatus = 'UNPAID'
-  else if (filterKey.value === 'PAID') { params.status = 'CREATED'; params.paymentStatus = 'PAID' }
+  else if (filterKey.value === 'PAID') params.status = 'PAID'
   else if (filterKey.value) params.status = filterKey.value
   orders.value = (await api.get('/orders', { params })).data.data || []
 }

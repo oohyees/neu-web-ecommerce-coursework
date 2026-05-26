@@ -7,6 +7,7 @@ import java.util.Map;
 
 public interface AuthMapper {
     User findUser(@Param("username") String username, @Param("password") String password);
+    Map<String,Object> findUserCredentials(@Param("username") String username);
     User findUserById(Long id);
     User findUserByUsername(String username);
     User findUserByEmail(String email);
@@ -14,11 +15,14 @@ public interface AuthMapper {
     int updateProfile(User user);
     int updatePassword(@Param("email") String email, @Param("password") String password);
     int updatePasswordById(@Param("id") Long id, @Param("oldPassword") String oldPassword, @Param("newPassword") String newPassword);
+    int updateUserPasswordHash(@Param("id") Long id, @Param("password") String password);
     List<User> findUsers(@Param("keyword") String keyword, @Param("offset") Integer offset, @Param("size") Integer size);
     int countUsers(@Param("keyword") String keyword);
     int updateEnabled(@Param("id") Long id, @Param("enabled") Boolean enabled);
     Map<String,Object> findAdminProfileByCredentials(@Param("username") String username, @Param("password") String password);
+    Map<String,Object> findAdminCredentials(@Param("username") String username);
     int updateAdminPassword(@Param("id") Long id, @Param("oldPassword") String oldPassword, @Param("newPassword") String newPassword);
+    int updateAdminPasswordHash(@Param("id") Long id, @Param("password") String password);
     Map<String,Object> findAdminProfile(Long id);
     int updateAdminProfile(@Param("id") Long id,@Param("nickname") String nickname,@Param("email") String email,@Param("phone") String phone);
     // 管理员账号管理

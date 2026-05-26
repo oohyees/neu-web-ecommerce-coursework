@@ -10,7 +10,7 @@
             <strong>{{ group.name }}</strong>
             <span>{{ group.children.map(c => c.name).slice(0, 3).join(' / ') || '精选好物' }}</span>
           </button>
-          <p v-if="!categoryGroups.length" class="empty-tip">暂无分类，请在后台维护分类数据。</p>
+          <p v-if="categoriesLoaded && !categoryGroups.length" class="empty-tip">暂无分类，请在后台维护分类数据。</p>
         </aside>
 
         <!-- 中间 Banner -->
@@ -106,6 +106,7 @@ const notices = ref([])
 const promotions = ref([])
 const categories = ref([])
 const coupons = ref([])
+const categoriesLoaded = ref(false)
 
 const categoryGroups = computed(() => categories.value.filter(c => !c.parentId).map(parent => ({
   ...parent,
@@ -131,12 +132,21 @@ async function favorite(product) {
 }
 
 onMounted(async () => {
-  data.value = (await api.get('/home')).data.data || data.value
-  announcements.value = (await api.get('/announcements')).data.data || []
-  notices.value = (await api.get('/activity-notices')).data.data || []
-  promotions.value = (await api.get('/marketing/promotions')).data.data || []
-  categories.value = (await api.get('/categories')).data.data || []
-  coupons.value = (await api.get('/marketing/coupons')).data.data || []
+  const [homeRes, announcementRes, noticeRes, promotionRes, categoryRes, couponRes] = await Promise.all([
+    api.get('/home'),
+    api.get('/announcements'),
+    api.get('/activity-notices'),
+    api.get('/marketing/promotions'),
+    api.get('/categories'),
+    api.get('/marketing/coupons')
+  ])
+  data.value = homeRes.data.data || data.value
+  announcements.value = announcementRes.data.data || []
+  notices.value = noticeRes.data.data || []
+  promotions.value = promotionRes.data.data || []
+  categories.value = categoryRes.data.data || []
+  categoriesLoaded.value = true
+  coupons.value = couponRes.data.data || []
 })
 </script>
 

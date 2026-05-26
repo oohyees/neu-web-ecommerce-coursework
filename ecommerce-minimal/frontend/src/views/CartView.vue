@@ -40,7 +40,7 @@
         </el-table-column>
         <el-table-column label="数量" width="160">
           <template #default="{ row }">
-            <el-input-number :model-value="row.quantity" :min="1" :max="99" size="small" @change="value => updateQuantity(row.productId, value)" />
+            <el-input-number :model-value="row.quantity" :min="1" :max="99" size="small" @change="value => updateQuantity(row, value)" />
           </template>
         </el-table-column>
         <el-table-column label="小计" width="120">
@@ -48,14 +48,14 @@
         </el-table-column>
         <el-table-column label="操作" width="90">
           <template #default="{ row }">
-            <el-button type="danger" link @click="removeItem(row.productId)">删除</el-button>
+            <el-button type="danger" link @click="removeItem(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
 
       <!-- 移动端列表 -->
       <section class="mobile-cart mobile-only">
-        <article v-for="row in items" :key="row.productId" class="mobile-item">
+        <article v-for="row in items" :key="row.id" class="mobile-item">
           <el-checkbox :model-value="selected.includes(row)" @change="checked => toggleMobile(row, checked)" />
           <img :src="row.imageUrl" @error="imgFallback" />
           <div>
@@ -63,9 +63,9 @@
             <span>{{ row.specText || '默认规格' }}</span>
             <div class="mobile-price-qty">
               <b class="price">&yen;{{ row.subtotal }}</b>
-              <el-input-number :model-value="row.quantity" :min="1" size="small" @change="value => updateQuantity(row.productId, value)" />
+              <el-input-number :model-value="row.quantity" :min="1" size="small" @change="value => updateQuantity(row, value)" />
             </div>
-            <el-button type="danger" link size="small" @click="removeItem(row.productId)">删除</el-button>
+            <el-button type="danger" link size="small" @click="removeItem(row)">删除</el-button>
           </div>
         </article>
       </section>
@@ -121,15 +121,15 @@ async function load() {
   }
 }
 
-async function updateQuantity(productId, quantity) {
-  await api.put('/cart/items', { userId: session.userId, productId, quantity })
+async function updateQuantity(row, quantity) {
+  await api.put('/cart/items', { cartItemId: row.id, productId: row.productId, specText: row.specText, quantity })
   load()
 }
 
-async function removeItem(productId) {
+async function removeItem(row) {
   try {
     await ElMessageBox.confirm('确定要删除该商品吗？', '确认删除', { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' })
-    await api.delete('/cart/items', { params: { userId: session.userId, productId } })
+    await api.delete('/cart/items', { params: { cartItemId: row.id, productId: row.productId, specText: row.specText } })
     ElMessage.success('已删除')
     load()
   } catch { /* user cancelled */ }
@@ -151,7 +151,7 @@ function toggleMobile(row, checked) {
   selected.value = checked ? [...selected.value, row] : selected.value.filter(i => i !== row)
 }
 function checkout() {
-  sessionStorage.setItem('checkoutProductIds', JSON.stringify(selected.value.map(i => i.productId)))
+  sessionStorage.setItem('checkoutCartItemIds', JSON.stringify(selected.value.map(i => i.id)))
   router.push('/checkout')
 }
 function imgFallback(e) {

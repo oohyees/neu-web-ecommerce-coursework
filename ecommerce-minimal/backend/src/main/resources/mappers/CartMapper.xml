@@ -7,7 +7,7 @@
         on duplicate key update quantity = quantity + values(quantity)
     </insert>
     <select id="findByUserId" resultType="com.example.ecommerce.model.CartItemView">
-        select p.id as product_id, p.name as product_name, c.spec_text, p.image_url, p.price, c.quantity,
+        select c.id, p.id as product_id, p.name as product_name, c.spec_text, p.image_url, p.price, c.quantity,
                p.price * c.quantity as subtotal
         from cart_item c
         join product p on p.id = c.product_id
@@ -16,10 +16,31 @@
     </select>
     <update id="updateQuantity">
         update cart_item set quantity = #{quantity}
-        where user_id = #{userId} and product_id = #{productId}
+        where user_id = #{userId}
+        <choose>
+            <when test="cartItemId != null">and id = #{cartItemId}</when>
+            <otherwise>
+                and product_id = #{productId}
+                <choose>
+                    <when test="specText != null">and spec_text = #{specText}</when>
+                    <otherwise>and spec_text is null</otherwise>
+                </choose>
+            </otherwise>
+        </choose>
     </update>
     <delete id="deleteItem">
-        delete from cart_item where user_id = #{userId} and product_id = #{productId}
+        delete from cart_item
+        where user_id = #{userId}
+        <choose>
+            <when test="cartItemId != null">and id = #{cartItemId}</when>
+            <otherwise>
+                and product_id = #{productId}
+                <choose>
+                    <when test="specText != null">and spec_text = #{specText}</when>
+                    <otherwise>and spec_text is null</otherwise>
+                </choose>
+            </otherwise>
+        </choose>
     </delete>
     <delete id="clearByUserId">
         delete from cart_item where user_id = #{userId}
@@ -27,5 +48,9 @@
     <delete id="deleteSelected">
         delete from cart_item where user_id=#{userId} and product_id in
         <foreach collection="productIds" item="id" open="(" close=")" separator=",">#{id}</foreach>
+    </delete>
+    <delete id="deleteSelectedItems">
+        delete from cart_item where user_id=#{userId} and id in
+        <foreach collection="cartItemIds" item="id" open="(" close=")" separator=",">#{id}</foreach>
     </delete>
 </mapper>

@@ -4,6 +4,9 @@
     <select id="findUser" resultType="com.example.ecommerce.model.User">
         select * from user where username = #{username} and password = #{password}
     </select>
+    <select id="findUserCredentials" resultType="map">
+        select id, username, password, enabled from user where username = #{username}
+    </select>
     <select id="findUserById" resultType="com.example.ecommerce.model.User">
         select * from user where id = #{id}
     </select>
@@ -23,6 +26,7 @@
     </update>
     <update id="updatePassword">update user set password=#{password} where email=#{email}</update>
     <update id="updatePasswordById">update user set password=#{newPassword} where id=#{id} and password=#{oldPassword}</update>
+    <update id="updateUserPasswordHash">update user set password=#{password} where id=#{id}</update>
     <select id="findUsers" resultType="com.example.ecommerce.model.User">
         select * from user
         <where>
@@ -44,7 +48,11 @@
     <select id="findAdminProfileByCredentials" resultType="map">
         select id,username,nickname,email,phone,role from admin_user where username = #{username} and password = #{password}
     </select>
+    <select id="findAdminCredentials" resultType="map">
+        select id,username,password,role from admin_user where username = #{username}
+    </select>
     <update id="updateAdminPassword">update admin_user set password=#{newPassword} where id=#{id} and password=#{oldPassword}</update>
+    <update id="updateAdminPasswordHash">update admin_user set password=#{password} where id=#{id}</update>
     <select id="findAdminProfile" resultType="map">select id,username,nickname,email,phone,role from admin_user where id=#{id}</select>
     <update id="updateAdminProfile">update admin_user set nickname=#{nickname},email=#{email},phone=#{phone} where id=#{id}</update>
     <!-- 管理员账号管理 -->

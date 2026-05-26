@@ -3,6 +3,7 @@ package com.example.ecommerce.model;
 import java.math.BigDecimal;
 
 public class CartItemView {
+    private Long id;
     private Long productId;
     private String productName;
     private String specText;
@@ -10,6 +11,8 @@ public class CartItemView {
     private BigDecimal price;
     private Integer quantity;
     private BigDecimal subtotal;
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     public Long getProductId() { return productId; }
     public void setProductId(Long productId) { this.productId = productId; }
     public String getProductName() { return productName; }
