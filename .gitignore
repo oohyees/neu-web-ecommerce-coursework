@@ -4,6 +4,8 @@ target/
 
 # ===== 构建产物 =====
 dist/
+submission/
+*.zip
 
 # ===== 日志（运行时生成，收拢在 logs/）=====
 logs/
@@ -34,3 +36,4 @@ logs/
 .idea/
 .vscode/
 *.iml
+.DS_Store
