@@ -18,9 +18,8 @@ libs/
   common/              公共响应与会话模型
 docs/
   course/              课程资料
-  report/              实验报告正文和素材索引
-  acceptance/          验收清单、评分证据、截图材料
-  dev-log/             开发记录
+  course/acceptance/   验收清单、评分证据、截图材料
+  archive/             历史记录，仅作追溯参考
 scripts/
   acceptance_check.sh
   microservices_smoke_test.sh
@@ -33,7 +32,7 @@ scripts/
 - Frontend: Vue 3, Vite, Element Plus, Pinia, ECharts
 - Backend: Java 17, Spring Boot 3.2.4, Spring Cloud 2023.0.1, Spring Cloud Alibaba 2023.0.1.0, MyBatis, MySQL, Redis
 - Microservices: Spring Cloud Gateway, Nacos Discovery, OpenFeign, Spring Cloud LoadBalancer
-- Deployment: Docker Compose, Nginx, Nacos
+- Deployment: Docker Compose, Nginx, Nacos, MailHog local SMTP capture
 - Course evidence: Servlet, JSP, Listener, Filter, JDBC
 
 ## Run Monolith Stack
@@ -44,12 +43,15 @@ npm --prefix apps/web install
 npm --prefix apps/web run build
 docker compose up -d --build
 ./scripts/acceptance_check.sh
+python3 scripts/acceptance_api_smoke.py
+mvn test
 ```
 
 URLs:
 
 - Frontend: `http://localhost:18081`
 - Backend API: `http://localhost:18080/api`
+- MailHog inbox: `http://localhost:18099`
 - Legacy status page: `http://localhost:18080/legacy/status`
 
 Default accounts:
@@ -74,8 +76,13 @@ URLs:
 - Order service: `http://localhost:18093`
 - Admin service: `http://localhost:18094`
 - Nacos console: `http://localhost:18098/nacos`
+- MailHog inbox: `http://localhost:18199`
 
 The microservice smoke test checks Nacos registration, Gateway routing, Redis token authentication, `401/403` permission behavior, user/admin login, cart access, order creation, stock deduction, and Feign log evidence between `order-service` and `catalog-service`.
+
+Email verification is a real SMTP flow. Docker starts MailHog and configures the backend to send verification emails to it; the frontend never receives a fixed code from the API. For automated monolith smoke testing, `scripts/acceptance_api_smoke.py` reads the verification code from MailHog through `ACCEPTANCE_MAILHOG_URL` (`http://localhost:18099` by default).
+
+`mvn test` expects the Docker MySQL, Redis, and MailHog dependencies to be running; the default compose stack exposes them on `13306`, `6380`, and `11025`.
 
 By default the smoke test creates a real demo order and deducts product stock. To run a non-mutating environment check, use:
 

@@ -2,6 +2,8 @@
 
 This repository is a course ecommerce platform organized as a monorepo.
 
+For the current handoff state, verification results, remaining work, and grading-risk notes, read `AGENTS.md` first.
+
 ## Layout
 
 - `apps/api`: Spring Boot monolith backend. It contains the full business implementation and the course-required legacy Servlet/JSP/Listener/Filter/JDBC module.
@@ -46,3 +48,4 @@ Default accounts:
 - User-facing APIs should derive the current user from the Redis-backed token session, not from client-supplied `userId`.
 - Admin APIs are role-protected by `ADMIN` / `SUPER_ADMIN`.
 - Generated artifacts such as `target`, `dist`, `node_modules`, `submission`, browser profiles, uploads, and logs are not source.
+- Current active course evidence lives under `docs/course/acceptance`; `docs/archive` is historical only.
