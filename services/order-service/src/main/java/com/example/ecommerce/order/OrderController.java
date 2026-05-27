@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,6 +48,9 @@ public class OrderController {
         if (body.get("cartItemId") != null || body.get("id") != null) {
             updated = jdbc.update("update cart_item set quantity=? where id=? and user_id=?",
                     intValue(body.get("quantity"), 1), longValue(body.getOrDefault("cartItemId", body.get("id"))), userId);
+        } else if (body.get("specText") == null) {
+            updated = jdbc.update("update cart_item set quantity=? where user_id=? and product_id=?",
+                    intValue(body.get("quantity"), 1), userId, longValue(body.get("productId")));
         } else {
             updated = jdbc.update("update cart_item set quantity=? where user_id=? and product_id=? and (spec_text <=> ?)",
                     intValue(body.get("quantity"), 1), userId, longValue(body.get("productId")), stringValue(body.get("specText")));
@@ -71,6 +75,55 @@ public class OrderController {
                        detail_address detailAddress,is_default isDefault
                 from user_address where user_id=? order by is_default desc,id
                 """, userId));
+    }
+
+    @PostMapping("/addresses")
+    public ApiResponse<?> createAddress(@RequestHeader("X-User-Id") Long userId, @RequestBody Map<String, Object> body) {
+        if (boolValue(body.get("isDefault"))) jdbc.update("update user_address set is_default=0 where user_id=?", userId);
+        jdbc.update("""
+                insert into user_address(user_id,receiver_name,phone,province,city,district,detail_address,is_default)
+                values(?,?,?,?,?,?,?,?)
+                """, userId, stringValue(body.get("receiverName")), stringValue(body.get("phone")),
+                stringValue(body.get("province")), stringValue(body.get("city")), stringValue(body.get("district")),
+                stringValue(body.get("detailAddress")), boolValue(body.get("isDefault")) ? 1 : 0);
+        Long id = jdbc.queryForObject("select last_insert_id()", Long.class);
+        return ApiResponse.ok(jdbc.queryForMap("""
+                select id,user_id userId,receiver_name receiverName,phone,province,city,district,
+                       detail_address detailAddress,is_default isDefault
+                from user_address where id=?
+                """, id));
+    }
+
+    @PutMapping("/addresses")
+    public ApiResponse<?> updateAddress(@RequestHeader("X-User-Id") Long userId, @RequestBody Map<String, Object> body) {
+        Long id = longValue(body.get("id"));
+        if (boolValue(body.get("isDefault"))) jdbc.update("update user_address set is_default=0 where user_id=?", userId);
+        int updated = jdbc.update("""
+                update user_address set receiver_name=?,phone=?,province=?,city=?,district=?,detail_address=?,is_default=?
+                where id=? and user_id=?
+                """, stringValue(body.get("receiverName")), stringValue(body.get("phone")),
+                stringValue(body.get("province")), stringValue(body.get("city")), stringValue(body.get("district")),
+                stringValue(body.get("detailAddress")), boolValue(body.get("isDefault")) ? 1 : 0, id, userId);
+        if (updated == 0) return ApiResponse.fail("收货地址不存在");
+        return ApiResponse.ok(jdbc.queryForMap("""
+                select id,user_id userId,receiver_name receiverName,phone,province,city,district,
+                       detail_address detailAddress,is_default isDefault
+                from user_address where id=?
+                """, id));
+    }
+
+    @DeleteMapping("/addresses/{id}")
+    public ApiResponse<?> deleteAddress(@RequestHeader("X-User-Id") Long userId, @PathVariable Long id) {
+        jdbc.update("delete from user_address where id=? and user_id=?", id, userId);
+        return ApiResponse.ok(null);
+    }
+
+    @PutMapping("/addresses/{id}/default")
+    public ApiResponse<?> setDefaultAddress(@RequestHeader("X-User-Id") Long userId, @PathVariable Long id) {
+        if (!ownsAddress(userId, id)) return ApiResponse.fail("收货地址不存在");
+        jdbc.update("update user_address set is_default=0 where user_id=?", userId);
+        jdbc.update("update user_address set is_default=1 where id=? and user_id=?", id, userId);
+        return ApiResponse.ok(null);
     }
 
     @PostMapping("/orders")
@@ -160,9 +213,14 @@ public class OrderController {
         Map<String, Object> order = orders.get(0);
         if ("USER".equals(role) && !userId.equals(longValue(order.get("userId")))) return ApiResponse.fail("无权访问该订单");
         var items = jdbc.queryForList("select product_name productName,spec_text specText,unit_price unitPrice,quantity,subtotal from order_item where order_id=? order by id", id);
-        var address = jdbc.queryForMap("select province,city,district,detail_address detailAddress from user_address where id=?", longValue(order.get("addressId")));
+        var addresses = jdbc.queryForList("select province,city,district,detail_address detailAddress from user_address where id=?", longValue(order.get("addressId")));
         var logistics = jdbc.queryForList("select id,content,created_at createdAt from order_logistics where order_id=? order by created_at,id", id);
-        return ApiResponse.ok(Map.of("order", order, "items", items, "address", address, "logistics", logistics));
+        Map<String,Object> data = new LinkedHashMap<>();
+        data.put("order", order);
+        data.put("items", items);
+        data.put("address", addresses.isEmpty() ? null : addresses.get(0));
+        data.put("logistics", logistics);
+        return ApiResponse.ok(data);
     }
 
     @PutMapping("/orders/{id}/pay")
@@ -241,5 +299,12 @@ public class OrderController {
 
     private String stringValue(Object value) {
         return value == null ? null : String.valueOf(value);
+    }
+
+    private boolean boolValue(Object value) {
+        if (value == null) return false;
+        if (value instanceof Boolean bool) return bool;
+        if (value instanceof Number number) return number.intValue() != 0;
+        return Boolean.parseBoolean(String.valueOf(value));
     }
 }

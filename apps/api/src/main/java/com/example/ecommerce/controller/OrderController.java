@@ -10,6 +10,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -62,9 +63,14 @@ public class OrderController {
         var session = CurrentSession.get(request);
         if ("USER".equals(session.role()) && !session.id().equals(order.getUserId())) return ApiResponse.fail("无权访问该订单");
         var items=jdbc.queryForList("select * from order_item where order_id=? order by id",id);
-        var address=jdbc.queryForMap("select * from user_address where id=?",order.getAddressId());
+        var addresses=jdbc.queryForList("select * from user_address where id=?",order.getAddressId());
         var logistics=orderMapper.findLogistics(id);
-        return ApiResponse.ok(Map.of("order",order,"items",items,"address",address,"logistics",logistics));
+        Map<String,Object> data = new LinkedHashMap<>();
+        data.put("order", order);
+        data.put("items", items);
+        data.put("address", addresses.isEmpty() ? null : addresses.get(0));
+        data.put("logistics", logistics);
+        return ApiResponse.ok(data);
     }
 
     @PutMapping("/api/orders/{id}/cancel")

@@ -51,23 +51,18 @@ public class AuthController {
         String throttleKey="verify:throttle:"+purpose+":"+email;
         if(Boolean.TRUE.equals(redisTemplate.hasKey(throttleKey))) return ApiResponse.fail("发送过于频繁，请稍后再试");
         String code=String.valueOf((int)(Math.random()*900000)+100000);
-        boolean demoMode=false;
         try { mailService.sendVerificationCode(email,code,purpose); }
-        catch (IllegalStateException ex) {
-            code="123456";
-            demoMode=true;
-        }
         catch (Exception ex) { return ApiResponse.fail("验证码发送失败："+ex.getMessage()); }
         redisTemplate.opsForValue().set("verify:"+purpose+":"+email,code,java.time.Duration.ofMinutes(10));
         redisTemplate.opsForValue().set(throttleKey,"1",java.time.Duration.ofMinutes(1));
-        return ApiResponse.ok(demoMode ? Map.of("demoMode", true, "demoCode", code) : null);
+        return ApiResponse.ok(null);
     }
 
     @PostMapping("/register/email")
     public ApiResponse<?> registerByEmail(@RequestBody Map<String,String> body){
         Object valid=redisTemplate.opsForValue().get("verify:REGISTER:"+body.get("email"));
         if(valid==null || !body.get("code").equals(String.valueOf(valid))) return ApiResponse.fail("验证码无效");
-        User user=new User(); user.setUsername(body.get("username")); user.setPassword(body.get("password")); user.setNickname(body.get("nickname")); user.setEmail(body.get("email")); user.setPhone(body.get("phone")); user.setAvatarUrl("https://dummyimage.com/120x120/dbeafe/1e3a8a&text=U");
+        User user=new User(); user.setUsername(body.get("username")); user.setPassword(body.get("password")); user.setNickname(body.get("nickname")); user.setEmail(body.get("email")); user.setPhone(body.get("phone")); user.setAvatarUrl("/catalog/avatar-default.svg");
         return register(user);
     }
 
@@ -131,6 +126,12 @@ public class AuthController {
                 "items", authService.findUsers(keyword, offset, size),
                 "total", authService.countUsers(keyword)
         ));
+    }
+
+    @GetMapping("/admin/users/{id}")
+    public ApiResponse<?> userDetail(@PathVariable Long id) {
+        User user = authService.getUser(id);
+        return user == null ? ApiResponse.fail("用户不存在") : ApiResponse.ok(user);
     }
 
     @PutMapping("/admin/users/{id}/enabled")

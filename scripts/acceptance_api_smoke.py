@@ -7,10 +7,12 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import base64
 from pathlib import Path
 
 
 BASE = os.environ.get("ACCEPTANCE_BASE_URL", "http://localhost:18080/api")
+MAILHOG = os.environ.get("ACCEPTANCE_MAILHOG_URL", "http://localhost:18099")
 RESULTS = []
 
 
@@ -76,6 +78,26 @@ def ok(resp):
     return resp["data"]
 
 
+def latest_mail_code(email):
+    url = MAILHOG.rstrip("/") + "/api/v2/messages?limit=50"
+    with urllib.request.urlopen(url, timeout=20) as resp:
+        payload = json.loads(resp.read().decode())
+    for item in payload.get("items", []):
+        content = item.get("Content", {})
+        headers = content.get("Headers", {})
+        recipients = headers.get("To", [])
+        body = content.get("Body", "")
+        transfer_encoding = ",".join(headers.get("Content-Transfer-Encoding", [])).lower()
+        if "base64" in transfer_encoding:
+            body = base64.b64decode(body).decode("utf-8", errors="ignore")
+        if any(email in r for r in recipients):
+            import re
+            match = re.search(r"(\d{6})", body)
+            if match:
+                return match.group(1)
+    raise AssertionError(f"cannot find verification code email for {email}")
+
+
 def auth_flow():
     user = ok(request("POST", "/auth/login", body={"username": "alice", "password": "123456"}))
     state["user_id"] = user["userId"]
@@ -90,16 +112,18 @@ def registration_flow():
     suffix = str(int(time.time() * 1000))
     email = f"qa-{suffix}@example.com"
     ok(request("POST", "/auth/code", body={"email": email, "purpose": "REGISTER"}))
+    code = latest_mail_code(email)
     data = ok(request("POST", "/auth/register/email", body={
         "username": f"qa_user_{suffix}",
         "password": "qa123456",
         "nickname": "QA",
         "email": email,
         "phone": "13811112222",
-        "code": "123456",
+        "code": code,
     }))
     assert data["userId"] > 0
     state["qa_user_id"] = data["userId"]
+    state["qa_email"] = email
     ok(request("POST", "/marketing/coupons/2/claim", params={"userId": data["userId"]}, token=state["user_token"]))
     claimed = ok(request("GET", f"/marketing/coupons/user/{data['userId']}", token=state["user_token"]))
     assert any(c["id"] == 2 for c in claimed)
@@ -116,9 +140,11 @@ def password_and_profile_flow():
     ok(request("PUT", "/auth/password", body={
         "userId": uid, "oldPassword": "123456", "newPassword": "123456"
     }, token=token))
-    ok(request("POST", "/auth/code", body={"email": "alice@example.com", "purpose": "RESET"}))
+    reset_email = state.get("qa_email", updated["email"])
+    ok(request("POST", "/auth/code", body={"email": reset_email, "purpose": "RESET"}))
+    code = latest_mail_code(reset_email)
     ok(request("POST", "/auth/password/reset", body={
-        "email": "alice@example.com", "code": "123456", "password": "123456"
+        "email": reset_email, "code": code, "password": "123456"
     }))
     return "profile/change/reset password ok"
 
@@ -148,8 +174,8 @@ def favorite_review_upload_flow():
     assert ok(request("GET", "/favorites/1/status", params={"userId": uid}, token=token)) is True
     favorites = ok(request("GET", "/favorites", params={"userId": uid}, token=token))
     assert any(p["id"] == 1 for p in favorites)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as f:
-        f.write(b"qa-image")
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as f:
+        f.write(b"\x89PNG\r\n\x1a\n")
         temp_name = f.name
     try:
         uploaded = ok(request("POST", "/files/upload", token=token, files={"file": temp_name}))
@@ -179,27 +205,34 @@ def address_cart_order_flow():
     updated_address = ok(request("PUT", "/addresses", body=address, token=token))
     assert updated_address["detailAddress"] == "QA 路 2 号"
     addrs = ok(request("GET", "/addresses", params={"userId": uid}, token=token))
-    assert any(a["id"] == address["id"] and a["isDefault"] for a in addrs)
+    assert any(a["id"] == address["id"] and a["isDefault"] for a in addrs), addrs
+    request("DELETE", "/cart/items", params={
+        "userId": uid, "productId": 1, "specText": "颜色:黑色 / 尺寸:87键"
+    }, token=token)
     ok(request("POST", "/cart/items", body={"userId": uid, "productId": 1, "specText": "颜色:黑色 / 尺寸:87键", "quantity": 1}, token=token))
     cart = ok(request("GET", "/cart", params={"userId": uid}, token=token))
-    assert any(i["productId"] == 1 and i["quantity"] >= 1 for i in cart)
-    ok(request("PUT", "/cart/items", body={"userId": uid, "productId": 1, "quantity": 2}, token=token))
+    assert any(i["productId"] == 1 and i["quantity"] >= 1 for i in cart), cart
+    ok(request("PUT", "/cart/items", body={
+        "userId": uid, "productId": 1, "specText": "颜色:黑色 / 尺寸:87键", "quantity": 2
+    }, token=token))
     cart = ok(request("GET", "/cart", params={"userId": uid}, token=token))
-    assert any(i["productId"] == 1 and i["quantity"] == 2 for i in cart)
+    assert any(i["productId"] == 1 and i["quantity"] == 2 for i in cart), cart
     order_no = ok(request("POST", "/orders", body={
         "userId": uid, "addressId": address["id"], "productIds": [1], "couponId": None, "paymentMethod": "MOCK_PAY"
     }, token=token))["orderNo"]
     orders = ok(request("GET", "/orders", params={"userId": uid}, token=token))
     order = next(o for o in orders if o["orderNo"] == order_no)
     state["order_id"] = order["id"]
-    assert order["paymentStatus"] == "UNPAID"
+    assert order["paymentStatus"] == "UNPAID", order
     ok(request("PUT", f"/orders/{order['id']}/pay", token=token))
     ok(request("PUT", f"/orders/{order['id']}/refund", token=token))
     logistics = ok(request("GET", f"/orders/{order['id']}/logistics", token=token))
-    assert any("已支付" in x["content"] for x in logistics)
+    assert any("已支付" in x["content"] for x in logistics), logistics
     detail = ok(request("GET", f"/orders/{order['id']}", token=token))
-    assert detail["order"]["orderNo"] == order_no and len(detail["items"]) >= 1
-    ok(request("DELETE", "/cart/items", params={"userId": uid, "productId": 1}, token=token))
+    assert detail["order"]["orderNo"] == order_no and len(detail["items"]) >= 1, detail
+    ok(request("DELETE", "/cart/items", params={
+        "userId": uid, "productId": 1, "specText": "颜色:黑色 / 尺寸:87键"
+    }, token=token))
     ok(request("DELETE", f"/addresses/{address['id']}", token=token))
     return "address/cart/order/pay/refund/logistics ok"
 

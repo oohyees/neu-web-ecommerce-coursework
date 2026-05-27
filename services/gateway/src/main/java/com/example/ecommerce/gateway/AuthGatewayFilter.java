@@ -45,6 +45,10 @@ public class AuthGatewayFilter implements GlobalFilter, Ordered {
             exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
             return exchange.getResponse().setComplete();
         }
+        if (isSuperAdminPath(path) && !"SUPER_ADMIN".equals(role)) {
+            exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+            return exchange.getResponse().setComplete();
+        }
 
         ServerHttpRequest mutated = request.mutate()
                 .header("X-User-Id", userId)
@@ -87,5 +91,13 @@ public class AuthGatewayFilter implements GlobalFilter, Ordered {
                 || path.startsWith("/api/products/admin")
                 || path.startsWith("/api/marketing/admin")
                 || path.startsWith("/api/reviews/admin");
+    }
+
+    private boolean isSuperAdminPath(String path) {
+        return path.startsWith("/api/auth/admin/users")
+                || path.startsWith("/api/auth/admin/admins")
+                || path.startsWith("/api/admin/users")
+                || path.startsWith("/api/admin/activity-notices")
+                || path.startsWith("/api/admin/announcements");
     }
 }

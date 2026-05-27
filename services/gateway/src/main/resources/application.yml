@@ -56,6 +56,12 @@ spring:
             - Path=/api/cart,/api/cart/**,/api/orders,/api/orders/**,/api/addresses,/api/addresses/**
           filters:
             - StripPrefix=1
+        - id: support-service
+          uri: lb://ecommerce-admin-service
+          predicates:
+            - Path=/api/feedback,/api/feedback/**,/api/consultations,/api/consultations/**
+          filters:
+            - StripPrefix=1
         - id: admin-service
           uri: lb://ecommerce-admin-service
           predicates:

@@ -434,7 +434,7 @@ class EcommerceScoringTests {
         var items = om.readTree(res.getResponse().getContentAsString()).get("data").get("items");
         if (items.size() > 0) {
             long uid = items.get(0).get("id").asLong();
-            mvc.perform(get("/api/auth/profile").param("userId", String.valueOf(uid))
+            mvc.perform(get("/api/auth/admin/users/" + uid)
                             .header("Authorization", "Bearer " + superAdminToken))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -569,7 +569,7 @@ class EcommerceScoringTests {
     @Test @Order(60)
     @DisplayName("0.5分 用户注册 - 邮箱验证码注册流程")
     void userRegister() throws Exception {
-        // 发送验证码（需要SMTP配置，可能失败但不阻塞）
+        // 发送验证码：测试环境通过 Docker MailHog 走真实 SMTP 捕获链路。
         mvc.perform(post("/api/auth/code")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"test@example.com\",\"purpose\":\"REGISTER\"}"))
@@ -735,7 +735,7 @@ class EcommerceScoringTests {
         mvc.perform(post("/api/home/banners")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"测试轮播\",\"imageUrl\":\"https://dummyimage.com/800x360\",\"linkUrl\":\"/products\",\"sortOrder\":99}"))
+                        .content("{\"title\":\"测试轮播\",\"imageUrl\":\"/catalog/B08F2Z6RJB.webp\",\"linkUrl\":\"/products\",\"sortOrder\":99}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }
@@ -753,7 +753,7 @@ class EcommerceScoringTests {
             mvc.perform(put("/api/home/banners")
                             .header("Authorization", "Bearer " + adminToken)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"id\":" + id + ",\"title\":\"修改后轮播\",\"imageUrl\":\"https://dummyimage.com/800x360/v2\",\"linkUrl\":\"/products\",\"sortOrder\":1}"))
+                            .content("{\"id\":" + id + ",\"title\":\"修改后轮播\",\"imageUrl\":\"/catalog/B09MDNKLM7.webp\",\"linkUrl\":\"/products\",\"sortOrder\":1}"))
                     .andExpect(status().isOk());
         }
         // 搜索
@@ -868,7 +868,7 @@ class EcommerceScoringTests {
     @Test @Order(88)
     @DisplayName("0.5分 文件上传接口")
     void fileUpload() throws Exception {
-        byte[] content = "fake-image-content".getBytes();
+        byte[] content = "\u0089PNG\r\n\u001a\n".getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
         var f = new MockMultipartFile("file", "test.png", "image/png", content);
         mvc.perform(multipart("/api/files/upload").file(f)
                         .header("Authorization", "Bearer " + adminToken))

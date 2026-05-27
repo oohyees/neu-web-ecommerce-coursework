@@ -14,11 +14,13 @@ import java.util.UUID;
 public class AuthController {
     private final JdbcTemplate jdbc;
     private final StringRedisTemplate redis;
+    private final MailService mailService;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    public AuthController(JdbcTemplate jdbc, StringRedisTemplate redis) {
+    public AuthController(JdbcTemplate jdbc, StringRedisTemplate redis, MailService mailService) {
         this.jdbc = jdbc;
         this.redis = redis;
+        this.mailService = mailService;
     }
 
     @PostMapping("/login")
@@ -37,25 +39,40 @@ public class AuthController {
         jdbc.update("""
                 insert into user(username,password,nickname,email,phone,avatar_url,enabled)
                 values(?,?,?,?,?,?,1)
-                """, body.get("username"), body.get("password"), body.getOrDefault("nickname", body.get("username")),
-                body.getOrDefault("email", ""), body.getOrDefault("phone", ""), "https://dummyimage.com/120x120/dbeafe/1e3a8a&text=U");
+                """, body.get("username"), encoder.encode(body.get("password")), body.getOrDefault("nickname", body.get("username")),
+                body.getOrDefault("email", ""), body.getOrDefault("phone", ""), "/catalog/avatar-default.svg");
         Long id = jdbc.queryForObject("select id from user where username=?", Long.class, body.get("username"));
         return ApiResponse.ok(Map.of("userId", id));
     }
 
     @PostMapping("/register/email")
     public ApiResponse<?> registerEmail(@RequestBody Map<String, String> body) {
+        if (!validCode(body.get("email"), body.get("code"), "REGISTER")) return ApiResponse.fail("验证码无效");
         return register(body);
     }
 
     @PostMapping("/code")
-    public ApiResponse<?> code() {
-        return ApiResponse.ok(Map.of("demoMode", true, "demoCode", "123456"));
+    public ApiResponse<?> code(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String purpose = body.getOrDefault("purpose", "REGISTER");
+        if (email == null || email.isBlank()) return ApiResponse.fail("邮箱不能为空");
+        String throttleKey = "verify:throttle:" + purpose + ":" + email;
+        if (Boolean.TRUE.equals(redis.hasKey(throttleKey))) return ApiResponse.fail("发送过于频繁，请稍后再试");
+        String code = String.valueOf((int) (Math.random() * 900000) + 100000);
+        try {
+            mailService.sendVerificationCode(email, code, purpose);
+        } catch (Exception ex) {
+            return ApiResponse.fail("验证码发送失败：" + ex.getMessage());
+        }
+        redis.opsForValue().set("verify:" + purpose + ":" + email, code, Duration.ofMinutes(10));
+        redis.opsForValue().set(throttleKey, "1", Duration.ofMinutes(1));
+        return ApiResponse.ok(null);
     }
 
     @PostMapping("/password/reset")
     public ApiResponse<?> resetPassword(@RequestBody Map<String, String> body) {
-        int updated = jdbc.update("update user set password=? where email=?", body.get("password"), body.get("email"));
+        if (!validCode(body.get("email"), body.get("code"), "RESET")) return ApiResponse.fail("验证码无效");
+        int updated = jdbc.update("update user set password=? where email=?", encoder.encode(body.get("password")), body.get("email"));
         return updated == 0 ? ApiResponse.fail("邮箱未注册") : ApiResponse.ok(null);
     }
 
@@ -81,6 +98,16 @@ public class AuthController {
     public ApiResponse<?> profile(@RequestHeader("X-User-Id") Long userId) {
         var users = jdbc.queryForList("select id,username,nickname,email,phone,avatar_url avatarUrl,enabled from user where id=?", userId);
         return users.isEmpty() ? ApiResponse.fail("用户不存在") : ApiResponse.ok(users.get(0));
+    }
+
+    @PutMapping("/password")
+    public ApiResponse<?> changePassword(@RequestHeader("X-User-Id") Long userId, @RequestBody Map<String, String> body) {
+        var rows = jdbc.queryForList("select password from user where id=?", userId);
+        if (rows.isEmpty() || !matches(String.valueOf(rows.get(0).get("password")), body.get("oldPassword"))) {
+            return ApiResponse.fail("原密码错误");
+        }
+        jdbc.update("update user set password=? where id=?", encoder.encode(body.get("newPassword")), userId);
+        return ApiResponse.ok(null);
     }
 
     @GetMapping("/admin/users")
@@ -123,6 +150,67 @@ public class AuthController {
         return ApiResponse.ok(null);
     }
 
+    @GetMapping("/admin/profile")
+    public ApiResponse<?> adminProfile(@RequestHeader("X-User-Id") Long adminId) {
+        var admins = jdbc.queryForList("select id,username,nickname,email,phone,role from admin_user where id=?", adminId);
+        return admins.isEmpty() ? ApiResponse.fail("管理员不存在") : ApiResponse.ok(admins.get(0));
+    }
+
+    @PutMapping("/admin/profile")
+    public ApiResponse<?> updateAdminProfile(@RequestHeader("X-User-Id") Long adminId, @RequestBody Map<String, String> body) {
+        jdbc.update("update admin_user set nickname=?,email=?,phone=? where id=?",
+                body.getOrDefault("nickname", ""), body.getOrDefault("email", ""), body.getOrDefault("phone", ""), adminId);
+        return adminProfile(adminId);
+    }
+
+    @PutMapping("/admin/password")
+    public ApiResponse<?> changeAdminPassword(@RequestHeader("X-User-Id") Long adminId, @RequestBody Map<String, String> body) {
+        var rows = jdbc.queryForList("select password from admin_user where id=?", adminId);
+        if (rows.isEmpty() || !matches(String.valueOf(rows.get(0).get("password")), body.get("oldPassword"))) {
+            return ApiResponse.fail("原密码错误");
+        }
+        jdbc.update("update admin_user set password=? where id=?", encoder.encode(body.get("newPassword")), adminId);
+        return ApiResponse.ok(null);
+    }
+
+    @GetMapping("/admin/admins")
+    public ApiResponse<?> admins(@RequestParam(required = false) String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return ApiResponse.ok(jdbc.queryForList("select id,username,nickname,email,phone,role from admin_user order by id"));
+        }
+        String like = "%" + keyword + "%";
+        return ApiResponse.ok(jdbc.queryForList("""
+                select id,username,nickname,email,phone,role from admin_user
+                where username like ? or nickname like ? or email like ? or phone like ? order by id
+                """, like, like, like, like));
+    }
+
+    @PostMapping("/admin/admins")
+    public ApiResponse<?> createAdmin(@RequestBody Map<String, String> body) {
+        String role = body.getOrDefault("role", "ADMIN");
+        if (!java.util.Set.of("ADMIN", "SUPER_ADMIN").contains(role)) return ApiResponse.fail("无效的角色");
+        jdbc.update("""
+                insert into admin_user(username,password,nickname,email,phone,role)
+                values(?,?,?,?,?,?)
+                """, body.get("username"), encoder.encode(body.get("password")), body.getOrDefault("nickname", ""),
+                body.getOrDefault("email", ""), body.getOrDefault("phone", ""), role);
+        return ApiResponse.ok(null);
+    }
+
+    @PutMapping("/admin/admins")
+    public ApiResponse<?> updateAdmin(@RequestBody Map<String, String> body) {
+        jdbc.update("update admin_user set nickname=?,email=?,phone=?,role=? where id=?",
+                body.getOrDefault("nickname", ""), body.getOrDefault("email", ""), body.getOrDefault("phone", ""),
+                body.getOrDefault("role", "ADMIN"), Long.valueOf(body.get("id")));
+        return ApiResponse.ok(null);
+    }
+
+    @DeleteMapping("/admin/admins/{id}")
+    public ApiResponse<?> deleteAdmin(@PathVariable Long id) {
+        jdbc.update("delete from admin_user where id=?", id);
+        return ApiResponse.ok(null);
+    }
+
     @PutMapping("/profile")
     public ApiResponse<?> updateProfile(@RequestHeader("X-User-Id") Long userId, @RequestBody Map<String, String> body) {
         jdbc.update("update user set nickname=?,email=?,phone=?,avatar_url=? where id=?",
@@ -136,6 +224,15 @@ public class AuthController {
         String token = body.get("token");
         if (token != null && !token.isBlank()) redis.delete("session:" + token);
         return ApiResponse.ok(null);
+    }
+
+    private boolean validCode(String email, String code, String purpose) {
+        if (email == null || email.isBlank() || code == null || code.isBlank()) return false;
+        String key = "verify:" + purpose + ":" + email;
+        String stored = redis.opsForValue().get(key);
+        if (!code.equals(stored)) return false;
+        redis.delete(key);
+        return true;
     }
 
     private boolean matches(String stored, String raw) {
