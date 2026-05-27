@@ -23,14 +23,17 @@ if ! command -v mysql >/dev/null 2>&1; then
   exit 1
 fi
 
+MYSQL_ARGS=(
+  --host="$HOST"
+  --port="$PORT"
+  --user="$USER"
+  --password="$PASSWORD"
+  --default-character-set=utf8mb4
+)
+
 echo "Resetting database '$DATABASE' on $HOST:$PORT ..."
-mysql \
-  --host="$HOST" \
-  --port="$PORT" \
-  --user="$USER" \
-  --password="$PASSWORD" \
-  --default-character-set=utf8mb4 \
-  "$DATABASE" < <(printf 'SOURCE %s;\nSOURCE %s;\n' "$SCHEMA" "$DATA")
+mysql "${MYSQL_ARGS[@]}" < "$SCHEMA"
+mysql "${MYSQL_ARGS[@]}" "$DATABASE" < "$DATA"
 
 echo "Demo database reset complete."
 
