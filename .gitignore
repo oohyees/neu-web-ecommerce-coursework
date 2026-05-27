@@ -11,6 +11,7 @@ ecommerce-minimal/
 # ===== 日志（运行时生成，收拢在 logs/）=====
 logs/
 *.log
+**/uploads/*
 
 # ===== Playwright / 浏览器运行时（截图验证时生成）=====
 .chrome-*/

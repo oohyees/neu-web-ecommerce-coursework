@@ -90,8 +90,8 @@ async function load() {
   if (filters.value.categoryId) params.categoryId = filters.value.categoryId
   if (filters.value.keyword) params.keyword = filters.value.keyword
   if (filters.value.keyword) params.searchMode = filters.value.searchMode
-  if (minPrice.value != null) params.minPrice = minPrice.value
-  if (maxPrice.value != null) params.maxPrice = maxPrice.value
+  if (Number(minPrice.value) > 0) params.minPrice = minPrice.value
+  if (Number(maxPrice.value) > 0) params.maxPrice = maxPrice.value
   const result = (await api.get('/products', { params })).data.data
   products.value = result.items || []
   total.value = result.total || 0
