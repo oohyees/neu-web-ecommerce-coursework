@@ -1,3 +1,4 @@
+USE ecommerce_auth;
 -- ============================================================
 -- 用户域：用户、管理员、验证码
 -- ============================================================
@@ -29,4 +30,18 @@ CREATE TABLE IF NOT EXISTS verification_code (
   code VARCHAR(16) NOT NULL,
   purpose VARCHAR(32) NOT NULL,
   expires_at DATETIME NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS admin_permission (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  code VARCHAR(64) NOT NULL UNIQUE,
+  name VARCHAR(64) NOT NULL,
+  group_name VARCHAR(64)
+);
+
+CREATE TABLE IF NOT EXISTS admin_role_permission (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  role VARCHAR(32) NOT NULL,
+  permission_id BIGINT NOT NULL,
+  UNIQUE KEY uk_role_perm (role, permission_id)
 );

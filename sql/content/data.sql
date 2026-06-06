@@ -1,3 +1,4 @@
+USE ecommerce_product;
 -- ============================================================
 -- content 域：种子数据
 -- ============================================================
@@ -17,3 +18,10 @@ INSERT INTO customer_consultation (user_id, subject, content, reply, status, cre
 
 INSERT INTO feedback (user_id, content, reply, status, created_at) VALUES
 (1, '希望能增加更多支付方式，比如银联云闪付。', '感谢反馈，银联支付已在支付页面开放，欢迎使用。', 'REPLIED', NOW());
+
+INSERT INTO hot_search (keyword, search_count, enabled, sort_order) VALUES
+('机械键盘', 156, 1, 1),
+('无线鼠标', 143, 1, 2),
+('蓝牙耳机', 128, 1, 3),
+('显示器', 112, 1, 4),
+('Type-C数据线', 98, 1, 5);

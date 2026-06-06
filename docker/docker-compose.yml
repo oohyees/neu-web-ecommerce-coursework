@@ -14,8 +14,16 @@ services:
     volumes:
       - ./mysql/data:/var/lib/mysql
       - ./mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-      - ../sql/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql:ro
-      - ../sql/data.sql:/docker-entrypoint-initdb.d/03-data.sql:ro
+      - ../sql/user/schema.sql:/docker-entrypoint-initdb.d/02-user-schema.sql:ro
+      - ../sql/user/data.sql:/docker-entrypoint-initdb.d/03-user-data.sql:ro
+      - ../sql/product/schema.sql:/docker-entrypoint-initdb.d/04-product-schema.sql:ro
+      - ../sql/product/data.sql:/docker-entrypoint-initdb.d/05-product-data.sql:ro
+      - ../sql/order/schema.sql:/docker-entrypoint-initdb.d/06-order-schema.sql:ro
+      - ../sql/order/data.sql:/docker-entrypoint-initdb.d/07-order-data.sql:ro
+      - ../sql/content/schema.sql:/docker-entrypoint-initdb.d/08-content-schema.sql:ro
+      - ../sql/content/data.sql:/docker-entrypoint-initdb.d/09-content-data.sql:ro
+      - ../sql/marketing/schema.sql:/docker-entrypoint-initdb.d/10-marketing-schema.sql:ro
+      - ../sql/marketing/data.sql:/docker-entrypoint-initdb.d/11-marketing-data.sql:ro
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
@@ -74,7 +82,7 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       DB_USERNAME: root
       DB_PASSWORD: root123
       REDIS_HOST: redis
@@ -106,7 +114,7 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_product?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       DB_USERNAME: root
       DB_PASSWORD: root123
       NACOS_SERVER_ADDR: nacos:8848
@@ -127,7 +135,7 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_order?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       DB_USERNAME: root
       DB_PASSWORD: root123
       NACOS_SERVER_ADDR: nacos:8848
@@ -148,7 +156,7 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_product?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       DB_USERNAME: root
       DB_PASSWORD: root123
       NACOS_SERVER_ADDR: nacos:8848

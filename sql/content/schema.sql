@@ -1,3 +1,4 @@
+USE ecommerce_product;
 -- ============================================================
 -- 内容域：轮播、公告、活动通知、客服、反馈
 -- ============================================================
@@ -44,4 +45,12 @@ CREATE TABLE IF NOT EXISTS feedback (
   reply VARCHAR(500),
   status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
   created_at DATETIME NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS hot_search (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  keyword VARCHAR(100) NOT NULL UNIQUE,
+  search_count INT DEFAULT 0,
+  enabled TINYINT DEFAULT 1,
+  sort_order INT DEFAULT 0
 );

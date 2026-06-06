@@ -269,7 +269,7 @@ public class OrderController {
         return jdbc.queryForList("""
                 select c.id,c.product_id productId,p.name productName,p.image_url imageUrl,c.spec_text specText,
                        p.price,c.quantity,p.price*c.quantity subtotal
-                from cart_item c join product p on p.id=c.product_id
+                from cart_item c join ecommerce_product.product p on p.id=c.product_id
                 where c.user_id=? order by c.id
                 """, userId);
     }
