@@ -6,12 +6,13 @@ For the current handoff state, verification results, remaining work, and grading
 
 ## Layout
 
-- `apps/api`: Spring Boot monolith backend. It contains the full business implementation and the course-required legacy Servlet/JSP/Listener/Filter/JDBC module.
-- `apps/web`: Vue 3 + Vite frontend for storefront and admin console.
-- `services/*`: course microservice projects for gateway, auth, catalog, order, and admin.
-- `libs/common`: shared DTO/session model examples.
+- `backend/legacy-web`: Spring Boot monolith backend. It contains the full business implementation and the course-required Servlet/JSP/Listener/Filter/JDBC evidence.
+- `backend/gateway-service`, `auth-service`, `product-service`, `order-service`, `admin-service`, `common`: Spring Cloud microservice evidence path.
+- `frontend/shop-web`: Vue 3 + Vite storefront.
+- `frontend/admin-web`: Vue 3 + Vite admin console.
+- `docker`: Docker Compose, Dockerfiles, Nginx, MySQL, and Redis configuration.
 - `docs`: course materials, report materials, acceptance evidence, and development logs.
-- `scripts`: build, acceptance, and submission automation.
+- `scripts`: build, acceptance, reset, and submission automation.
 
 ## Common Commands
 
@@ -20,16 +21,19 @@ For the current handoff state, verification results, remaining work, and grading
 mvn -q -DskipTests package
 
 # Build frontend
-npm --prefix apps/web install
-npm --prefix apps/web run build
+npm --prefix frontend/shop-web install
+npm --prefix frontend/admin-web install
+npm --prefix frontend/shop-web run build
+npm --prefix frontend/admin-web run build
 
 # Run complete monolith stack
-docker compose up -d --build
+docker compose -f docker/docker-compose.legacy.yml up -d --build
 ./scripts/acceptance_check.sh
 
 # Run microservice stack
 ./scripts/build_microservices.sh
-docker compose -f docker-compose.microservices.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
+./scripts/microservices_smoke_test.sh
 ```
 
 ## Main Application

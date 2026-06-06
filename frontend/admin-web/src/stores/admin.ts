@@ -54,7 +54,12 @@ export const useAdminStore = defineStore('admin', () => {
     name.value = ''
     role.value = ''
     permissions.value = []
-    localStorage.clear()
+    localStorage.removeItem('token')
+    localStorage.removeItem('adminId')
+    localStorage.removeItem('adminUsername')
+    localStorage.removeItem('adminName')
+    localStorage.removeItem('role')
+    localStorage.removeItem('adminPermissions')
   }
 
   return { token, adminId, username, name, role, permissions, isLoggedIn, setAuth, hasPermission, logout }

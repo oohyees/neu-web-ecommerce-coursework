@@ -22,7 +22,7 @@
         <el-input v-model="password" placeholder="请输入密码" type="password" size="large" class="auth-input" show-password @keyup.enter="login" />
       </el-form>
       <div class="row-options">
-        <el-checkbox v-model="remember">记住账号</el-checkbox>
+        <el-checkbox v-model="remember">记住密码</el-checkbox>
       </div>
       <el-button type="danger" size="large" class="auth-btn" :loading="loading" @click="login">登 录</el-button>
       <div class="links">
@@ -40,9 +40,8 @@ import { ElMessage } from 'element-plus'
 import { api } from '@/api'
 import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 const username = ref(localStorage.getItem('rememberUsername') || '')
-const password = ref('')
-const remember = ref(Boolean(localStorage.getItem('rememberUsername')))
-localStorage.removeItem('rememberPassword')
+const password = ref(localStorage.getItem('rememberPassword') || '')
+const remember = ref(Boolean(localStorage.getItem('rememberUsername') && localStorage.getItem('rememberPassword')))
 const loading = ref(false)
 const router = useRouter()
 const userStore = useUserStore()
@@ -55,8 +54,10 @@ async function login() {
     userStore.setAuth(data.data)
     if (remember.value) {
       localStorage.setItem('rememberUsername', username.value)
+      localStorage.setItem('rememberPassword', password.value)
     } else {
       localStorage.removeItem('rememberUsername')
+      localStorage.removeItem('rememberPassword')
     }
     ElMessage.success('登录成功')
     router.push('/')

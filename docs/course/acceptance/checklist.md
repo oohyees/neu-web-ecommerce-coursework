@@ -34,7 +34,7 @@
 
 | 指导书要求 | 覆盖方式 | 状态 |
 | --- | --- | --- |
-| 工程压缩包只打包源码及配置文件，总大小不超过 50M | `scripts/create_submission_zip.sh` 只打包 `frontend/backend/deploy/docs/scripts/pom.xml/README`，排除 `node_modules`、`target`、`dist`、`uploads`、`logs`、`docs/archive`、`.npm-cache` 等；本轮试打包大小约 4.9M | 已覆盖 |
+| 工程压缩包只打包源码及配置文件，总大小不超过 50M | `scripts/create_submission_zip.sh` 只打包 `frontend/backend/docker/docs/scripts/pom.xml/README`，排除 `node_modules`、`target`、`dist`、`uploads`、`logs`、`docs/archive`、`.npm-cache` 等；本轮试打包大小约 4.9M | 已覆盖 |
 | 工程压缩包命名格式 | 脚本默认参数为 `学号-姓名-班级-大作业-工程压缩包.zip` | 已覆盖 |
 | 实验报告命名格式 | `docs/course/实验报告.md` 为报告正文源，导出 docx 时按 `学号-姓名-班级-大作业-实验报告.docx` 命名 | 已覆盖 |
 | 报告包含实验目的、内容、环境、过程与分析、创新点、总结 | `docs/course/实验报告.md` 已按这些章节组织 | 已覆盖 |
@@ -132,9 +132,9 @@
 | 指导书细项 | 覆盖方式 | 证据 |
 | --- | --- | --- |
 | Redis 缓存热点数据 | 首页、商品详情缓存；会话、验证码、节流存 Redis | `@Cacheable`、`SessionService`、Redis 配置 |
-| 微服务拆分商品/订单/用户核心模块 | gateway、auth、product、order、admin 多服务独立构建部署 | `backend/*`、`deploy/docker-compose.yml` |
+| 微服务拆分商品/订单/用户核心模块 | gateway、auth、product、order、admin 多服务独立构建部署 | `backend/*`、`docker/docker-compose.yml` |
 | 服务间高效通信 | Gateway + Nacos + OpenFeign，订单服务调用商品服务扣库存 | `microservices_smoke_test.sh` Feign 日志证据 |
-| Docker 容器化部署 | 单体栈和微服务栈 Compose | `deploy/docker-compose.legacy.yml`、`deploy/docker-compose.yml` |
+| Docker 容器化部署 | 单体栈和微服务栈 Compose | `docker/docker-compose.legacy.yml`、`docker/docker-compose.yml` |
 | 多环境一致性 | MySQL、Redis、MailHog、Nacos、后端、前端均容器化 | Docker 截图和启动脚本 |
 
 ## 评分表映射

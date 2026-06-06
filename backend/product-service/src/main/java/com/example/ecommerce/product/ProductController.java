@@ -304,8 +304,23 @@ public class ProductController {
     }
 
     @GetMapping("/reviews")
-    public ApiResponse<?> reviews(@RequestParam Long productId) {
-        return ApiResponse.ok(jdbc.queryForList("select id,user_id userId,product_id productId,rating,content,image_url imageUrl,created_at createdAt from product_review where product_id=? order by created_at desc,id desc", productId));
+    public ApiResponse<?> reviews(@RequestParam Long productId,
+                                  @RequestParam(required = false) Integer page,
+                                  @RequestParam(required = false) Integer size) {
+        if (page == null && size == null) {
+            return ApiResponse.ok(jdbc.queryForList("""
+                    select id,user_id userId,product_id productId,rating,content,image_url imageUrl,created_at createdAt
+                    from product_review where product_id=? order by created_at desc,id desc
+                    """, productId));
+        }
+        int safePage = Math.max(page == null ? 1 : page, 1);
+        int safeSize = Math.min(Math.max(size == null ? 10 : size, 1), 100);
+        Integer total = jdbc.queryForObject("select count(*) from product_review where product_id=?", Integer.class, productId);
+        var items = jdbc.queryForList("""
+                select id,user_id userId,product_id productId,rating,content,image_url imageUrl,created_at createdAt
+                from product_review where product_id=? order by created_at desc,id desc limit ? offset ?
+                """, productId, safeSize, (safePage - 1) * safeSize);
+        return ApiResponse.ok(Map.of("items", items, "total", total == null ? 0 : total));
     }
 
     @PostMapping("/reviews")

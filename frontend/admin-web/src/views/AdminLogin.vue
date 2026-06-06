@@ -31,7 +31,7 @@ async function login() {
   try {
     const { data } = await api.post('/auth/admin/login', { username: username.value, password: password.value })
     if (!data.success) return ElMessage.error(data.message)
-    adminStore.setAdmin(data.data)
+    adminStore.setAuth(data.data)
     ElMessage.success('登录成功')
     router.push('/admin/dashboard')
   } catch {

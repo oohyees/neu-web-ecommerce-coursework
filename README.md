@@ -1,6 +1,6 @@
 # Ecommerce Platform
 
-《Web 开发技术》电商平台大作业。仓库已整理为微服务优先的团队式 monorepo：默认架构使用 Spring Cloud Gateway、Nacos 和 OpenFeign 落实服务拆分、注册发现、统一鉴权和跨服务下单链路；`legacy-web` 保留完整单体业务与 Servlet/JSP/Listener/Filter/JDBC 课程证据。
+《Web 开发技术》电商平台大作业。仓库采用团队式 monorepo：`legacy-web` 是稳定的单体验收路径，覆盖完整商城、后台和 Servlet/JSP/Listener/Filter/JDBC 课程证据；微服务路径使用 Spring Cloud Gateway、Nacos 和 OpenFeign 展示服务拆分、注册发现、统一鉴权和跨服务下单链路。
 
 ## Repository Layout
 
@@ -16,7 +16,7 @@ backend/
   admin-service/       后台聚合服务
   common/              公共响应与会话模型
   legacy-web/          单体回归与传统 Web 技术证据
-deploy/
+docker/
   docker-compose.yml         默认微服务栈
   docker-compose.legacy.yml  legacy 单体对照栈
 docs/
@@ -46,7 +46,7 @@ npm --prefix frontend/shop-web install
 npm --prefix frontend/admin-web install
 npm --prefix frontend/shop-web run build
 npm --prefix frontend/admin-web run build
-docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 scripts/microservices_smoke_test.sh
 ```
 
@@ -70,7 +70,7 @@ The microservice smoke test checks Nacos registration, Gateway routing, Redis to
 mvn -q -DskipTests package
 npm --prefix frontend/shop-web install
 npm --prefix frontend/shop-web run build
-docker compose -f deploy/docker-compose.legacy.yml up -d --build
+docker compose -f docker/docker-compose.legacy.yml up -d --build
 ./scripts/acceptance_check.sh
 python3 scripts/acceptance_api_smoke.py
 mvn test

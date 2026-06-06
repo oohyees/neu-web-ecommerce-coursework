@@ -82,7 +82,7 @@ import EmptyState from '../components/EmptyState.vue'
 
 const items = ref<any[]>([]), keyword = ref(''), visible = ref(false)
 const emptyForm = () => ({ title: '', productId: null, promotionType: 'FLASH_SALE', promotionPrice: 0, promotionStock: 100, startAt: '', endAt: '', enabled: true })
-const form = ref(emptyForm())
+const form = ref<any>(emptyForm())
 
 async function load() { items.value = (await api.get('/marketing/admin/promotions', { params: { keyword: keyword.value } })).data.data || [] }
 function openCreate() { form.value = emptyForm(); visible.value = true }

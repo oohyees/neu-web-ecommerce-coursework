@@ -14,17 +14,17 @@ INSERT INTO product_category (parent_id, name, sort_order) VALUES
 (7, '桌面办公', 1);
 
 INSERT INTO product (category_id, name, price, stock, sales, is_on_sale, image_url, detail_html, params_text) VALUES
-(2, 'Koolertron One Handed Programmable Mechanical Keyboard with OEM Gateron Red Switch,All 48 Programmable Keys Tools...', 85.99, 31, 8, 1, '/catalog/B076LRJ528.webp', 'Read more Macro Keyboard Specifications: All 48 keys are programmable, 8 Macro Keys,No backlit Key number: 48 Keyboard switch: OEM Gateron Red Keystroke force: 45±15cN Interface: 2 MINI USB Interfaces, USB2.1M detachable USB cable Rating: DC 5V, '');
+(2, 'Koolertron One Handed Programmable Mechanical Keyboard with OEM Gateron Red Switch,All 48 Programmable Keys Tools...', 85.99, 31, 8, 1, '/catalog/B076LRJ528.webp', 'Read more Macro Keyboard Specifications: All 48 keys are programmable, 8 Macro Keys,No backlit Key number: 48 Keyboard switch: OEM Gateron Red Keystroke force: 45±15cN Interface: 2 MINI USB Interfaces, USB2.1M detachable USB cable Rating: DC 5V, &lt;
 
 INSERT INTO product_spec (product_id, spec_name, spec_value) VALUES
 (1, '品牌', 'Koolertron'),
 (1, '型号', 'AE-SMKD7'),
 (1, '来源', '公开商品样本'),
 (2, '品牌', 'Razer'),
-(2, '型号', 'RZ01-03210300-R3M1'),
+(2, '型号', '‎RZ01-03210300-R3M1'),
 (2, '来源', '公开商品样本'),
 (3, '品牌', 'R-Go Tools'),
-(3, '型号', 'RGOSP-USWIBL'),
+(3, '型号', '‎RGOSP-USWIBL'),
 (3, '来源', '公开商品样本'),
 (4, '品牌', 'Allsop'),
 (4, '型号', 'ASP30203'),
@@ -59,19 +59,19 @@ INSERT INTO product_spec (product_id, spec_name, spec_value) VALUES
 (14, '型号', 'GCS62HU'),
 (14, '来源', '公开商品样本'),
 (15, '品牌', 'GearIT'),
-(15, '型号', '‏  GI-PRO-HD2-6.6F-2PK'),
+(15, '型号', '‏ ‎ GI-PRO-HD2-6.6F-2PK'),
 (15, '来源', '公开商品样本'),
 (16, '品牌', 'Seagate'),
 (16, '型号', 'STKP18000400'),
 (16, '来源', '公开商品样本'),
 (17, '品牌', 'GearIT'),
-(17, '型号', '‏  6CAT6E-ORANGE-24PK'),
+(17, '型号', '‏ ‎ 6CAT6E-ORANGE-24PK'),
 (17, '来源', '公开商品样本'),
 (18, '品牌', 'Linksys'),
 (18, '型号', 'MR20EC-AMZ'),
 (18, '来源', '公开商品样本'),
 (19, '品牌', 'Seagate'),
-(19, '型号', 'STJW500401'),
+(19, '型号', '‎STJW500401'),
 (19, '来源', '公开商品样本'),
 (20, '品牌', 'MAIWO'),
 (20, '型号', 'M.2 SATA/NVME'),
@@ -86,24 +86,24 @@ INSERT INTO product_spec (product_id, spec_name, spec_value) VALUES
 (23, '型号', 'DISPLTR12'),
 (23, '来源', '公开商品样本'),
 (24, '品牌', 'Xerox'),
-(24, '型号', '006R01220'),
+(24, '型号', '‎006R01220'),
 (24, '来源', '公开商品样本'),
 (25, '品牌', 'Safco'),
 (25, '型号', '3257BL'),
 (25, '来源', '公开商品样本'),
 (26, '品牌', 'AVERY'),
-(26, '型号', '05741'),
+(26, '型号', '‎05741'),
 (26, '来源', '公开商品样本'),
 (27, '品牌', 'O2COOL'),
 (27, '来源', '公开商品样本'),
 (28, '品牌', 'Drawealth'),
-(28, '型号', 'T0085'),
+(28, '型号', '‎T0085'),
 (28, '来源', '公开商品样本'),
 (29, '品牌', 'Simple Designs'),
 (29, '型号', 'LT3039-PRP'),
 (29, '来源', '公开商品样本'),
 (30, '品牌', 'Brother'),
-(30, '型号', 'TN620'),
+(30, '型号', '‎TN620'),
 (30, '来源', '公开商品样本');
 
 INSERT INTO product_review (user_id, product_id, rating, content, image_url, created_at) VALUES
@@ -129,7 +129,7 @@ INSERT INTO product_review (user_id, product_id, rating, content, image_url, cre
 (1, 20, 4, 'I used this for cloning my 256 GB stock SSD drive to a new 2 TB SSD for my Steam Deck. The enclosure got incredibly hot. Do not touch it til it cools down. I already expected it to get hot so it was not a surprise, because lots of data being transferred and no fan. It did the job excellently. Now it''s the home of my old Stock drive and I needed to reclone the stock image due to my own mistake, and it was fast. I can''t vouch for the longevity of the device and only for a...', '', NOW()),
 (1, 21, 5, 'It’s a classic. Durable', '', NOW()),
 (1, 22, 4, 'The pen in all it''s glory is amazing. Smooth, properly weighted for my liking. The only ting that I did not like is that I got delivered a pen with black ink, when the description clearly states blue ink. Couldn''t even find an option to return and request for refund.', '', NOW()),
-(1, 23, 5, 'Very nice folder for what I need it for. I use them as substitute teacher folders for their assignments. The only issue I had was putting in the cover on the front. I used regular paper and it''s a bit difficult to slide in.' , '', NOW());
+(1, 23, 5, 'Very nice folder for what I need it for. I use them as substitute teacher folders for their assignments. The only issue I had was putting in the cover on the front. I used regular paper and it''s a bit difficult to slide in;
 
 INSERT INTO product_spec (product_id, spec_name, spec_value) VALUES
 (7, '型号', 'Aothia-Cork'),

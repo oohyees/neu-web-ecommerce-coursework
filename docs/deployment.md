@@ -6,7 +6,7 @@
 
 ```bash
 ./scripts/build_microservices.sh
-docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 ```
 
 > 构建命令详见 [开发手册 § 常用命令](development.md)。
@@ -41,7 +41,7 @@ curl http://localhost:18082
 ## legacy 单体对照模式
 
 ```bash
-docker compose -f deploy/docker-compose.legacy.yml up -d --build
+docker compose -f docker/docker-compose.legacy.yml up -d --build
 ```
 
 ### 服务清单
@@ -83,16 +83,8 @@ mysql -h 127.0.0.1 -P 13306 -u root -p123456 ecommerce_minimal
 自动化冒烟会创建 QA 用户、订单、商品、评价和上传记录。最终课堂演示或重新截图前，可将数据库恢复到 `schema.sql` + `data.sql` 的干净种子状态：
 
 ```bash
-./scripts/reset_demo_database.sh
+./scripts/reset_demo_data.sh
 ```
-
-Windows PowerShell 环境可使用：
-
-```powershell
-./scripts/reset_demo_database.ps1 -Port 13306
-```
-
----
 
 ## 环境变量
 

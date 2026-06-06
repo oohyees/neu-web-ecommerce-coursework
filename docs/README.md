@@ -24,12 +24,12 @@
 ```bash
 # 默认微服务模式
 ./scripts/build_microservices.sh
-docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 # 前台 http://localhost:18095  |  后台 http://localhost:18082
 # Gateway http://localhost:18090/api  |  Nacos http://localhost:18098/nacos
 
 # legacy 单体对照模式
-docker compose -f deploy/docker-compose.legacy.yml up -d --build
+docker compose -f docker/docker-compose.legacy.yml up -d --build
 # 前端 http://localhost:18081  |  API http://localhost:18080/api
 ```
 
@@ -60,5 +60,5 @@ docs/
 - **前端**：Vue 3 + Vite + Element Plus + Pinia，前台 `frontend/shop-web` 与后台 `frontend/admin-web` 独立工程
 - **数据库**：MySQL 8.4，21 张表，utf8mb4
 - **缓存/会话**：Redis 7，token 存 Redis，12h TTL
-- **部署**：Docker Compose，默认微服务栈 `deploy/docker-compose.yml`，legacy 对照栈 `deploy/docker-compose.legacy.yml`
+- **部署**：Docker Compose，默认微服务栈 `docker/docker-compose.yml`，legacy 对照栈 `docker/docker-compose.legacy.yml`
 - **测试**：71 个集成测试，0 失败，覆盖全部评分点

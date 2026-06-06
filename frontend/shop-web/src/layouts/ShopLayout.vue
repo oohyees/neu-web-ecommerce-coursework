@@ -44,6 +44,7 @@
       </div>
     </nav>
     <main class="main"><slot /></main>
+    <ShopFloatingActions />
     <footer class="footer">
       <div class="page-wrap footer-grid">
         <div>
@@ -68,6 +69,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore, useCartStore, useFavoriteStore } from '../stores/index'
 import { api } from '../api/index'
+import ShopFloatingActions from '../components/ShopFloatingActions.vue'
 const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()

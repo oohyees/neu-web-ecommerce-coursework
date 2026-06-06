@@ -10,7 +10,7 @@ cd "$ROOT"
 zip -qr "$OUT_DIR/$NAME" \
   frontend \
   backend \
-  deploy \
+  docker \
   docs \
   scripts \
   pom.xml \
@@ -27,10 +27,14 @@ zip -qr "$OUT_DIR/$NAME" \
      '*/.DS_Store' \
      '*/.chrome-*/*' \
      '*/.refs/*' \
+     'docker/mysql/data/*' \
+     'docker/redis/data/*' \
+     'docker/uploads/*' \
      '*/uploads/*' \
      '*/logs/*' \
      'docs/archive/*' \
      'docs/db-backups/*' \
+     'docs/course/student-code-comparison.md' \
      'submission/*'
 
 du -sh "$OUT_DIR/$NAME"

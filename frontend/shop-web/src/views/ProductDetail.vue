@@ -14,6 +14,12 @@
         <div class="summary">
           <h1>{{ product.name }}</h1>
           <p class="sub muted">销量 {{ product.sales || 0 }} · 库存 {{ product.stock ?? 0 }}件 · {{ favorite ? '已收藏' : '可收藏' }}</p>
+          <div class="acceptance-meta">
+            <div><span>规格</span><strong>{{ specs.length ? Object.keys(groupedSpecs).length : '默认' }}</strong></div>
+            <div><span>库存</span><strong>{{ product.stock ?? 0 }}</strong></div>
+            <div><span>销量</span><strong>{{ product.sales || 0 }}</strong></div>
+            <div><span>评价</span><strong>{{ reviewTotal }}</strong></div>
+          </div>
 
           <div class="price-box">
             <span v-if="flashSale" class="flash-tag">秒杀</span>
@@ -38,6 +44,8 @@
             <el-button type="danger" size="large" @click="buyNow">立即购买</el-button>
             <el-button size="large" @click="add">加入购物车</el-button>
             <el-button size="large" @click="toggleFavorite">{{ favorite ? '♥ 已收藏' : '♡ 收藏' }}</el-button>
+            <el-button size="large" @click="activeTab = 'reviews'">查看评价</el-button>
+            <el-button size="large" @click="$router.push('/consultations')">客服咨询</el-button>
           </div>
 
           <ul class="service-list">
@@ -50,7 +58,7 @@
       </section>
 
       <div class="detail-bottom">
-        <el-tabs model-value="detail">
+        <el-tabs v-model="activeTab">
           <el-tab-pane label="商品详情" name="detail">
             <div class="tab-panel">{{ product.detailHtml || '暂无详情介绍，敬请期待更多内容。' }}</div>
           </el-tab-pane>
@@ -62,6 +70,13 @@
           </el-tab-pane>
           <el-tab-pane :label="`用户评价 (${reviews.length})`" name="reviews">
             <section class="reviews-section">
+              <div class="review-summary">
+                <div>
+                  <span class="muted">评价概览</span>
+                  <strong>{{ reviewTotal ? `${reviewAvg} / 5` : '暂无评分' }}</strong>
+                </div>
+                <p>支持文字评价和图片上传，完成订单后可用于展示商品模块进阶功能。</p>
+              </div>
               <article v-for="r in reviews" :key="r.id" class="review-card">
                 <div class="review-head">
                   <el-rate :model-value="r.rating" disabled size="small" />
@@ -70,7 +85,7 @@
                 <p>{{ r.content }}</p>
                 <img v-if="r.imageUrl" :src="r.imageUrl" class="review-img" />
               </article>
-              <EmptyState v-if="!reviews.length" title="暂无评价" description="购买后可上传图片评价。" />
+              <EmptyState v-if="!reviews.length" title="暂无评价" description="购买后可在这里提交文字和图片评价。" />
               <div v-if="reviewTotal > reviewSize" class="review-pager">
                 <el-pagination layout="prev, pager, next, total" :total="reviewTotal" :page-size="reviewSize" :current-page="reviewPage" @current-change="changeReviewPage" />
               </div>
@@ -108,8 +123,14 @@ const product = ref<any>(null), reviews = ref<any[]>([]), favorite = ref(false),
 const selectedSpecs = ref({}), flashSale = ref<any>(null), quantity = ref(1)
 const reviewPage = ref(1), reviewSize = 5, reviewTotal = ref(0)
 const reviewForm = ref({ rating: 5, content: '', imageUrl: '' })
+const activeTab = ref('detail')
 const groupedSpecs = computed(() => specs.value.reduce((m, s) => ((m[s.specName] ??= []).push(s.specValue), m), {}))
 const specText = computed(() => Object.entries(selectedSpecs.value).map(([k, v]) => `${k}:${v}`).join(' / '))
+const reviewAvg = computed(() => {
+  if (!reviews.value.length) return '0.0'
+  const total = reviews.value.reduce((sum, item) => sum + Number(item.rating || 0), 0)
+  return (total / reviews.value.length).toFixed(1)
+})
 
 async function load() {
   product.value = (await api.get(`/products/${route.params.id}`)).data.data
@@ -122,6 +143,11 @@ async function load() {
 
 async function loadReviews() {
   const result = (await api.get('/reviews', { params: { productId: route.params.id, page: reviewPage.value, size: reviewSize } })).data.data || {}
+  if (Array.isArray(result)) {
+    reviews.value = result.slice((reviewPage.value - 1) * reviewSize, reviewPage.value * reviewSize)
+    reviewTotal.value = result.length
+    return
+  }
   reviews.value = result.items || []
   reviewTotal.value = result.total || 0
 }
@@ -198,6 +224,34 @@ onMounted(load)
 h1 { margin: 0 0 8px; font-size: 24px; line-height: 1.35; }
 .sub { font-size: 14px; }
 
+.acceptance-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.acceptance-meta div {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  background: #fff7f8;
+  border: 1px solid #fecdd3;
+  border-radius: var(--radius);
+}
+
+.acceptance-meta span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.acceptance-meta strong {
+  color: var(--brand);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
 .price-box {
   display: flex;
   align-items: baseline;
@@ -243,6 +297,38 @@ h1 { margin: 0 0 8px; font-size: 24px; line-height: 1.35; }
 .params-table { margin-top: 12px; }
 
 .reviews-section { padding: 8px 0; }
+.review-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: #fff7f8;
+  border: 1px solid #fecdd3;
+  border-radius: var(--radius);
+}
+
+.review-summary div {
+  display: grid;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.review-summary strong {
+  color: var(--brand);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.review-summary p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .review-card { padding: 16px; margin-bottom: 12px; background: #f8fafc; border-radius: var(--radius); }
 .review-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
 .review-card p { margin: 8px 0; line-height: 1.6; }
@@ -255,5 +341,25 @@ h1 { margin: 0 0 8px; font-size: 24px; line-height: 1.35; }
 @media (max-width: 900px) {
   .detail-panel { grid-template-columns: 1fr; }
   .gallery { height: 300px; }
+  .acceptance-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .review-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .detail-panel,
+  .detail-bottom {
+    padding: 14px;
+  }
+  .action-row :deep(.el-button) {
+    flex: 1 1 140px;
+    margin-left: 0 !important;
+  }
+  .service-list li {
+    flex: 1 1 42%;
+    text-align: center;
+  }
 }
 </style>

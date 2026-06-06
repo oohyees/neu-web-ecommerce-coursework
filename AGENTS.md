@@ -4,8 +4,8 @@ This repository is a Web Development course ecommerce project. The current goal 
 
 ## Current Verified State
 
-- Monolith is the primary acceptance path.
-- Microservices are an innovation/evidence path, not the only demo entry.
+- Current Vue frontends plus Gateway/microservices are the primary page-acceptance path.
+- Legacy monolith is the traditional Web evidence and fallback path, not the only demo entry.
 - Email verification is a real SMTP flow through Docker MailHog; there is no fixed or returned demo code.
 - `docs/course/acceptance/checklist.md` is the current point-by-point coverage matrix for the guidebook body and scoring table.
 - Submission packaging was test-run successfully and produced a source-only zip around `4.4M`, well below the `50M` limit.
@@ -41,24 +41,31 @@ Observed passing results:
 
 ## Remaining Worthwhile Work
 
-1. Browser/manual visual巡检 for the monolith path:
-   - `http://localhost:18081`
+1. Browser/manual visual巡检 for the current Vue frontend path first:
+   - `http://localhost:5173`
+   - `http://localhost:5174`
+   - or Docker/Nginx microservice frontend entry when using full-stack containers
    - Home, product list/detail, cart, checkout, pay, orders.
    - Admin login, dashboard, products, orders, users.
    - Mobile widths around 390px and 768px, especially the admin drawer menu.
 
-2. Screenshot freshness check:
+2. Legacy evidence spot check:
+   - `http://localhost:18081`
+   - `/legacy/status`
+   - Confirm the single-stack path still works as traditional Java Web evidence and fallback demo.
+
+3. Screenshot freshness check:
    - Evidence lives in `docs/course/acceptance/evidence`.
    - Confirm the key images still match the current UI and current documentation.
    - Highest-value screenshots: home, product detail, cart, checkout/pay/orders, admin dashboard/products/orders/users, responsive, Docker, Nacos, smoke pass, Feign logs.
 
-3. Git/document migration cleanup:
+4. Git/document migration cleanup:
    - `git status` shows many old doc paths deleted and new doc paths untracked.
    - Treat this as a docs reorganization, not accidental loss.
    - Active docs are under `docs/course`, root `docs/*.md`, and `README.md`.
    - `docs/archive` is historical and intentionally excluded from the submission zip.
 
-4. Demo database reset before final live demonstration:
+5. Demo database reset before final live demonstration:
    - Smoke tests create QA users/orders/products/reviews/uploads.
    - For screenshots or classroom demo, reset to clean seed data first.
    - Do not reset if the user wants to inspect test-created data.

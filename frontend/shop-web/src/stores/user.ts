@@ -46,7 +46,11 @@ export const useUserStore = defineStore('user', () => {
     avatar.value = ''
     adminId.value = null
     role.value = ''
-    localStorage.clear()
+    localStorage.removeItem('token')
+    localStorage.removeItem('userId')
+    localStorage.removeItem('nickname')
+    localStorage.removeItem('adminId')
+    localStorage.removeItem('role')
   }
 
   // 启动时从 localStorage 恢复

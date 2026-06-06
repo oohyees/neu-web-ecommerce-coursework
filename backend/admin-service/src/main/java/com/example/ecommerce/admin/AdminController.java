@@ -119,6 +119,29 @@ public class AdminController {
         }
     }
 
+    @GetMapping("/users/export")
+    public void exportUsers(HttpServletResponse response) throws Exception {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=users.xlsx");
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet sheet = wb.createSheet("users");
+            Row head = sheet.createRow(0);
+            String[] headers = {"id", "username", "nickname", "email", "phone", "enabled"};
+            for (int i = 0; i < headers.length; i++) head.createCell(i).setCellValue(headers[i]);
+            int r = 1;
+            for (Map<String, Object> item : jdbc.queryForList("select id,username,nickname,email,phone,enabled from ecommerce_auth.user order by id desc")) {
+                Row row = sheet.createRow(r++);
+                row.createCell(0).setCellValue(String.valueOf(item.get("id")));
+                row.createCell(1).setCellValue(String.valueOf(item.get("username")));
+                row.createCell(2).setCellValue(String.valueOf(item.get("nickname")));
+                row.createCell(3).setCellValue(String.valueOf(item.get("email")));
+                row.createCell(4).setCellValue(String.valueOf(item.get("phone")));
+                row.createCell(5).setCellValue(String.valueOf(item.get("enabled")));
+            }
+            wb.write(response.getOutputStream());
+        }
+    }
+
     @GetMapping("/dashboard/export")
     public void exportDashboard(HttpServletResponse response) throws Exception {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

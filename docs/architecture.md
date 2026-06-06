@@ -17,8 +17,8 @@
 ```
 web/
 ├── pom.xml                          # 根 Maven POM，聚合 7 个子模块
-├── deploy/
-│   ├── deploy/docker-compose.yml           # 默认微服务 Docker 部署
+├── docker/
+│   ├── docker-compose.yml           # 默认微服务 Docker 部署
 │   └── docker-compose.legacy.yml    # legacy 单体对照 Docker 部署
 ├── CLAUDE.md                        # 项目开发指南
 │
@@ -571,7 +571,7 @@ Axios 实例配置：
 ```bash
 # 构建并启动
 ./scripts/build_microservices.sh
-docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 
 # 访问
 # 前台: http://localhost:18095
@@ -587,7 +587,7 @@ docker compose -f deploy/docker-compose.yml up -d --build
 
 ```bash
 # 构建并启动
-docker compose -f deploy/docker-compose.legacy.yml up -d --build
+docker compose -f docker/docker-compose.legacy.yml up -d --build
 
 # 访问
 # 前端: http://localhost:18081

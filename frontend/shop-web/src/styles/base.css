@@ -318,4 +318,17 @@ img {
   .toolbar-panel .el-date-editor {
     width: 100% !important;
   }
+
+  .el-drawer {
+    max-width: 92vw !important;
+  }
+
+  .admin-card,
+  .page-card {
+    padding: 14px;
+  }
+
+  .el-table {
+    min-width: 640px;
+  }
 }

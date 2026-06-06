@@ -14,7 +14,7 @@
 | 分类排序 | 后台分类表单可新增/编辑 `sortOrder`，列表显示排序值 | `/admin/categories` |
 | 商品/订单导入导出 | 商品页有导入/导出按钮，订单页有导出按钮；已新增小体量 CSV 样例 | `/admin/products`，`/admin/orders`，`sample-products-import.csv` |
 | Redis 可见证据 | Session key、验证码、缓存均使用 Redis；重置脚本会清理 Redis | `SessionService`，`CacheConfig`，`scripts/reset_demo_data.sh` |
-| 微服务证据 | Gateway/Nacos/OpenFeign/库存扣减由微服务烟测覆盖 | `deploy/docker-compose.yml`，`scripts/microservices_smoke_test.sh` |
+| 微服务证据 | Gateway/Nacos/OpenFeign/库存扣减由微服务烟测覆盖 | `docker/docker-compose.yml`，`scripts/microservices_smoke_test.sh` |
 | Docker 兜底 | 已新增不重新构建的演示启动与服务检查脚本 | `scripts/demo_start_monolith.sh`，`scripts/demo_start_microservices.sh`，`scripts/demo_check_services.sh` |
 
 ## 本轮新增交付

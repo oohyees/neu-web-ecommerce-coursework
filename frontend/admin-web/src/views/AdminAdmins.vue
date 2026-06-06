@@ -77,7 +77,7 @@ import EmptyState from '../components/EmptyState.vue'
 
 const items = ref<any[]>([]), keyword = ref(''), visible = ref(false)
 const emptyForm = () => ({ username: '', password: '', nickname: '', email: '', phone: '', role: 'ADMIN' })
-const form = ref(emptyForm())
+const form = ref<any>(emptyForm())
 
 async function load() { items.value = (await api.get('/auth/admin/admins', { params: { keyword: keyword.value } })).data.data || [] }
 function openCreate() { form.value = emptyForm(); visible.value = true }

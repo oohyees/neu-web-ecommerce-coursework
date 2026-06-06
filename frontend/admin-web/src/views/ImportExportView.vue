@@ -1,11 +1,11 @@
 <template>
   <AdminLayout>
     <div class="page-wrap">
-      <AdminPageHeader title="数据导入导出" description="批量导入商品数据，导出订单与用户报表" />
+      <AdminPageHeader title="数据导入导出" description="批量导入商品数据，导出订单、用户与商品报表" />
 
       <section class="admin-card block">
         <h2>📥 商品导入</h2>
-        <p class="muted">支持 CSV 格式批量导入商品数据，表头需包含：名称、价格、库存、分类ID。</p>
+        <p class="muted">支持 CSV 格式批量导入商品数据，表头顺序需为：分类ID、名称、价格、库存、图片、详情、参数。</p>
         <el-upload
           drag
           :auto-upload="false"
@@ -62,10 +62,16 @@ const importing = ref(false)
 const exporting = ref<string | null>(null)
 
 const exportTypes = [
-  { key: 'orders', label: '订单报表', desc: '导出所有订单数据，含商品明细、金额和状态' },
-  { key: 'users', label: '用户列表', desc: '导出注册用户信息与消费统计' },
-  { key: 'products', label: '商品清单', desc: '导出在售商品的完整信息' },
+  { key: 'orders', label: '订单报表', desc: '导出所有订单数据，含金额、支付和状态' },
+  { key: 'users', label: '用户列表', desc: '导出注册用户基础信息与账号状态' },
+  { key: 'products', label: '商品清单', desc: '导出商品资料、库存和销量' },
 ]
+
+const exportRouteMap: Record<string, string> = {
+  orders: '/admin/orders/export',
+  users: '/admin/users/export',
+  products: '/products/admin/export',
+}
 
 function handleFileChange(file: any) {
   selectedFile.value = file.raw || null
@@ -77,7 +83,7 @@ async function doImport() {
   try {
     const fd = new FormData()
     fd.append('file', selectedFile.value)
-    const res = await api.post('/admin/import/products', fd)
+    const res = await api.post('/products/admin/import', fd)
     ElMessage.success(`成功导入 ${res.data.data?.count || 0} 条商品数据`)
     selectedFile.value = null
   } catch {
@@ -88,7 +94,7 @@ async function doImport() {
 }
 
 function downloadTemplate() {
-  const csv = '名称,价格,库存,分类ID,描述\n示例商品,99.00,100,1,商品描述\n'
+  const csv = 'categoryId,name,price,stock,imageUrl,detailHtml,paramsText\n1,示例商品,99.00,100,/uploads/demo.png,商品详情,商品参数\n'
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -100,7 +106,9 @@ function downloadTemplate() {
 async function doExport(key: string) {
   exporting.value = key
   try {
-    const res = await api.get(`/admin/export/${key}`, { responseType: 'blob' })
+    const route = exportRouteMap[key]
+    if (!route) throw new Error(`unknown export key: ${key}`)
+    const res = await api.get(route, { responseType: 'blob' })
     const url = URL.createObjectURL(new Blob([res.data]))
     const a = document.createElement('a')
     a.href = url; a.download = `${key}_${new Date().toISOString().slice(0, 10)}.xlsx`; a.click()

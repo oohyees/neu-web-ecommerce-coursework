@@ -24,7 +24,7 @@ web/
 ├── frontend/
 │   ├── shop-web/              # 前台商城 Vue 工程
 │   └── admin-web/             # 后台管理 Vue 工程
-├── deploy/                    # Docker Compose 部署配置
+├── docker/                    # Docker Compose 部署配置
 └── scripts/                   # 构建/验收脚本
 ```
 
@@ -37,16 +37,16 @@ npm --prefix frontend/shop-web run build
 npm --prefix frontend/admin-web run build
 
 # 测试
-docker compose -f deploy/docker-compose.legacy.yml up -d mysql redis mailhog
+docker compose -f docker/docker-compose.legacy.yml up -d mysql redis mailhog
 mvn test                            # 依赖 Docker MySQL/Redis/MailHog，71 个评分点测试
 
 # 默认微服务栈
 ./scripts/build_microservices.sh    # 构建全部微服务
-docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build
 ./scripts/microservices_smoke_test.sh
 
 # legacy 单体对照栈
-docker compose -f deploy/docker-compose.legacy.yml up -d --build
+docker compose -f docker/docker-compose.legacy.yml up -d --build
 ./scripts/acceptance_check.sh       # 快速冒烟
 ```
 

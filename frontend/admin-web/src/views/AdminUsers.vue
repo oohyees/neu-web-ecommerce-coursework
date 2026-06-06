@@ -85,7 +85,7 @@ import EmptyState from '../components/EmptyState.vue'
 const items = ref<any[]>([]), total = ref(0), page = ref(1), size = 10, keyword = ref(''), detail = ref<any>(null), detailVisible = ref(false)
 const visible = ref(false)
 const emptyForm = () => ({ username: '', password: '', nickname: '', email: '', phone: '' })
-const form = ref(emptyForm())
+const form = ref<any>(emptyForm())
 
 async function load() {
   const { data } = await api.get('/auth/admin/users', { params: { keyword: keyword.value, page: page.value, size } })

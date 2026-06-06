@@ -54,7 +54,8 @@ const menuGroups = computed(() => [
     items: [
       { path: '/admin/products', label: '商品管理' },
       { path: '/admin/categories', label: '分类管理' },
-      { path: '/admin/reviews', label: '评价管理' }
+      { path: '/admin/reviews', label: '评价管理' },
+      { path: '/admin/import-export', label: '导入导出' }
     ]
   },
   {
@@ -93,6 +94,7 @@ const menuGroups = computed(() => [
 
 const menuRouteMap: Record<string, string> = {
   'products': 'goods', 'categories': 'goods', 'reviews': 'goods',
+  'import-export': 'goods',
   'orders': 'orders', 'consultations': 'orders', 'feedback': 'orders',
   'banners': 'content', 'promotions': 'content', 'announcements': 'content', 'activity-notices': 'content',
   'users': 'system', 'admins': 'system', 'profile': 'system'
@@ -261,6 +263,13 @@ async function logout() {
   }
   .main {
     padding: 16px;
+  }
+  .admin-drawer :deep(.el-drawer__body) {
+    padding: 0;
+    overflow-y: auto;
+  }
+  .admin-drawer :deep(.el-menu) {
+    border-right: 0;
   }
 }
 </style>

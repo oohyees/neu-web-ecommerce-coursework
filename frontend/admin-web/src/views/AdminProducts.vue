@@ -97,7 +97,7 @@ const keyword = ref('')
 const categoryFilter = ref<any>(null)
 const drawerVisible = ref(false)
 const emptyForm = () => ({ categoryId: categories.value[0]?.id || null, name: '', price: 0, stock: 0, sales: 0, isOnSale: true, imageUrl: '', detailHtml: '', paramsText: '' })
-const form = ref(emptyForm())
+const form = ref<any>(emptyForm())
 
 async function load() {
   const result = (await api.get('/products/admin/all', { params: { page: page.value, size, keyword: keyword.value, categoryId: categoryFilter.value } })).data.data

@@ -63,9 +63,18 @@
               <p v-else class="muted">{{ userStore.email || '' }}</p>
             </div>
           </div>
-          <div class="quick-actions">
-            <el-button type="danger" @click="$router.push(userStore.userId ? '/user/orders' : '/login')">我的订单</el-button>
-            <el-button @click="$router.push('/cart')">购物车</el-button>
+          <div class="acceptance-actions">
+            <button
+              v-for="item in quickEntries"
+              :key="item.path"
+              type="button"
+              class="acceptance-action"
+              @click="$router.push(item.path)"
+            >
+              <span class="action-icon">{{ item.icon }}</span>
+              <strong>{{ item.label }}</strong>
+              <em>{{ item.hint }}</em>
+            </button>
           </div>
 
           <el-divider />
@@ -119,7 +128,7 @@
       </div>
 
       <!-- ===== 秒杀入口 (李旋风格渐变红底) ===== -->
-      <div v-if="promotions.length" class="seckill-entry" @click="$router.push('/products?sort=sales_desc')">
+      <div v-if="promotions.length" class="seckill-entry" @click="$router.push('/seckill')">
         <span class="seckill-tag">⚡ 限时秒杀</span>
         <span class="seckill-desc">{{ promotions[0]?.title || '爆款直降 · 抢完即止' }}</span>
         <span class="seckill-go">立即抢购 →</span>
@@ -223,6 +232,15 @@ const searchKeyword = ref('')
 const hotSearchWords = ref<string[]>(['键盘', '鼠标', 'SSD', '耳机', '手机', '笔记本'])
 const placeholderIndex = ref(0)
 let placeholderTimer: ReturnType<typeof setInterval> | null = null
+
+const quickEntries = [
+  { label: '我的订单', hint: '支付/物流/评价', icon: '单', path: '/user/orders' },
+  { label: '购物车', hint: '勾选结算', icon: '车', path: '/cart' },
+  { label: '限时秒杀', hint: '促销活动', icon: '秒', path: '/seckill' },
+  { label: '领券中心', hint: '优惠结算', icon: '券', path: '/user/coupons' },
+  { label: '活动公告', hint: '公告通知', icon: '告', path: '/notices' },
+  { label: '在线客服', hint: '咨询反馈', icon: '客', path: '/consultations' },
+]
 
 const rotatingPlaceholders = computed(() => {
   const fromHot = hotSearchWords.value
@@ -527,10 +545,62 @@ onUnmounted(() => {
 .user-greeting strong { font-size: 15px; }
 .user-greeting p { margin: 2px 0 0; font-size: 13px; }
 
-.quick-actions {
+.acceptance-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.acceptance-action {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 2px 8px;
+  align-items: center;
+  min-height: 58px;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.acceptance-action:hover {
+  border-color: #f2b8c2;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.action-icon {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--brand);
+  background: var(--brand-light);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.acceptance-action strong {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.acceptance-action em {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .panel-head {
@@ -775,10 +845,16 @@ onUnmounted(() => {
   }
   .banner-copy strong { font-size: 13px; }
   .hero-carousel :deep(.el-carousel__container) { height: 260px !important; }
+  .acceptance-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .acceptance-action {
+    min-height: 54px;
+    padding: 8px;
+  }
 }
 @media (max-width: 540px) {
   .promo-grid { grid-template-columns: 1fr; }
   .product-scroll { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .category-panel { max-height: none; }
+  .acceptance-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 </style>
