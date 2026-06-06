@@ -17,12 +17,14 @@
     <el-card class="auth-card" shadow="never">
       <h2>用户登录</h2>
       <p class="card-desc">欢迎回来，请登录你的账号</p>
-      <el-input v-model="username" placeholder="请输入用户名" size="large" class="auth-input" />
-      <el-input v-model="password" placeholder="请输入密码" type="password" size="large" class="auth-input" show-password />
+      <el-form @submit.prevent="login">
+        <el-input v-model="username" placeholder="请输入用户名" size="large" class="auth-input" />
+        <el-input v-model="password" placeholder="请输入密码" type="password" size="large" class="auth-input" show-password @keyup.enter="login" />
+      </el-form>
       <div class="row-options">
         <el-checkbox v-model="remember">记住账号</el-checkbox>
       </div>
-      <el-button type="danger" size="large" class="auth-btn" @click="login" :loading="loading">登 录</el-button>
+      <el-button type="danger" size="large" class="auth-btn" :loading="loading" @click="login">登 录</el-button>
       <div class="links">
         <el-button link @click="$router.push('/register')">注册账号</el-button>
         <el-button link @click="$router.push('/forgot-password')">忘记密码</el-button>

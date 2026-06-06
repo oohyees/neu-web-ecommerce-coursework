@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import java.io.IOException;
 
 import java.util.Set;
 
@@ -41,10 +42,14 @@ public class AuthInterceptor implements HandlerInterceptor {
         SessionInfo session = token == null ? null : sessionService.get(token.replace("Bearer ", ""));
         if (session == null) {
             response.setStatus(401);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"success\":false,\"message\":\"未登录或会话已过期，请重新登录\"}");
             return false;
         }
         if (isAdminPath(path, method) && !Set.of("ADMIN","SUPER_ADMIN").contains(session.role())) {
             response.setStatus(403);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"success\":false,\"message\":\"权限不足，仅管理员可操作\"}");
             return false;
         }
         boolean superAdminOnly = path.startsWith("/api/auth/admin/users")
@@ -54,6 +59,8 @@ public class AuthInterceptor implements HandlerInterceptor {
                 || path.startsWith("/api/admin/announcements");
         if (superAdminOnly && !"SUPER_ADMIN".equals(session.role())) {
             response.setStatus(403);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"success\":false,\"message\":\"权限不足，仅超级管理员可操作\"}");
             return false;
         }
         request.setAttribute("session", session);

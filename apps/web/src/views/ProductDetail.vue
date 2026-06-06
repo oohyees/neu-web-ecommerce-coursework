@@ -117,7 +117,7 @@ async function load() {
   specs.value = (await api.get(`/marketing/specs/${route.params.id}`)).data.data || []
   flashSale.value = (await api.get('/marketing/promotions')).data.data.find(p => p.productId === Number(route.params.id) && p.promotionType === 'FLASH_SALE')
   if (session.userId) favorite.value = (await api.get(`/favorites/${route.params.id}/status`, { params: { userId: session.userId } })).data.data
-  Object.entries(groupedSpecs.value).forEach(([name, values]) => selectedSpecs.value[name] = values[0])
+  selectedSpecs.value = {}
 }
 
 async function loadReviews() {
@@ -130,6 +130,7 @@ function changeReviewPage(v) { reviewPage.value = v; loadReviews() }
 
 async function add() {
   if (!session.userId) return ElMessage.warning('请先登录') && false
+  if (!specsReady.value) return ElMessage.warning('请选择规格') && false
   await api.post('/cart/items', { userId: session.userId, productId: Number(route.params.id), quantity: quantity.value, specText: specText.value })
   ElMessage.success('已加入购物车')
   return true
@@ -164,6 +165,7 @@ async function submitReview() {
   reviewPage.value = 1
   load()
 }
+const specsReady = computed(() => Object.keys(groupedSpecs.value).every(name => selectedSpecs.value[name]))
 function imgFallback(e) {
   e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect fill="%23f3f4f6" width="400" height="400"/><text x="200" y="200" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="18">暂无图片</text></svg>'
 }

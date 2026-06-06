@@ -91,7 +91,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api'
@@ -138,14 +138,18 @@ async function removeItem(row) {
 function changeSelection(rows) { selected.value = rows }
 function selectAll() {
   selected.value = [...items.value]
-  tableRef.value?.clearSelection()
-  items.value.forEach(row => tableRef.value?.toggleRowSelection(row, true))
+  nextTick(() => {
+    tableRef.value?.clearSelection()
+    items.value.forEach(row => tableRef.value?.toggleRowSelection(row, true))
+  })
 }
 function invertSelection() {
   const next = items.value.filter(row => !selected.value.includes(row))
   selected.value = next
-  tableRef.value?.clearSelection()
-  next.forEach(row => tableRef.value?.toggleRowSelection(row, true))
+  nextTick(() => {
+    tableRef.value?.clearSelection()
+    next.forEach(row => tableRef.value?.toggleRowSelection(row, true))
+  })
 }
 function toggleMobile(row, checked) {
   selected.value = checked ? [...selected.value, row] : selected.value.filter(i => i !== row)

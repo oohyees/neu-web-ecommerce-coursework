@@ -1,0 +1,3 @@
+categoryId,name,price,stock,sales,isOnSale,imageUrl,detailHtml,paramsText
+1,演示导入商品-满绩验收,99.00,100,0,true,/catalog/B0B572FFKQ.jpg,用于现场演示商品批量导入功能。,品牌: Demo; 型号: IMPORT-001; 用途: 批量导入验收
+1,演示导入商品-备用样例,129.00,80,0,true,/catalog/B088CTW44F.jpg,备用导入样例，便于重复演示后搜索核验。,品牌: Demo; 型号: IMPORT-002; 用途: 批量导入验收

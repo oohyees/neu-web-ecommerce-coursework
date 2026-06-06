@@ -7,9 +7,11 @@
       </div>
       <h1>管理员登录</h1>
       <p class="desc">请输入管理员账号密码登录后台管理系统</p>
-      <el-input v-model="username" placeholder="用户名" size="large" class="auth-input" />
-      <el-input v-model="password" placeholder="密码" type="password" size="large" class="auth-input" show-password />
-      <el-button type="danger" size="large" class="auth-btn" @click="login" :loading="loading">登录后台</el-button>
+      <el-form @submit.prevent="login">
+        <el-input v-model="username" placeholder="用户名" size="large" class="auth-input" />
+        <el-input v-model="password" placeholder="密码" type="password" size="large" class="auth-input" show-password @keyup.enter="login" />
+        <el-button type="danger" size="large" class="auth-btn" :loading="loading" @click="login">登录后台</el-button>
+      </el-form>
       <el-button link @click="$router.push('/')">← 返回商城首页</el-button>
     </el-card>
   </main>

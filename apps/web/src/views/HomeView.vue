@@ -6,10 +6,17 @@
         <!-- 左侧分类 -->
         <aside class="category-panel">
           <h2>全部分类</h2>
-          <button v-for="group in categoryGroups" :key="group.id" @click="$router.push(`/products?categoryId=${group.id}`)">
-            <strong>{{ group.name }}</strong>
-            <span>{{ group.children.map(c => c.name).slice(0, 3).join(' / ') || '精选好物' }}</span>
-          </button>
+          <div v-for="group in categoryGroups" :key="group.id" class="category-group">
+            <button class="parent-category" @click="$router.push(`/products?categoryId=${group.id}`)">
+              <strong>{{ group.name }}</strong>
+              <span>{{ group.children.map(c => c.name).slice(0, 3).join(' / ') || '精选好物' }}</span>
+            </button>
+            <div v-if="group.children.length" class="child-categories">
+              <button v-for="child in group.children.slice(0, 4)" :key="child.id" @click="$router.push(`/products?categoryId=${child.id}`)">
+                {{ child.name }}
+              </button>
+            </div>
+          </div>
           <p v-if="categoriesLoaded && !categoryGroups.length" class="empty-tip">暂无分类，请在后台维护分类数据。</p>
         </aside>
 
@@ -49,6 +56,16 @@
           <p v-for="a in announcements.slice(0, 2)" :key="a.id" class="notice-line">{{ a.title }}</p>
           <p v-for="n in notices.slice(0, 2)" :key="`n-${n.id}`" class="notice-line">{{ n.title }}</p>
         </aside>
+      </section>
+
+      <section class="search-panel">
+        <el-input v-model="searchKeyword" size="large" placeholder="搜索商品名称、品牌或关键词" @keyup.enter="goSearch">
+          <template #append><el-button type="danger" @click="goSearch">搜索</el-button></template>
+        </el-input>
+        <div class="hot-search">
+          <span>热门搜索</span>
+          <button v-for="word in hotSearchWords" :key="word" @click="goSearch(word)">{{ word }}</button>
+        </div>
       </section>
 
       <!-- 促销/优惠券四宫格 -->
@@ -92,6 +109,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { api } from '../api'
 import { useSessionStore } from '../store'
@@ -100,6 +118,7 @@ import ProductCard from '../components/ProductCard.vue'
 import EmptyState from '../components/EmptyState.vue'
 
 const session = useSessionStore()
+const router = useRouter()
 const data = ref({ banners: [], hotProducts: [], newProducts: [] })
 const announcements = ref([])
 const notices = ref([])
@@ -107,6 +126,8 @@ const promotions = ref([])
 const categories = ref([])
 const coupons = ref([])
 const categoriesLoaded = ref(false)
+const searchKeyword = ref('')
+const hotSearchWords = ['手机', '耳机', '电脑', '运动', '家居']
 
 const categoryGroups = computed(() => categories.value.filter(c => !c.parentId).map(parent => ({
   ...parent,
@@ -117,6 +138,12 @@ async function claim(couponId) {
   if (!session.userId) return ElMessage.warning('请先登录后领取优惠券')
   await api.post(`/marketing/coupons/${couponId}/claim`, null, { params: { userId: session.userId } })
   ElMessage.success('优惠券已领取')
+}
+
+function goSearch(word) {
+  const keyword = typeof word === 'string' ? word : searchKeyword.value
+  if (!keyword.trim()) return router.push('/products')
+  router.push(`/products?keyword=${encodeURIComponent(keyword.trim())}&searchMode=fuzzy`)
 }
 
 async function addToCart(product) {
@@ -174,19 +201,24 @@ onMounted(async () => {
   font-weight: 700;
 }
 
-.category-panel button {
+.category-group {
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.parent-category {
   display: grid;
+  gap: 4px;
   width: 100%;
-  padding: 11px 0;
+  padding: 0;
   text-align: left;
   cursor: pointer;
   background: none;
   border: 0;
-  border-bottom: 1px solid #f1f5f9;
   transition: color .2s;
 }
 
-.category-panel button:hover strong {
+.parent-category:hover strong {
   color: var(--brand);
 }
 
@@ -201,6 +233,67 @@ onMounted(async () => {
 .empty-tip {
   color: var(--muted);
   font-size: 13px;
+}
+
+.child-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.child-categories button {
+  padding: 3px 8px;
+  cursor: pointer;
+  color: var(--muted);
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.child-categories button:hover {
+  color: var(--brand);
+  border-color: #fecdd3;
+  background: #fff5f6;
+}
+
+.search-panel {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  margin-bottom: 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.hot-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.hot-search span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hot-search button {
+  padding: 4px 10px;
+  cursor: pointer;
+  color: #374151;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.hot-search button:hover {
+  color: var(--brand);
+  border-color: #fecdd3;
+  background: #fff5f6;
 }
 
 /* ---- banner ---- */

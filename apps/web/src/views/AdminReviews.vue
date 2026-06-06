@@ -13,6 +13,12 @@
           <template #default="{ row }"><span class="price">{{ row.rating }} 分</span></template>
         </el-table-column>
         <el-table-column prop="content" label="评价内容" min-width="220" show-overflow-tooltip />
+        <el-table-column label="图片" width="110">
+          <template #default="{ row }">
+            <img v-if="row.imageUrl" :src="row.imageUrl" class="review-thumb" />
+            <span v-else class="muted">无图</span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="120">
           <template #default="{ row }">
             <el-button link type="danger" size="small" @click="remove(row.id)">删除</el-button>
@@ -54,4 +60,12 @@ onMounted(load)
 
 <style scoped>
 .pager { display: flex; justify-content: flex-end; margin-top: 16px; }
+.review-thumb {
+  width: 72px;
+  height: 54px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8fafc;
+}
 </style>

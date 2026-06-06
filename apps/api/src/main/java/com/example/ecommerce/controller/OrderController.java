@@ -53,6 +53,21 @@ public class OrderController {
         ));
     }
 
+    @GetMapping("/api/admin/orders/{id}")
+    public ApiResponse<?> adminOrderDetail(@PathVariable Long id) {
+        var order = orderMapper.findById(id);
+        if (order == null) return ApiResponse.fail("订单不存在");
+        var items = jdbc.queryForList("select * from order_item where order_id=? order by id", id);
+        var addresses = jdbc.queryForList("select * from user_address where id=?", order.getAddressId());
+        var logistics = orderMapper.findLogistics(id);
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("order", order);
+        data.put("orderItems", items);
+        data.put("address", addresses.isEmpty() ? null : addresses.get(0));
+        data.put("logistics", logistics);
+        return ApiResponse.ok(data);
+    }
+
     @GetMapping("/api/orders")
     public ApiResponse<?> myOrders(@RequestParam(required = false) Long userId,@RequestParam(required = false) String status,@RequestParam(required = false) String paymentStatus,@RequestParam(required = false) Integer page,@RequestParam(required = false) Integer size, HttpServletRequest request) {
         Long currentUserId = CurrentSession.userId(request);
