@@ -192,8 +192,8 @@ INSERT INTO user_coupon (user_id, coupon_id, status, claimed_at) VALUES
 (1, 1, 'UNUSED', NOW());
 
 INSERT INTO promotion (product_id, title, promotion_type, promotion_price, promotion_stock, start_at, end_at, enabled) VALUES
-(1, '限时优惠', 'FLASH_SALE', 75.99, 10, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 7 DAY), 1),
-(2, '精选直降', 'PROMOTION', 53.20, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 7 DAY), 1);
+(1, '限时优惠', 'FLASH_SALE', 75.99, 10, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
+(2, '精选直降', 'PROMOTION', 53.20, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1);
 
 INSERT INTO user_address (user_id, receiver_name, phone, province, city, district, detail_address, is_default) VALUES
 (1, 'Alice', '13800000000', '辽宁省', '沈阳市', '和平区', '创新路 1 号', 1);

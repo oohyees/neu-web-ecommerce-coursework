@@ -6,6 +6,7 @@ import com.example.ecommerce.mapper.OrderMapper;
 import com.example.ecommerce.mapper.ProductMapper;
 import com.example.ecommerce.mapper.MarketingMapper;
 import com.example.ecommerce.model.CartItemView;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -30,6 +31,7 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = {"productDetail", "home"}, allEntries = true)
     public String createOrder(Long userId, Long addressId, java.util.List<Long> cartItemIds, java.util.List<Long> productIds, Long couponId, String paymentMethod) {
         List<CartItemView> items = cartMapper.findByUserId(userId).stream()
                 .filter(i -> (cartItemIds != null && !cartItemIds.isEmpty()) ? cartItemIds.contains(i.getId()) : (productIds == null || productIds.isEmpty() || productIds.contains(i.getProductId())))

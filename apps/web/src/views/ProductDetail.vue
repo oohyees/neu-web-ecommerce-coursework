@@ -25,7 +25,7 @@
           <el-form label-width="72px" class="buy-form">
             <el-form-item v-for="(values, name) in groupedSpecs" :key="name" :label="name">
               <el-radio-group v-model="selectedSpecs[name]" size="small">
-                <el-radio-button v-for="value in values" :key="value" :label="value" />
+                <el-radio-button v-for="value in values" :key="value" :label="value" :value="value" />
               </el-radio-group>
             </el-form-item>
             <el-form-item label="数量">
@@ -71,6 +71,9 @@
                 <img v-if="r.imageUrl" :src="r.imageUrl" class="review-img" />
               </article>
               <EmptyState v-if="!reviews.length" title="暂无评价" description="购买后可上传图片评价。" />
+              <div v-if="reviewTotal > reviewSize" class="review-pager">
+                <el-pagination layout="prev, pager, next, total" :total="reviewTotal" :page-size="reviewSize" :current-page="reviewPage" @current-change="changeReviewPage" />
+              </div>
 
               <el-divider />
               <h3>发表评价</h3>
@@ -103,18 +106,27 @@ import EmptyState from '../components/EmptyState.vue'
 const route = useRoute(), router = useRouter(), session = useSessionStore()
 const product = ref(null), reviews = ref([]), favorite = ref(false), specs = ref([])
 const selectedSpecs = ref({}), flashSale = ref(null), quantity = ref(1)
+const reviewPage = ref(1), reviewSize = 5, reviewTotal = ref(0)
 const reviewForm = ref({ rating: 5, content: '', imageUrl: '' })
 const groupedSpecs = computed(() => specs.value.reduce((m, s) => ((m[s.specName] ??= []).push(s.specValue), m), {}))
 const specText = computed(() => Object.entries(selectedSpecs.value).map(([k, v]) => `${k}:${v}`).join(' / '))
 
 async function load() {
   product.value = (await api.get(`/products/${route.params.id}`)).data.data
-  reviews.value = (await api.get('/reviews', { params: { productId: route.params.id } })).data.data || []
+  await loadReviews()
   specs.value = (await api.get(`/marketing/specs/${route.params.id}`)).data.data || []
   flashSale.value = (await api.get('/marketing/promotions')).data.data.find(p => p.productId === Number(route.params.id) && p.promotionType === 'FLASH_SALE')
   if (session.userId) favorite.value = (await api.get(`/favorites/${route.params.id}/status`, { params: { userId: session.userId } })).data.data
   Object.entries(groupedSpecs.value).forEach(([name, values]) => selectedSpecs.value[name] = values[0])
 }
+
+async function loadReviews() {
+  const result = (await api.get('/reviews', { params: { productId: route.params.id, page: reviewPage.value, size: reviewSize } })).data.data || {}
+  reviews.value = result.items || []
+  reviewTotal.value = result.total || 0
+}
+
+function changeReviewPage(v) { reviewPage.value = v; loadReviews() }
 
 async function add() {
   if (!session.userId) return ElMessage.warning('请先登录') && false
@@ -149,6 +161,7 @@ async function submitReview() {
   await api.post('/reviews', { userId: session.userId, productId: Number(route.params.id), ...reviewForm.value })
   ElMessage.success('评价已提交')
   reviewForm.value = { rating: 5, content: '', imageUrl: '' }
+  reviewPage.value = 1
   load()
 }
 function imgFallback(e) {
@@ -232,6 +245,7 @@ h1 { margin: 0 0 8px; font-size: 24px; line-height: 1.35; }
 .review-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
 .review-card p { margin: 8px 0; line-height: 1.6; }
 .review-img { width: 100px; height: 75px; object-fit: cover; border-radius: 6px; }
+.review-pager { display: flex; justify-content: flex-end; margin: 12px 0; }
 .review-form { max-width: 560px; margin-top: 16px; }
 .review-form h3 { margin: 0 0 12px; font-size: 16px; }
 .upload-preview { width: 100px; height: 75px; object-fit: cover; border-radius: 6px; margin-top: 6px; }

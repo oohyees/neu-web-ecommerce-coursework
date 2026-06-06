@@ -14,7 +14,10 @@ public interface OrderMapper {
                         @Param("specText") String specText, @Param("unitPrice") BigDecimal unitPrice, @Param("quantity") Integer quantity, @Param("subtotal") BigDecimal subtotal);
     List<OrderView> findAll();
     List<OrderView> findByUserId(@Param("userId") Long userId, @Param("status") String status);
-    List<OrderView> searchAdmin(@Param("keyword") String keyword, @Param("status") String status);
+    List<OrderView> findByUserIdPage(@Param("userId") Long userId, @Param("status") String status, @Param("paymentStatus") String paymentStatus, @Param("offset") Integer offset, @Param("size") Integer size);
+    int countByUserId(@Param("userId") Long userId, @Param("status") String status, @Param("paymentStatus") String paymentStatus);
+    List<OrderView> searchAdmin(@Param("keyword") String keyword, @Param("status") String status, @Param("offset") Integer offset, @Param("size") Integer size);
+    int countAdmin(@Param("keyword") String keyword, @Param("status") String status);
     int updateStatus(@Param("id") Long id, @Param("status") String status);
     int updatePaymentStatus(@Param("id") Long id, @Param("paymentStatus") String paymentStatus);
     int updateLogisticsStatus(@Param("id") Long id, @Param("logisticsStatus") String logisticsStatus);

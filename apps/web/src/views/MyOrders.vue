@@ -42,7 +42,7 @@
             <el-button v-if="order.paymentStatus==='UNPAID'" type="danger" size="small" @click="$router.push(`/pay/${order.id}`)">立即支付</el-button>
             <el-button v-if="order.status==='CREATED'" size="small" @click="cancelOrder(order.id)">取消订单</el-button>
             <el-button v-if="order.status==='SHIPPED'" type="danger" size="small" @click="confirm(order.id)">确认收货</el-button>
-            <el-button v-if="order.paymentStatus==='PAID'" size="small" @click="refund(order.id)">申请退款</el-button>
+            <el-button v-if="order.paymentStatus==='PAID' && !['REQUESTED','APPROVED'].includes(order.refundStatus)" size="small" @click="refund(order.id)">申请退款</el-button>
             <el-button size="small" @click="showLogistics(order)">物流轨迹</el-button>
             <el-button size="small" @click="openDetail(order)">订单详情</el-button>
           </footer>
@@ -111,7 +111,12 @@ async function confirm(id) {
     load()
   } catch { /* user cancelled */ }
 }
-async function refund(id) { await api.put(`/orders/${id}/refund`); ElMessage.success('退款申请已提交'); load() }
+async function refund(id) {
+  const { data } = await api.put(`/orders/${id}/refund`)
+  if (!data.success) return ElMessage.error(data.message)
+  ElMessage.success('退款申请已提交')
+  load()
+}
 async function showLogistics(row) {
   const items = (await api.get(`/orders/${row.id}/logistics`)).data.data
   ElMessageBox.alert(items.map(i => `${i.createdAt} ${i.content}`).join('\n') || '暂无物流信息', '物流轨迹')

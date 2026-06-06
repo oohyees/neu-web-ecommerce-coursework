@@ -81,7 +81,7 @@
         where id = #{id}
     </update>
     <update id="decreaseStock">
-        update product set stock = stock - #{quantity}
+        update product set stock = stock - #{quantity}, sales = sales + #{quantity}
         where id = #{id} and stock &gt;= #{quantity}
     </update>
     <select id="countAllForAdmin" resultType="int">

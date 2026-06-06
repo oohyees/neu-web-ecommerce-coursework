@@ -89,7 +89,12 @@ async function load() {
   orders.value = result.items || []; total.value = result.total || 0
 }
 async function ship(id) { await api.put(`/admin/orders/${id}/ship`); ElMessage.success('已发货'); load() }
-async function approveRefund(id) { await api.put(`/admin/orders/${id}/refund/approve`); ElMessage.success('退款已处理'); load() }
+async function approveRefund(id) {
+  const { data } = await api.put(`/admin/orders/${id}/refund/approve`)
+  if (!data.success) return ElMessage.error(data.message)
+  ElMessage.success('退款已处理')
+  load()
+}
 async function updateStatus(id, status) { await api.put(`/admin/orders/${id}/status`, null, { params: { status } }); ElMessage.success('状态已更新'); load() }
 async function openDetail(row) { detail.value = (await api.get(`/orders/${row.id}`)).data.data; detailVisible.value = true }
 function changePage(v) { page.value = v; load() }

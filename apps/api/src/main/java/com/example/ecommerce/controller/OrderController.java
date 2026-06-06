@@ -46,14 +46,24 @@ public class OrderController {
 
     @GetMapping("/api/admin/orders")
     public ApiResponse<?> adminOrders(@RequestParam(required = false) String keyword,@RequestParam(required = false) String status,@RequestParam(defaultValue="1") Integer page,@RequestParam(defaultValue="10") Integer size) {
-        var all=orderMapper.searchAdmin(keyword,status);
-        int from=Math.min((page-1)*size,all.size()),to=Math.min(from+size,all.size());
-        return ApiResponse.ok(Map.of("items",all.subList(from,to),"total",all.size()));
+        int safePage = Math.max(page, 1), safeSize = Math.min(Math.max(size, 1), 100);
+        return ApiResponse.ok(Map.of(
+                "items", orderMapper.searchAdmin(keyword, status, (safePage - 1) * safeSize, safeSize),
+                "total", orderMapper.countAdmin(keyword, status)
+        ));
     }
 
     @GetMapping("/api/orders")
-    public ApiResponse<?> myOrders(@RequestParam(required = false) Long userId,@RequestParam(required = false) String status,@RequestParam(required = false) String paymentStatus, HttpServletRequest request) {
-        return ApiResponse.ok(orderMapper.findByUserId(CurrentSession.userId(request),status).stream().filter(o->paymentStatus==null||paymentStatus.isBlank()||paymentStatus.equals(o.getPaymentStatus())).toList());
+    public ApiResponse<?> myOrders(@RequestParam(required = false) Long userId,@RequestParam(required = false) String status,@RequestParam(required = false) String paymentStatus,@RequestParam(required = false) Integer page,@RequestParam(required = false) Integer size, HttpServletRequest request) {
+        Long currentUserId = CurrentSession.userId(request);
+        if (page == null || size == null) {
+            return ApiResponse.ok(orderMapper.findByUserId(currentUserId,status).stream().filter(o->paymentStatus==null||paymentStatus.isBlank()||paymentStatus.equals(o.getPaymentStatus())).toList());
+        }
+        int safePage = Math.max(page, 1), safeSize = Math.min(Math.max(size, 1), 100);
+        return ApiResponse.ok(Map.of(
+                "items", orderMapper.findByUserIdPage(currentUserId, status, paymentStatus, (safePage - 1) * safeSize, safeSize),
+                "total", orderMapper.countByUserId(currentUserId, status, paymentStatus)
+        ));
     }
 
     @GetMapping("/api/orders/{id}")
@@ -120,13 +130,24 @@ public class OrderController {
     @PutMapping("/api/orders/{id}/refund")
     public ApiResponse<?> refund(@PathVariable Long id, HttpServletRequest request) {
         if (!ownsOrder(id, request)) return ApiResponse.fail("无权操作该订单");
+        var order = orderMapper.findById(id);
+        if (order == null) return ApiResponse.fail("订单不存在");
+        if (!"PAID".equals(order.getPaymentStatus())) return ApiResponse.fail("仅已支付订单可申请退款");
+        if ("REQUESTED".equals(order.getRefundStatus()) || "APPROVED".equals(order.getRefundStatus())) return ApiResponse.fail("退款已提交或已处理");
+        if (!java.util.Set.of("PAID", "SHIPPED", "COMPLETED").contains(order.getStatus())) return ApiResponse.fail("当前订单状态不可申请退款");
         orderMapper.updateRefundStatus(id, "REQUESTED");
+        orderMapper.insertLogistics(id,"用户申请退款",LocalDateTime.now());
         return ApiResponse.ok(null);
     }
 
     @PutMapping("/api/admin/orders/{id}/refund/approve")
     public ApiResponse<?> approveRefund(@PathVariable Long id) {
+        var order = orderMapper.findById(id);
+        if (order == null) return ApiResponse.fail("订单不存在");
+        if (!"REQUESTED".equals(order.getRefundStatus())) return ApiResponse.fail("当前订单未申请退款");
         orderMapper.updateRefundStatus(id, "APPROVED");
+        orderMapper.updatePaymentStatus(id, "REFUNDED");
+        orderMapper.insertLogistics(id,"管理员已同意退款",LocalDateTime.now());
         return ApiResponse.ok(null);
     }
 

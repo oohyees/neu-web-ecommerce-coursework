@@ -23,16 +23,45 @@
         </where>
         order by created_at desc, id desc
     </select>
+    <select id="findByUserIdPage" resultType="com.example.ecommerce.model.OrderView">
+        select * from orders
+        <where>
+          user_id = #{userId}
+          <if test="status != null and status != ''">and status = #{status}</if>
+          <if test="paymentStatus != null and paymentStatus != ''">and payment_status = #{paymentStatus}</if>
+        </where>
+        order by created_at desc, id desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countByUserId" resultType="int">
+        select count(*) from orders
+        <where>
+          user_id = #{userId}
+          <if test="status != null and status != ''">and status = #{status}</if>
+          <if test="paymentStatus != null and paymentStatus != ''">and payment_status = #{paymentStatus}</if>
+        </where>
+    </select>
     <select id="searchAdmin" resultType="com.example.ecommerce.model.OrderView">
         select * from orders
         <where>
-          <if test="keyword != null and keyword != ''">order_no like concat('%',#{keyword},'%') or cast(user_id as char) like concat('%',#{keyword},'%')</if>
+          <if test="keyword != null and keyword != ''">(order_no like concat('%',#{keyword},'%') or cast(user_id as char) like concat('%',#{keyword},'%'))</if>
           <if test="status != null and status != ''">
             <if test="keyword != null and keyword != ''">and</if>
             status=#{status}
           </if>
         </where>
         order by created_at desc, id desc
+        limit #{size} offset #{offset}
+    </select>
+    <select id="countAdmin" resultType="int">
+        select count(*) from orders
+        <where>
+          <if test="keyword != null and keyword != ''">(order_no like concat('%',#{keyword},'%') or cast(user_id as char) like concat('%',#{keyword},'%'))</if>
+          <if test="status != null and status != ''">
+            <if test="keyword != null and keyword != ''">and</if>
+            status=#{status}
+          </if>
+        </where>
     </select>
     <update id="updateStatus">
         update orders set status = #{status} where id = #{id}

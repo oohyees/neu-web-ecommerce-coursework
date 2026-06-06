@@ -5,7 +5,7 @@
       <el-button @click="$router.push('/products')">继续购物</el-button>
     </div>
 
-    <el-tabs v-model="filterKey" class="order-tabs" @tab-change="load">
+    <el-tabs v-model="filterKey" class="order-tabs" @tab-change="changeFilter">
       <el-tab-pane label="全部" name="" />
       <el-tab-pane label="待支付" name="UNPAID" />
       <el-tab-pane label="待发货" name="PAID" />
@@ -38,7 +38,7 @@
           <el-button v-if="order.paymentStatus==='UNPAID'" type="danger" size="small" @click="$router.push(`/pay/${order.id}`)">立即支付</el-button>
           <el-button v-if="order.status==='CREATED'" size="small" @click="cancelOrder(order.id)">取消订单</el-button>
           <el-button v-if="order.status==='SHIPPED'" type="danger" size="small" @click="confirm(order.id)">确认收货</el-button>
-          <el-button v-if="order.paymentStatus==='PAID'" size="small" @click="refund(order.id)">申请退款</el-button>
+          <el-button v-if="order.paymentStatus==='PAID' && !['REQUESTED','APPROVED'].includes(order.refundStatus)" size="small" @click="refund(order.id)">申请退款</el-button>
           <el-button size="small" @click="showLogistics(order)">物流轨迹</el-button>
           <el-button size="small" @click="openDetail(order)">订单详情</el-button>
         </footer>
@@ -47,6 +47,9 @@
     <EmptyState v-else title="暂无订单" description="完成下单后可以在这里查看订单状态。">
       <el-button type="danger" @click="$router.push('/products')">去购物</el-button>
     </EmptyState>
+    <div v-if="total > size" class="pager">
+      <el-pagination layout="prev, pager, next, total" :total="total" :page-size="size" :current-page="page" @current-change="changePage" />
+    </div>
 
     <el-dialog v-model="detailVisible" title="订单详情" width="760px">
       <el-descriptions v-if="detail" :column="1" border>
@@ -76,17 +79,25 @@ import EmptyState from '../components/EmptyState.vue'
 
 const session = useSessionStore()
 const orders = ref([])
+const total = ref(0)
+const page = ref(1)
+const size = 6
 const filterKey = ref('')
 const detail = ref(null)
 const detailVisible = ref(false)
 
 async function load() {
-  const params = { userId: session.userId }
+  const params = { userId: session.userId, page: page.value, size }
   if (filterKey.value === 'UNPAID') params.paymentStatus = 'UNPAID'
   else if (filterKey.value === 'PAID') params.status = 'PAID'
   else if (filterKey.value) params.status = filterKey.value
-  orders.value = (await api.get('/orders', { params })).data.data || []
+  const result = (await api.get('/orders', { params })).data.data || {}
+  orders.value = result.items || []
+  total.value = result.total || 0
 }
+
+function changeFilter() { page.value = 1; load() }
+function changePage(v) { page.value = v; load() }
 
 async function cancelOrder(id) {
   try {
@@ -104,7 +115,12 @@ async function confirm(id) {
     load()
   } catch { /* user cancelled */ }
 }
-async function refund(id) { await api.put(`/orders/${id}/refund`); ElMessage.success('退款申请已提交'); load() }
+async function refund(id) {
+  const { data } = await api.put(`/orders/${id}/refund`)
+  if (!data.success) return ElMessage.error(data.message)
+  ElMessage.success('退款申请已提交')
+  load()
+}
 async function showLogistics(row) {
   const items = (await api.get(`/orders/${row.id}/logistics`)).data.data
   ElMessageBox.alert(items.map(i => `${i.createdAt} ${i.content}`).join('\n') || '暂无物流信息', '物流轨迹')
@@ -168,6 +184,12 @@ h1 { margin: 0; font-size: 22px; }
 .order-card footer {
   flex-wrap: wrap;
   border-top: 1px solid #f1f5f9;
+}
+
+.pager {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
 @media (max-width: 768px) {

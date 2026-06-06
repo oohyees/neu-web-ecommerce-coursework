@@ -1,21 +1,21 @@
 <template>
   <AdminLayout>
     <AdminPageHeader title="商品管理" eyebrow="Product" subtitle="维护商品资料、图片、库存、上下架和批量导入导出。">
-      <el-upload :show-file-list="false" :http-request="importProducts"><el-button>导入商品</el-button></el-upload>
+      <el-upload accept=".csv,text/csv" :show-file-list="false" :http-request="importProducts"><el-button>导入商品</el-button></el-upload>
       <el-button @click="exportProducts">导出商品</el-button>
       <el-button type="danger" @click="openCreate">新增商品</el-button>
     </AdminPageHeader>
 
     <section class="toolbar-panel">
-      <el-input v-model="keyword" placeholder="搜索商品名称" style="width:240px" clearable @keyup.enter="load" />
-      <el-select v-model="categoryFilter" clearable placeholder="分类筛选" style="width:160px" @change="load">
+      <el-input v-model="keyword" placeholder="搜索商品名称" style="width:240px" clearable @keyup.enter="search" @clear="search" />
+      <el-select v-model="categoryFilter" clearable placeholder="分类筛选" style="width:160px" @change="search">
         <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
       </el-select>
-      <el-button type="danger" @click="load">搜索</el-button>
+      <el-button type="danger" @click="search">搜索</el-button>
     </section>
 
     <section class="admin-card">
-      <el-table v-if="filteredProducts.length" :data="paginated" class="product-table">
+      <el-table v-if="products.length" :data="products" class="product-table">
         <el-table-column label="商品" min-width="300">
           <template #default="{ row }">
             <div class="goods-cell">
@@ -48,8 +48,8 @@
         </el-table-column>
       </el-table>
       <EmptyState v-else title="暂无商品数据" description="请先新增商品或调整筛选条件。" />
-      <div v-if="filteredProducts.length > size" class="pager">
-        <el-pagination layout="prev, pager, next, total" :total="filteredProducts.length" :page-size="size" :current-page="page" @current-change="changePage" />
+      <div v-if="total > size" class="pager">
+        <el-pagination layout="prev, pager, next, total" :total="total" :page-size="size" :current-page="page" @current-change="changePage" />
       </div>
     </section>
 
@@ -81,7 +81,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api'
 import AdminLayout from '../layouts/AdminLayout.vue'
@@ -89,6 +89,7 @@ import AdminPageHeader from '../components/AdminPageHeader.vue'
 import EmptyState from '../components/EmptyState.vue'
 
 const products = ref([])
+const total = ref(0)
 const page = ref(1)
 const size = 10
 const categories = ref([])
@@ -97,16 +98,11 @@ const categoryFilter = ref(null)
 const drawerVisible = ref(false)
 const emptyForm = () => ({ categoryId: categories.value[0]?.id || null, name: '', price: 0, stock: 0, sales: 0, isOnSale: true, imageUrl: '', detailHtml: '', paramsText: '' })
 const form = ref(emptyForm())
-const filteredProducts = computed(() => products.value.filter(p => (!keyword.value || p.name?.includes(keyword.value)) && (!categoryFilter.value || p.categoryId === categoryFilter.value)))
-const paginated = computed(() => {
-  const start = (page.value - 1) * size
-  return filteredProducts.value.slice(start, start + size)
-})
 
 async function load() {
-  const result = (await api.get('/products/admin/all', { params: { page: 1, size: 999 } })).data.data
+  const result = (await api.get('/products/admin/all', { params: { page: page.value, size, keyword: keyword.value, categoryId: categoryFilter.value } })).data.data
   products.value = result.items || []
-  page.value = 1
+  total.value = result.total || 0
   categories.value = (await api.get('/categories')).data.data || []
   if (!form.value.categoryId && categories.value.length) form.value.categoryId = categories.value[0].id
 }
@@ -140,9 +136,17 @@ async function toggleSale(row) {
   load()
 }
 
-function changePage(v) { page.value = v }
+function search() { page.value = 1; load() }
+function changePage(v) { page.value = v; load() }
 async function uploadImage({ file }) { const fd = new FormData(); fd.append('file', file); form.value.imageUrl = (await api.post('/files/upload', fd)).data.data }
-async function importProducts({ file }) { const fd = new FormData(); fd.append('file', file); await api.post('/products/admin/import', fd); ElMessage.success('导入完成'); load() }
+async function importProducts({ file }) {
+  if (!file.name.toLowerCase().endsWith('.csv')) return ElMessage.warning('请选择 CSV 文件')
+  const fd = new FormData(); fd.append('file', file)
+  const { data } = await api.post('/products/admin/import', fd)
+  if (!data.success) return ElMessage.error(data.message)
+  ElMessage.success(`导入完成，共 ${data.data.count} 条`)
+  search()
+}
 async function exportProducts() { const response = await api.get('/products/admin/export', { responseType: 'blob' }); const url = URL.createObjectURL(response.data); const a = document.createElement('a'); a.href = url; a.download = 'products.xlsx'; a.click(); URL.revokeObjectURL(url) }
 function imgFallback(e) {
   e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56"><rect fill="%23f3f4f6" width="56" height="56"/><text x="28" y="28" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="8">无图</text></svg>'

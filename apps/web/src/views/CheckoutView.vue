@@ -54,8 +54,8 @@
                 <el-option v-for="c in coupons" :key="c.id" :label="`${c.name}（满${c.thresholdAmount}减${c.discountAmount}）`" :value="c.id" />
               </el-select>
               <el-radio-group v-model="paymentMethod">
-                <el-radio-button label="MOCK_PAY">模拟支付</el-radio-button>
-                <el-radio-button label="CASH_ON_DELIVERY">货到付款</el-radio-button>
+                <el-radio-button label="模拟支付" value="MOCK_PAY">模拟支付</el-radio-button>
+                <el-radio-button label="货到付款" value="CASH_ON_DELIVERY">货到付款</el-radio-button>
               </el-radio-group>
             </div>
           </section>
@@ -134,8 +134,13 @@ onMounted(load)
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 18px;
 }
+.checkout-grid > main {
+  min-width: 0;
+}
 .block {
   margin-bottom: 16px;
+  min-width: 0;
+  overflow-x: auto;
 }
 .block h2 {
   margin: 0 0 14px;
@@ -182,6 +187,10 @@ onMounted(load)
   grid-template-columns: 1fr auto;
   gap: 16px;
   align-items: center;
+}
+.pay-options :deep(.el-select) {
+  width: 100% !important;
+  max-width: 100%;
 }
 
 .summary {
