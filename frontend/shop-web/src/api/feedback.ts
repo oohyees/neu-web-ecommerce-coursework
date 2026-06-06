@@ -1,18 +1,20 @@
-import { get, post } from './request'
-import type { Feedback, Consultation } from '../types/index'
+import request from './request'
 
-export function submitFeedback(data: { userId: number; type: string; content: string }) {
-  return post<void>('/feedback', data)
+export interface Feedback {
+  id: number
+  userId: number
+  type: string
+  content: string
+  contact: string
+  status: string
+  reply: string | null
+  createdAt: string
 }
 
-export function getFeedbacks(userId: number) {
-  return get<Feedback[]>('/feedback', { userId })
+export function fetchMyFeedback() {
+  return request.get('/feedback')
 }
 
-export function submitConsultation(data: { userId: number; question: string }) {
-  return post<Consultation>('/consultations', data)
-}
-
-export function getConsultations(userId: number) {
-  return get<Consultation[]>('/consultations', { userId })
+export function submitFeedback(data: { type: string; content: string; contact?: string }) {
+  return request.post('/feedback', data)
 }

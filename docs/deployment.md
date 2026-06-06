@@ -2,7 +2,7 @@
 
 > 相关文档：[架构总览](architecture.md) · [开发手册](development.md) · [API 参考](api-reference.md)
 
-## 默认微服务模式
+## 默认微服务模式（主演示路径）
 
 ```bash
 ./scripts/build_microservices.sh
@@ -67,15 +67,22 @@ curl http://localhost:18080/legacy/status
 
 ## 数据库
 
-- 数据库名：`ecommerce_minimal`（utf8mb4）
-- Schema：`backend/legacy-web/src/main/resources/schema.sql`（21 张表）
-- 种子数据：`backend/legacy-web/src/main/resources/data.sql`（商品、用户、订单等演示数据）
-- Docker 启动时自动执行 schema.sql 和 data.sql
+- legacy 数据库名：`ecommerce_minimal`（utf8mb4）
+- 微服务数据库名：`ecommerce_auth`、`ecommerce_product`、`ecommerce_order`
+- 微服务 Docker 初始化脚本：`sql/user`、`sql/product`、`sql/order`、`sql/content`、`sql/marketing`
+- legacy 初始化脚本：`backend/legacy-web/src/main/resources/schema.sql` 与 `data.sql`
+- 当前演示商品图片使用前端 `public/catalog` 下的本地资源；`sql/product/data.sql` 保留 DummyJSON 远程 URL 种子块，但当前持久化运行库已验证为本地 `/catalog/...` 图片路径
 
 ### 手动连接
 
 ```bash
 mysql -h 127.0.0.1 -P 13306 -u root -p123456 ecommerce_minimal
+```
+
+微服务 MySQL 连接示例：
+
+```bash
+mysql -h 127.0.0.1 -P 18096 -u root -proot123 ecommerce_product
 ```
 
 ### 重置演示数据

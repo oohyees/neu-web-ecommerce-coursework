@@ -1,139 +1,93 @@
-<template>
-  <ShopLayout>
-    <div class="page-wrap">
-      <el-breadcrumb separator="/" class="breadcrumb">
-        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-        <el-breadcrumb-item :to="{ path: '/user/orders' }">我的订单</el-breadcrumb-item>
-        <el-breadcrumb-item>订单详情</el-breadcrumb-item>
-      </el-breadcrumb>
-
-      <div v-if="loading" class="loading-state">加载中...</div>
-
-      <template v-else-if="order">
-        <section class="page-card order-header">
-          <div>
-            <h1>订单号：{{ order.orderNo }}</h1>
-            <p class="muted">{{ order.createdAt }}</p>
-          </div>
-          <StatusTag :value="order.status" />
-        </section>
-
-        <section class="page-card">
-          <h2>收货地址</h2>
-          <div v-if="order.address" class="address-info">
-            <strong>{{ order.address.receiverName }} {{ order.address.phone }}</strong>
-            <p>{{ order.address.province }}{{ order.address.city }}{{ order.address.district }}{{ order.address.detail }}</p>
-          </div>
-        </section>
-
-        <section class="page-card">
-          <h2>商品清单</h2>
-          <el-table :data="order.items">
-            <el-table-column label="商品" min-width="240">
-              <template #default="{ row }">
-                <div class="goods-cell">
-                  <img :src="row.productImage" @error="imgFallback" />
-                  <span>{{ row.productName }}</span>
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column prop="price" label="单价" width="120">
-              <template #default="{ row }"><span class="price">&yen;{{ row.price }}</span></template>
-            </el-table-column>
-            <el-table-column prop="quantity" label="数量" width="80" />
-            <el-table-column label="小计" width="120">
-              <template #default="{ row }"><span class="price">&yen;{{ (row.price * row.quantity).toFixed(2) }}</span></template>
-            </el-table-column>
-          </el-table>
-        </section>
-
-        <section class="page-card order-footer">
-          <div class="summary-row">
-            <span>商品总额</span>
-            <b>&yen;{{ order.totalAmount }}</b>
-          </div>
-          <div class="summary-row">
-            <span>支付方式</span>
-            <span>{{ order.paymentMethod || '未选择' }}</span>
-          </div>
-          <el-divider />
-          <div class="summary-row total">
-            <span>实付金额</span>
-            <b class="price">&yen;{{ order.totalAmount }}</b>
-          </div>
-
-          <div class="actions" style="margin-top:16px">
-            <el-button v-if="order.status === 'PENDING_PAYMENT'" type="danger" size="large" @click="$router.push(`/pay/${order.id}`)">立即支付</el-button>
-            <el-button v-if="order.status === 'PENDING_RECEIPT'" type="danger" size="large" @click="confirmReceipt">确认收货</el-button>
-          </div>
-        </section>
-      </template>
-
-      <EmptyState v-else title="订单不存在" description="该订单信息未找到。">
-        <el-button type="danger" @click="$router.push('/user/orders')">返回订单列表</el-button>
-      </EmptyState>
-    </div>
-  </ShopLayout>
-</template>
-
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '@/api'
-import type { Order } from '@/types'
-import ShopLayout from '@/layouts/ShopLayout.vue'
-import StatusTag from '@/components/StatusTag.vue'
-import EmptyState from '@/components/EmptyState.vue'
+import { fetchOrderDetail } from '@/api/order'
 
 const route = useRoute()
-const order = ref<Order | null>(null)
+const order = ref<any>(null)
+const items = ref<any[]>([])
+const address = ref<any>(null)
+const logistics = ref<any[]>([])
 const loading = ref(true)
 
-async function confirmReceipt() {
+async function load() {
+  loading.value = true
   try {
-    await ElMessageBox.confirm('确认已收到商品？', '确认收货', { confirmButtonText: '确认收货', cancelButtonText: '取消', type: 'warning' })
-    await api.put(`/orders/${route.params.id}/confirm`)
-    ElMessage.success('已确认收货')
-    order.value!.status = 'COMPLETED'
-  } catch { /* cancelled */ }
+    const id = Number(route.params.id)
+    const res: any = await fetchOrderDetail(id)
+    const data = res.data ?? res
+    order.value = data.order ?? data
+    items.value = data.items ?? data.orderItems ?? []
+    address.value = data.address
+    logistics.value = data.logistics ?? []
+  } catch { /* handled */ }
+  finally { loading.value = false }
 }
 
-function imgFallback(e: Event) {
-  (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect fill="%23f3f4f6" width="64" height="64"/><text x="32" y="32" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="8">无图</text></svg>'
-}
-
-onMounted(async () => {
-  try {
-    const res = await api.get(`/orders/${route.params.id}`)
-    order.value = res.data.data?.order || res.data.data
-  } finally {
-    loading.value = false
-  }
-})
+onMounted(load)
 </script>
 
+<template>
+  <div class="page-container detail-page">
+    <h2 class="page-title">订单详情</h2>
+
+    <div v-if="loading"><el-skeleton :rows="8" animated /></div>
+
+    <template v-else-if="order">
+      <!-- 状态 -->
+      <div class="detail-card">
+        <div class="d-row"><span>订单编号</span><span>{{ order.orderNo }}</span></div>
+        <div class="d-row"><span>订单状态</span><span class="order-status">{{ order.status }}</span></div>
+        <div class="d-row"><span>支付方式</span><span>{{ order.paymentMethod || '模拟支付' }}</span></div>
+        <div class="d-row"><span>下单时间</span><span>{{ order.createdAt }}</span></div>
+      </div>
+
+      <!-- 物流 -->
+      <div v-if="logistics.length" class="detail-card">
+        <h3 class="card-head">物流信息</h3>
+        <div class="log-item" v-for="l in logistics" :key="l.id">
+          <span class="log-content">{{ l.content }}</span>
+          <span class="log-time">{{ l.createdAt }}</span>
+        </div>
+      </div>
+
+      <!-- 地址 -->
+      <div v-if="address" class="detail-card">
+        <h3 class="card-head">收货地址</h3>
+        <p>{{ address.receiver || address.receiverName }} {{ address.phone }}</p>
+        <p>{{ address.province }}{{ address.city }}{{ address.district }} {{ address.detail || address.detailAddress }}</p>
+      </div>
+
+      <!-- 商品 -->
+      <div class="detail-card">
+        <h3 class="card-head">商品清单</h3>
+        <div v-for="item in items" :key="item.id" class="detail-item">
+          <span>{{ item.productName }}</span>
+          <span>{{ item.specText || '' }}</span>
+          <span>¥{{ item.unitPrice || item.price }} × {{ item.quantity }}</span>
+        </div>
+      </div>
+
+      <div class="detail-total">合计：<b>¥{{ order.totalAmount }}</b></div>
+    </template>
+  </div>
+</template>
+
 <style scoped>
-.breadcrumb { margin-bottom: 16px; }
-.loading-state { text-align: center; padding: 60px; color: var(--muted); }
+.detail-page { max-width: 700px; padding-bottom: 60px; }
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 24px; }
 
-.order-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
-.order-header h1 { font-size: 18px; margin: 0 0 4px; }
+.detail-card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.card-head { font-size: 15px; font-weight: 600; margin-bottom: 12px; padding-left: 8px; border-left: 3px solid var(--color-primary); }
+.d-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; color: #666; }
+.d-row .order-status { color: var(--color-primary); font-weight: 600; }
 
-.address-info { line-height: 1.6; }
-.address-info strong { font-size: 15px; }
-.address-info p { color: var(--muted); margin: 4px 0 0; }
+.log-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; }
+.log-time { color: #bbb; font-size: 12px; }
 
-.goods-cell { display: flex; gap: 12px; align-items: center; }
-.goods-cell img { width: 56px; height: 56px; object-fit: contain; background: #f6f6f6; border-radius: 6px; }
+.detail-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
+.detail-item :last-child { margin-left: auto; font-weight: 600; }
 
-.order-footer { margin-top: 16px; }
-.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
-.summary-row b { font-size: 18px; }
-.total { font-size: 16px; }
-.actions { display: flex; gap: 12px; }
-
-@media (max-width: 768px) {
-  .order-header { flex-direction: column; align-items: flex-start; }
-}
+.detail-total { text-align: right; font-size: 16px; padding: 16px 20px; }
+.detail-total b { font-size: 24px; color: var(--color-price, #ff0036); }
 </style>

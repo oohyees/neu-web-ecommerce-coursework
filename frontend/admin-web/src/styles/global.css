@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════════════════════════════
+   优品商城 - 管理后台全局样式
+   设计令牌 + 全局 reset + 通用工具类
+   ═══════════════════════════════════════════════════════════════ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --color-primary: #ff6b35;
+  --color-primary-light: #ff8c5a;
+  --color-primary-dark: #e55a2b;
+  --color-bg: #f5f7fa;
+  --color-card: #ffffff;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #888888;
+  --color-border: #e5e7eb;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --sidebar-width: 236px;
+}
+
+body {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ═══ 滚动条 ═══ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ═══ Element Plus 全覆盖 ═══ */
+:root {
+  --el-color-primary: var(--color-primary);
+  --el-color-primary-light-3: var(--color-primary-light);
+  --el-color-primary-dark-2: var(--color-primary-dark);
+}
+
+.el-button--primary { --el-button-bg-color: var(--color-primary); --el-button-border-color: var(--color-primary); --el-button-hover-bg-color: var(--color-primary-light); --el-button-hover-border-color: var(--color-primary-light); --el-button-active-bg-color: var(--color-primary-dark); --el-button-active-border-color: var(--color-primary-dark); font-weight: 600; }
+.el-button--primary:hover { transform: translateY(-1px); }
+.el-button { border-radius: 8px; font-weight: 500; }
+.el-button--danger { border-radius: 8px; }
+.el-button--default:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.el-tag { border-radius: 6px; font-weight: 500; }
+.el-tag--success { --el-tag-text-color: #15803d; }
+
+.el-table { --el-table-header-bg-color: #f8fafc; }
+.el-table th.el-table__cell { font-weight: 700; color: #333; }
+
+.el-pagination.is-background .el-pager li.is-active { background-color: var(--color-primary); }
+
+.el-input__wrapper.is-focus, .el-select__wrapper.is-focused { box-shadow: 0 0 0 1px var(--color-primary) inset !important; }
+.el-input__wrapper, .el-select .el-input__wrapper { border-radius: 8px; }
+
+.el-dialog { border-radius: 16px; }
+.el-dialog__footer { border-top: 1px solid #f0f0f0; padding-top: 16px; }
+.el-message-box { border-radius: 16px; }
+.el-card { border-radius: 12px; }
+
+.el-checkbox__input.is-checked .el-checkbox__inner { background-color: var(--color-primary); border-color: var(--color-primary); }
+.el-switch.is-checked .el-switch__core { background-color: var(--color-primary); border-color: var(--color-primary); }
+
+.el-menu-item.is-active { background: var(--color-primary) !important; color: #fff !important; }
+
+.el-empty { padding: 40px 0; }
+.el-skeleton { padding: 16px 0; }
+.el-loading-spinner .circular circle { stroke: var(--color-primary); }

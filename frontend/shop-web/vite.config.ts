@@ -8,23 +8,19 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src'),
     },
-    preserveSymlinks: true,
   },
   server: {
     port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:18090',
+        target: 'http://localhost:18080',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://localhost:18090',
+        target: 'http://localhost:18080',
         changeOrigin: true,
       },
     },
-  },
-  test: {
-    environment: 'jsdom',
-    globals: true,
   },
 })

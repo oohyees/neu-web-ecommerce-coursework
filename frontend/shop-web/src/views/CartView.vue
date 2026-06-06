@@ -1,245 +1,192 @@
-<template>
-  <ShopLayout>
-    <div class="page-wrap">
-      <el-steps :active="0" finish-status="success" class="steps">
-        <el-step title="购物车" />
-        <el-step title="确认订单" />
-        <el-step title="支付完成" />
-      </el-steps>
-
-      <section class="cart-head">
-        <div>
-          <h1>购物车</h1>
-          <p>勾选商品后进入结算，支持修改数量和删除商品。</p>
-        </div>
-        <el-button @click="$router.push('/products')">继续购物</el-button>
-      </section>
-
-      <section class="bulk">
-        <el-button link @click="selectAll">全选</el-button>
-        <el-button link @click="invertSelection">反选</el-button>
-        <span class="muted">共 {{ items.length }} 件商品</span>
-      </section>
-
-      <!-- 桌面端表格 -->
-      <el-table v-if="items.length" ref="tableRef" class="desktop-only cart-table" :data="items" @selection-change="changeSelection">
-        <el-table-column type="selection" width="50" />
-        <el-table-column label="商品" min-width="300">
-          <template #default="{ row }">
-            <div class="goods-cell">
-              <img :src="row.imageUrl" @error="imgFallback" />
-              <div>
-                <strong>{{ row.productName }}</strong>
-                <span>{{ row.specText || '默认规格' }}</span>
-              </div>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column label="单价" width="120">
-          <template #default="{ row }"><span class="price">&yen;{{ row.price }}</span></template>
-        </el-table-column>
-        <el-table-column label="数量" width="160">
-          <template #default="{ row }">
-            <el-input-number :model-value="row.quantity" :min="1" :max="99" size="small" @change="value => updateQuantity(row, value)" />
-          </template>
-        </el-table-column>
-        <el-table-column label="小计" width="120">
-          <template #default="{ row }"><span class="price">&yen;{{ row.subtotal }}</span></template>
-        </el-table-column>
-        <el-table-column label="操作" width="90">
-          <template #default="{ row }">
-            <el-button type="danger" link @click="removeItem(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 移动端列表 -->
-      <section class="mobile-cart mobile-only">
-        <article v-for="row in items" :key="row.id" class="mobile-item">
-          <el-checkbox :model-value="selected.includes(row)" @change="checked => toggleMobile(row, checked)" />
-          <img :src="row.imageUrl" @error="imgFallback" />
-          <div>
-            <strong>{{ row.productName }}</strong>
-            <span>{{ row.specText || '默认规格' }}</span>
-            <div class="mobile-price-qty">
-              <b class="price">&yen;{{ row.subtotal }}</b>
-              <el-input-number :model-value="row.quantity" :min="1" size="small" @change="value => updateQuantity(row, value)" />
-            </div>
-            <el-button type="danger" link size="small" @click="removeItem(row)">删除</el-button>
-          </div>
-        </article>
-      </section>
-
-      <EmptyState v-if="loadError" title="加载失败" description="购物车数据加载失败，请检查网络后重试。">
-        <el-button type="danger" @click="load">重新加载</el-button>
-      </EmptyState>
-      <EmptyState v-else-if="!loading && !items.length" title="购物车是空的" description="去商品列表挑选心仪的商品吧。">
-        <el-button type="danger" @click="$router.push('/products')">去逛逛</el-button>
-      </EmptyState>
-      <div v-if="loading" class="loading-state">加载中...</div>
-
-      <footer v-if="items.length" class="settlement">
-        <div class="settlement-left">
-          <span class="muted">已选 <b class="sel-count">{{ selected.length }}</b> 件</span>
-          <span class="total-label">合计</span>
-          <b class="total-price">&yen;{{ selectedTotal }}</b>
-        </div>
-        <el-button type="danger" size="large" :disabled="!selected.length" @click="checkout">去结算</el-button>
-      </footer>
-    </div>
-  </ShopLayout>
-</template>
-
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '@/api'
-import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
-import ShopLayout from '../layouts/ShopLayout.vue'
-import EmptyState from '../components/EmptyState.vue'
+import { useCartStore } from '@/stores/cart'
+import { fetchCart, updateCartQuantity, removeCartItem, type CartItem } from '@/api/cart'
+import { imageOrPlaceholder } from '@/utils/image'
 
 const router = useRouter()
-const items = ref<any[]>([])
-const selected = ref<any[]>([])
+const cartStore = useCartStore()
+
+const items = ref<CartItem[]>([])
+const checkedIds = ref<Set<number>>(new Set())
 const loading = ref(true)
-const loadError = ref(false)
-const userStore = useUserStore()
-const tableRef = ref()
-const selectedTotal = computed(() => selected.value.reduce((sum, i) => sum + Number(i.subtotal), 0).toFixed(2))
+
+const allChecked = computed({
+  get: () => items.value.length > 0 && checkedIds.value.size === items.value.length,
+  set: (val: boolean) => {
+    checkedIds.value = val ? new Set(items.value.map(i => i.id)) : new Set()
+  },
+})
+
+const totalPrice = computed(() => {
+  let sum = 0
+  items.value.forEach(i => { if (checkedIds.value.has(i.id)) sum += i.price * i.quantity })
+  return sum.toFixed(2)
+})
+
+const totalCount = computed(() => {
+  let c = 0
+  items.value.forEach(i => { if (checkedIds.value.has(i.id)) c += i.quantity })
+  return c
+})
 
 async function load() {
   loading.value = true
-  loadError.value = false
   try {
-    items.value = (await api.get('/cart', { params: { userId: userStore.userId } })).data.data || []
-  } catch {
-    loadError.value = true
-    items.value = []
-  } finally {
-    loading.value = false
+    const res: any = await fetchCart()
+    items.value = res.data?.items ?? (Array.isArray(res.data) ? res.data : [])
+  } catch { items.value = [] }
+  finally { loading.value = false }
+}
+
+function toggleCheck(id: number) {
+  const next = new Set(checkedIds.value)
+  next.has(id) ? next.delete(id) : next.add(id)
+  checkedIds.value = next
+}
+
+async function changeQty(item: CartItem, delta: number) {
+  const newQty = item.quantity + delta
+  if (newQty < 1) return
+  try {
+    await updateCartQuantity({ cartItemId: item.id, quantity: newQty })
+    item.quantity = newQty
+    cartStore.refresh()
+  } catch { /* handled */ }
+}
+
+async function removeItem(item: CartItem) {
+  try {
+    await ElMessageBox.confirm(`移除「${item.productName}」？`, '确认', { type: 'warning' })
+    await removeCartItem({ cartItemId: item.id })
+    items.value = items.value.filter(i => i.id !== item.id)
+    checkedIds.value.delete(item.id)
+    cartStore.refresh()
+    ElMessage.success('已移除')
+  } catch { /* cancelled */ }
+}
+
+function goCheckout() {
+  if (checkedIds.value.size === 0) {
+    ElMessage.warning('请先选择商品')
+    return
   }
+  const ids = Array.from(checkedIds.value).join(',')
+  router.push({ path: '/checkout', query: { cartItemIds: ids } })
 }
 
-async function updateQuantity(row: any, quantity: number) {
-  await api.put('/cart/items', { cartItemId: row.id, productId: row.productId, specText: row.specText, quantity })
-  load()
-}
-
-async function removeItem(row) {
-  try {
-    await ElMessageBox.confirm('确定要删除该商品吗？', '确认删除', { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' })
-    await api.delete('/cart/items', { params: { cartItemId: row.id, productId: row.productId, specText: row.specText } })
-    ElMessage.success('已删除')
-    load()
-  } catch { /* user cancelled */ }
-}
-
-function changeSelection(rows: any[]) { selected.value = rows }
-function selectAll() {
-  selected.value = [...items.value]
-  nextTick(() => {
-    tableRef.value?.clearSelection()
-    items.value.forEach(row => tableRef.value?.toggleRowSelection(row, true))
-  })
-}
-function invertSelection() {
-  const next = items.value.filter(row => !selected.value.includes(row))
-  selected.value = next
-  nextTick(() => {
-    tableRef.value?.clearSelection()
-    next.forEach(row => tableRef.value?.toggleRowSelection(row, true))
-  })
-}
-function toggleMobile(row, checked) {
-  selected.value = checked ? [...selected.value, row] : selected.value.filter(i => i !== row)
-}
-function checkout() {
-  sessionStorage.setItem('checkoutCartItemIds', JSON.stringify(selected.value.map(i => i.id)))
-  router.push('/checkout')
-}
-function imgFallback(e: Event) {
-  (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect fill="%23f3f4f6" width="80" height="80"/><text x="40" y="40" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="10">暂无图片</text></svg>'
+function goProduct(id: number) {
+  router.push(`/product/${id}`)
 }
 
 onMounted(load)
 </script>
 
+<template>
+  <div class="page-container cart-page">
+    <h2 class="page-title">我的购物车</h2>
+
+    <div v-if="loading" class="cart-loading">
+      <el-skeleton :rows="6" animated />
+    </div>
+
+    <div v-else-if="items.length === 0" class="cart-empty">
+      <el-empty description="购物车是空的">
+        <el-button type="primary" @click="router.push('/products')">去逛逛</el-button>
+      </el-empty>
+    </div>
+
+    <template v-else>
+      <div class="cart-header">
+        <el-checkbox v-model="allChecked" />
+        <span class="header-product">商品信息</span>
+        <span class="header-price">单价</span>
+        <span class="header-qty">数量</span>
+        <span class="header-subtotal">小计</span>
+        <span class="header-action">操作</span>
+      </div>
+
+      <div v-for="item in items" :key="item.id" class="cart-item">
+        <el-checkbox :model-value="checkedIds.has(item.id)" @change="toggleCheck(item.id)" />
+        <div class="item-product" @click="goProduct(item.productId)">
+          <img :src="imageOrPlaceholder(item.imageUrl)" :alt="item.productName" class="item-img" />
+          <div class="item-info">
+            <div class="item-name">{{ item.productName }}</div>
+            <div v-if="item.color || item.size" class="item-sku">
+              <span v-if="item.color" class="sku-tag">{{ item.color }}</span>
+              <span v-if="item.size" class="sku-tag">{{ item.size }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="item-price">¥{{ item.price }}</div>
+        <div class="item-qty">
+          <button class="qty-btn" @click="changeQty(item, -1)">−</button>
+          <span class="qty-val">{{ item.quantity }}</span>
+          <button class="qty-btn" @click="changeQty(item, 1)">+</button>
+        </div>
+        <div class="item-subtotal">¥{{ (item.price * item.quantity).toFixed(2) }}</div>
+        <div class="item-action">
+          <el-button type="danger" text @click="removeItem(item)">删除</el-button>
+        </div>
+      </div>
+
+      <div class="cart-footer">
+        <el-checkbox v-model="allChecked">全选</el-checkbox>
+        <span class="footer-total">已选 <b>{{ totalCount }}</b> 件，合计：<b class="price">¥{{ totalPrice }}</b></span>
+        <el-button type="primary" size="large" :disabled="checkedIds.size === 0" @click="goCheckout">去结算</el-button>
+      </div>
+    </template>
+  </div>
+</template>
+
 <style scoped>
-.steps {
-  padding: 20px;
-  margin-bottom: 16px;
-  background: #fff;
-  border-radius: var(--radius-lg);
-}
-.cart-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-h1, p { margin: 0; }
-p { color: var(--muted); margin-top: 4px; }
+.cart-page { padding-bottom: 120px; }
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
 
-.loading-state {
-  text-align: center; padding: 60px 20px; color: var(--muted); font-size: 15px;
+.cart-header {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  background: #f5f7fa; border-radius: 8px; font-size: 13px; color: #888;
 }
+.header-product { flex: 1; }
+.header-price, .header-qty, .header-subtotal, .header-action { width: 90px; text-align: center; }
 
-.bulk {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+.cart-item {
+  display: flex; align-items: center; gap: 12px; padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
-
-.cart-table :deep(th) { background: #f8fafc; }
-.goods-cell { display: flex; gap: 12px; align-items: center; }
-.goods-cell img { width: 72px; height: 72px; object-fit: contain; background: #f6f6f6; border: 1px solid #f1f5f9; border-radius: 6px; }
-.goods-cell div { display: grid; gap: 6px; }
-.goods-cell span { color: var(--muted); font-size: 13px; }
-
-.settlement {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  padding: 16px 20px;
-  margin-top: 20px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 -6px 20px rgba(31, 41, 55, .08);
+.item-product { flex: 1; display: flex; align-items: center; gap: 12px; cursor: pointer; min-width: 0; }
+.item-img { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: #f8f8f8; flex-shrink: 0; }
+.item-name { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-sku { display: flex; gap: 6px; margin-top: 4px; }
+.sku-tag { padding: 1px 8px; background: #f0f0f0; border-radius: 4px; font-size: 12px; color: #666; }
+.item-price { width: 90px; text-align: center; font-size: 15px; font-weight: 600; }
+.item-qty { width: 90px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.qty-btn {
+  width: 28px; height: 28px; border: 1px solid #ddd; border-radius: 6px;
+  background: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
-.settlement-left { display: flex; align-items: baseline; gap: 16px; }
-.sel-count { color: var(--brand); font-size: 18px; }
-.total-label { font-size: 15px; }
-.total-price { color: var(--brand); font-size: 26px; font-weight: 800; }
+.qty-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.qty-val { font-size: 15px; font-weight: 600; min-width: 20px; text-align: center; }
+.item-subtotal { width: 90px; text-align: center; font-size: 15px; font-weight: 600; color: var(--color-price, #ff0036); }
+.item-action { width: 90px; text-align: center; }
 
-.mobile-cart.mobile-only { display: none; gap: 12px; }
-.mobile-item {
-  display: grid;
-  grid-template-columns: auto 86px 1fr;
-  gap: 10px;
-  padding: 14px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+.cart-footer {
+  position: fixed; bottom: 0; left: 0; right: 0; background: #fff;
+  border-top: 2px solid var(--color-primary);
+  padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; z-index: 50;
 }
-.mobile-item img { width: 86px; height: 86px; object-fit: contain; background: #f6f6f6; border-radius: 6px; }
-.mobile-item div { display: grid; gap: 8px; }
-.mobile-price-qty { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.footer-total { font-size: 14px; color: #666; }
+.footer-total .price { color: var(--color-price, #ff0036); font-size: 20px; }
 
 @media (max-width: 768px) {
-  .mobile-cart.mobile-only { display: grid; }
-  .cart-head, .settlement { flex-direction: column; align-items: flex-start; }
-  .settlement-left { flex-wrap: wrap; }
+  .cart-header { display: none; }
+  .cart-item { flex-wrap: wrap; gap: 8px; position: relative; padding-right: 50px; }
+  .item-price { width: auto; font-size: 13px; }
+  .item-subtotal { width: auto; font-size: 13px; }
+  .item-qty { width: auto; }
+  .item-action { position: absolute; top: 16px; right: 0; width: auto; }
+  .cart-footer { flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
 }
 </style>

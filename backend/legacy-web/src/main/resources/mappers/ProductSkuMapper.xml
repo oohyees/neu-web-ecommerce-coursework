@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.ProductSkuMapper">
+    <select id="findByProductId" resultType="com.example.ecommerce.model.ProductSku">
+        SELECT id, product_id AS productId, sku_code AS skuCode, color, size,
+               price, stock, image
+        FROM product_sku WHERE product_id = #{productId} AND deleted = 0 ORDER BY id ASC
+    </select>
+    <select id="findById" resultType="com.example.ecommerce.model.ProductSku">
+        SELECT id, product_id AS productId, sku_code AS skuCode, color, size,
+               price, stock, image
+        FROM product_sku WHERE id = #{id} AND deleted = 0
+    </select>
+    <update id="decreaseStock">
+        UPDATE product_sku SET stock = stock - #{quantity}
+        WHERE id = #{id} AND stock >= #{quantity}
+    </update>
+</mapper>

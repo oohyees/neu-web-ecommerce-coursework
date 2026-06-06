@@ -49,16 +49,17 @@ docs/
 ├── course/                  — 课程交付物（只读）
 │   ├── 实验指导书.md
 │   ├── 实验报告.md
-│   └── acceptance/          — 评分清单 + 55 张截图证据
+│   └── acceptance/          — 评分清单 + 53 张截图证据
 │
 └── archive/                 — 历史文档（不保证与代码一致）
 ```
 
 ## 项目概览（30 秒版）
 
-- **后端**：Spring Cloud 微服务集群（`backend/gateway-service`、`auth-service`、`product-service`、`order-service`、`admin-service`） + legacy 单体证据（`backend/legacy-web`）
+- **主演示路径**：前台 `http://localhost:18095`、后台 `http://localhost:18082`、Gateway `http://localhost:18090`
+- **后端**：Spring Cloud 微服务集群（`backend/gateway-service`、`auth-service`、`product-service`、`order-service`、`admin-service`） + legacy 单体传统 Web 证据（`backend/legacy-web`）
 - **前端**：Vue 3 + Vite + Element Plus + Pinia，前台 `frontend/shop-web` 与后台 `frontend/admin-web` 独立工程
-- **数据库**：MySQL 8.4，21 张表，utf8mb4
+- **数据库**：MySQL 8.4，多域 schema，utf8mb4
 - **缓存/会话**：Redis 7，token 存 Redis，12h TTL
 - **部署**：Docker Compose，默认微服务栈 `docker/docker-compose.yml`，legacy 对照栈 `docker/docker-compose.legacy.yml`
-- **测试**：71 个集成测试，0 失败，覆盖全部评分点
+- **测试**：71 个集成测试、微服务 smoke、Gateway API smoke 均已通过

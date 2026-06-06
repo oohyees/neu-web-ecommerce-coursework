@@ -44,6 +44,10 @@ spring:
             - Path=/api/home/**,/api/home
           filters:
             - StripPrefix=1
+        - id: product-uploads
+          uri: lb://ecommerce-product-service
+          predicates:
+            - Path=/uploads/**
         - id: product-public-extra
           uri: lb://ecommerce-product-service
           predicates:

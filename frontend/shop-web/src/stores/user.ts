@@ -1,71 +1,41 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { LoginResult, UserInfo } from '../types/index.js'
+import type { LoginResult } from '@/api/user'
+import { markFreshLogin, consumeFreshLogin } from '@/utils/freshLogin'
 
 export const useUserStore = defineStore('user', () => {
-  const token = ref<string>('')
+  const token = ref('')
   const userId = ref<number | null>(null)
-  const nickname = ref<string>('')
-  const email = ref<string>('')
-  const avatar = ref<string>('')
-  const adminId = ref<number | null>(null)
-  const role = ref<string>('')
+  const nickname = ref('')
+  const avatarUrl = ref('')
+  const email = ref('')
+  const phone = ref('')
 
   const isLoggedIn = computed(() => !!token.value)
 
   function setAuth(data: LoginResult) {
     token.value = data.token
     userId.value = data.userId
-    email.value = data.email
-    nickname.value = data.nickname || data.email.split('@')[0]
-    avatar.value = data.avatar || ''
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('userId', String(data.userId))
-    localStorage.setItem('nickname', data.nickname)
+    nickname.value = data.nickname || ''
+    markFreshLogin()
   }
 
-  function setAdmin(data: { adminId: number; role: string; token: string }) {
-    adminId.value = data.adminId
-    role.value = data.role
-    localStorage.setItem('adminId', String(data.adminId))
-    localStorage.setItem('role', data.role)
-    localStorage.setItem('token', data.token)
-  }
-
-  function setProfile(data: Partial<UserInfo>) {
-    if (data.nickname) nickname.value = data.nickname
-    if (data.avatar !== undefined && data.avatar !== null) avatar.value = data.avatar
-    if (data.email) email.value = data.email
+  function setProfile(data: { nickname?: string; avatarUrl?: string; email?: string; phone?: string }) {
+    if (data.nickname !== undefined) nickname.value = data.nickname
+    if (data.avatarUrl !== undefined) avatarUrl.value = data.avatarUrl
+    if (data.email !== undefined) email.value = data.email
+    if (data.phone !== undefined) phone.value = data.phone
   }
 
   function logout() {
     token.value = ''
     userId.value = null
     nickname.value = ''
+    avatarUrl.value = ''
     email.value = ''
-    avatar.value = ''
-    adminId.value = null
-    role.value = ''
-    localStorage.removeItem('token')
-    localStorage.removeItem('userId')
-    localStorage.removeItem('nickname')
-    localStorage.removeItem('adminId')
-    localStorage.removeItem('role')
+    phone.value = ''
+    consumeFreshLogin()
   }
 
-  // 启动时从 localStorage 恢复
-  function restore() {
-    const saved = localStorage.getItem('token')
-    if (saved) {
-      token.value = saved
-      userId.value = Number(localStorage.getItem('userId')) || null
-      nickname.value = localStorage.getItem('nickname') || ''
-      adminId.value = Number(localStorage.getItem('adminId')) || null
-      role.value = localStorage.getItem('role') || ''
-    }
-  }
-
-  restore()
-
-  return { token, userId, nickname, email, avatar, adminId, role, isLoggedIn, setAuth, setAdmin, setProfile, logout }
-})
+  return { token, userId, nickname, avatarUrl, email, phone, isLoggedIn, setAuth, setProfile, logout }
+}, { persist: true })

@@ -11,19 +11,16 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:18090',
+        target: 'http://localhost:18080',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://localhost:18090',
+        target: 'http://localhost:18080',
         changeOrigin: true,
       },
     },
-  },
-  test: {
-    environment: 'jsdom',
-    globals: true,
   },
 })

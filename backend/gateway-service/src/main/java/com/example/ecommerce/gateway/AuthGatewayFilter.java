@@ -26,7 +26,7 @@ public class AuthGatewayFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
         String method = request.getMethod().name();
-        if ("OPTIONS".equalsIgnoreCase(method) || isPublic(path, method)) {
+        if ("OPTIONS".equalsIgnoreCase(method) || path.startsWith("/uploads") || isPublic(path, method)) {
             return chain.filter(exchange);
         }
 

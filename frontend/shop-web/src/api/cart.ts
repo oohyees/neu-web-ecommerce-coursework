@@ -1,30 +1,32 @@
-import { get, post, put, del } from './request'
-import type { CartItem } from '../types/index'
+import request from './request'
 
-export function getCart(userId: number) {
-  return get<CartItem[]>('/cart', { userId })
+export interface CartItem {
+  id: number
+  productId: number
+  productName: string
+  skuId: number | null
+  skuCode: string | null
+  color: string | null
+  size: string | null
+  specText: string | null
+  imageUrl: string
+  price: number
+  quantity: number
+  stock: number
 }
 
-export function addToCart(userId: number, productId: number, quantity = 1) {
-  return post<void>('/cart/items', { userId, productId, quantity })
+export function fetchCart() {
+  return request.get('/cart')
 }
 
-export function updateCartItem(itemId: number, quantity: number) {
-  return put<void>(`/cart/items/${itemId}`, { quantity })
+export function addToCart(data: { productId: number; skuId?: number; specText?: string; quantity: number }) {
+  return request.post('/cart/items', data)
 }
 
-export function removeCartItem(itemId: number) {
-  return del<void>(`/cart/items/${itemId}`)
+export function updateCartQuantity(data: { cartItemId?: number; productId?: number; specText?: string; quantity: number }) {
+  return request.put('/cart/items', data)
 }
 
-export function selectCartItem(itemId: number, selected: boolean) {
-  return put<void>(`/cart/items/${itemId}/select`, { selected })
-}
-
-export function selectAllCartItems(userId: number, selected: boolean) {
-  return put<void>('/cart/select-all', { userId, selected })
-}
-
-export function clearCart(userId: number) {
-  return del<void>('/cart/clear', { params: { userId } })
+export function removeCartItem(params: { cartItemId?: number; productId?: number; specText?: string }) {
+  return request.delete('/cart/items', { params })
 }

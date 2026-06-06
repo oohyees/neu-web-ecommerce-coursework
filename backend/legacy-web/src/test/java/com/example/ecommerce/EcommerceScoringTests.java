@@ -68,9 +68,11 @@ class EcommerceScoringTests {
         mvc.perform(get("/api/products/" + testProductId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.name").isNotEmpty())
-                .andExpect(jsonPath("$.data.price").isNotEmpty())
-                .andExpect(jsonPath("$.data.stock").isNotEmpty());
+                .andExpect(jsonPath("$.data.product.name").isNotEmpty())
+                .andExpect(jsonPath("$.data.product.price").isNotEmpty())
+                .andExpect(jsonPath("$.data.product.stock").isNotEmpty())
+                .andExpect(jsonPath("$.data.skus").isArray())
+                .andExpect(jsonPath("$.data.images").isArray());
     }
 
     @Test @Order(4)

@@ -1,6 +1,6 @@
 # 人工巡检问题记录
 
-更新时间：2026-05-27。
+更新时间：2026-06-07。
 
 | 编号 | 问题 | 影响 | 处理结果 |
 | --- | --- | --- | --- |
@@ -8,6 +8,7 @@
 | QA-002 | 验收证据 README 写“55 张页面截图”，实际 `docs/course/acceptance/evidence` 下为 53 张 PNG。 | 中。材料数量不一致会降低文档可信度。 | 已修复。`docs/course/acceptance/README.md` 已改为 53 张，并确认关键截图文件存在。 |
 | QA-003 | 当前数据库含自动化冒烟和导入测试留下的 QA 用户、测试分类、导入商品、测试订单、测试地址；购物车里还出现过导入商品库存不足，影响购买闭环演示。 | 高。最终课堂演示或重新截图时会看到测试痕迹，也可能因库存不足中断下单流程。 | 已记录并补齐修复路径。新增 `scripts/reset_demo_data.sh`，与既有 PowerShell 脚本等价，可在 macOS/Linux 上按 `schema.sql` 和 `data.sql` 重置演示数据库并清理 Redis。为避免误删当前测试数据，本轮未直接执行重置。 |
 | QA-004 | 首次执行 `scripts/reset_demo_data.sh` 失败。脚本用 MySQL `SOURCE` 命令通过批处理导入绝对路径 SQL，在当前 MySQL 客户端环境下解析为语法错误。 | 高。最终演示前如果不能一键恢复干净种子库，会继续残留 QA 数据，影响页面观感和购买链路稳定性。 | 已修复。脚本改为先导入 `schema.sql`，再对 `ecommerce_minimal` 导入 `data.sql`；本轮已实际执行成功，并用 Docker Redis 容器补充执行 `FLUSHDB` 清理缓存。 |
+| QA-005 | 商品图片不显示。当前微服务运行库的商品 `image_url` 使用 `/catalog/...` 本地路径，但前端 `public/catalog` 目录曾被迁移删除，Nginx 对图片请求回退到 `index.html`。同时少量导入测试商品 `imageUrl` 为空，会被浏览器解析成 `/`。 | 高。首页、搜索、详情、购物车和后台预览都会出现坏图，直接影响课堂演示观感。 | 已修复。恢复本地 catalog 图片资源，用户端和管理端均打包 `/catalog` 静态目录；新增 `/catalog/placeholder.svg`，并在用户端主要图片渲染处对空 `imageUrl` 兜底。复验首页 `document.images`：14/14 加载成功，坏图 0。 |
 
 ## 本轮复验
 
@@ -21,6 +22,9 @@
 | `python3 scripts/acceptance_api_smoke.py` | 8 组全部 PASS |
 | `mvn test` | 71 tests, 0 failures, 0 errors |
 | `./scripts/create_submission_zip.sh` | 通过，源码包约 4.4M |
+| 浏览器首页图片加载检查 | 通过；14 张图片全部加载，坏图 0 |
+| `curl -I http://127.0.0.1:18095/catalog/B076LRJ528.webp` | 通过，返回 `Content-Type: image/webp` |
+| `curl -I http://127.0.0.1:18095/catalog/placeholder.svg` | 通过，返回 `Content-Type: image/svg+xml` |
 
 ## 重置后浏览器巡检
 

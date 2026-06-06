@@ -1,6 +1,6 @@
 # Ecommerce Platform
 
-《Web 开发技术》电商平台大作业。仓库采用团队式 monorepo：`legacy-web` 是稳定的单体验收路径，覆盖完整商城、后台和 Servlet/JSP/Listener/Filter/JDBC 课程证据；微服务路径使用 Spring Cloud Gateway、Nacos 和 OpenFeign 展示服务拆分、注册发现、统一鉴权和跨服务下单链路。
+《Web 开发技术》电商平台大作业。仓库采用团队式 monorepo：当前主演示和评分路径是 Vue 前台/后台 + Spring Cloud Gateway + 微服务栈，覆盖商城、后台、Nacos 注册发现、Redis 鉴权、OpenFeign 下单扣库存和 Docker 容器化；`legacy-web` 保留完整传统 Java Web 技术证据，作为 Servlet/JSP/Listener/Filter/JDBC 验收入口和 fallback。
 
 ## Repository Layout
 
@@ -15,7 +15,7 @@ backend/
   order-service/       购物车与订单服务
   admin-service/       后台聚合服务
   common/              公共响应与会话模型
-  legacy-web/          单体回归与传统 Web 技术证据
+  legacy-web/          单体回归与传统 Web 技术证据/fallback
 docker/
   docker-compose.yml         默认微服务栈
   docker-compose.legacy.yml  legacy 单体对照栈
@@ -64,6 +64,8 @@ URLs:
 
 The microservice smoke test checks Nacos registration, Gateway routing, Redis token authentication, `401/403` permission behavior, user/admin login, cart access, order creation, stock deduction, and Feign log evidence between `order-service` and `product-service`.
 
+This is the primary classroom demo path. The product images used by the active seed data are local `/catalog/...` assets bundled under the frontend `public/catalog` directories, so the demo does not depend on external image hosts. The repository also keeps a DummyJSON seed block in `sql/product/data.sql`, but the current Docker database state verified on 2026-06-07 uses 30 local catalog image paths and no `cdn.dummyjson.com` product image URLs.
+
 ## Run Legacy Evidence Stack
 
 ```bash
@@ -75,6 +77,8 @@ docker compose -f docker/docker-compose.legacy.yml up -d --build
 python3 scripts/acceptance_api_smoke.py
 mvn test
 ```
+
+Legacy is a traditional Web evidence and fallback path, not the only demo entry.
 
 URLs:
 

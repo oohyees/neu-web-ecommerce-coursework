@@ -1,3 +1,0 @@
-/* 向后兼容：重新导出新的 token 系统 */
-@import './styles/tokens.css';
-@import './styles/base.css';

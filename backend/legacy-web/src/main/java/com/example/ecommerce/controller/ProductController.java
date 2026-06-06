@@ -2,6 +2,8 @@ package com.example.ecommerce.controller;
 
 import com.example.ecommerce.common.ApiResponse;
 import com.example.ecommerce.mapper.ProductMapper;
+import com.example.ecommerce.mapper.ProductSkuMapper;
+import com.example.ecommerce.mapper.ProductImageMapper;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.cache.annotation.CacheEvict;
@@ -22,7 +24,16 @@ import java.util.Map;
 @CrossOrigin
 public class ProductController {
     private final ProductMapper productMapper;
-    public ProductController(ProductMapper productMapper) { this.productMapper = productMapper; }
+    private final ProductSkuMapper productSkuMapper;
+    private final ProductImageMapper productImageMapper;
+    private final com.example.ecommerce.mapper.MarketingMapper marketingMapper;
+    public ProductController(ProductMapper productMapper, ProductSkuMapper productSkuMapper,
+            ProductImageMapper productImageMapper, com.example.ecommerce.mapper.MarketingMapper marketingMapper) {
+        this.productMapper = productMapper;
+        this.productSkuMapper = productSkuMapper;
+        this.productImageMapper = productImageMapper;
+        this.marketingMapper = marketingMapper;
+    }
     @GetMapping
     public ApiResponse<?> list(@RequestParam(required = false) Long categoryId,
                                @RequestParam(required = false) String keyword,
@@ -39,7 +50,17 @@ public class ProductController {
     @GetMapping("/{id}")
     @Cacheable(value = "productDetail", key = "#id")
     public ApiResponse<?> detail(@PathVariable Long id) {
-        return ApiResponse.ok(productMapper.findById(id));
+        var product = productMapper.findById(id);
+        if (product == null) return ApiResponse.fail("商品不存在");
+        var skus = productSkuMapper.findByProductId(id);
+        var images = productImageMapper.findByProductId(id);
+        var specs = marketingMapper.findSpecs(id);
+        return ApiResponse.ok(java.util.Map.of(
+            "product", product,
+            "skus", skus,
+            "images", images,
+            "specs", specs
+        ));
     }
 
     @GetMapping("/admin/all")

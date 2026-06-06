@@ -1,46 +1,36 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-export interface AdminUser {
-  adminId: number
-  username: string
-  name: string
-  role: 'ADMIN' | 'SUPER_ADMIN'
-  permissions: string[]
-}
-
 export interface AdminLoginResult {
   token: string
   adminId: number
-  username: string
-  name: string
-  role: 'ADMIN' | 'SUPER_ADMIN'
-  permissions: string[]
+  role: string
 }
 
 export const useAdminStore = defineStore('admin', () => {
-  const token = ref<string>(localStorage.getItem('token') || '')
-  const adminId = ref<number | null>(Number(localStorage.getItem('adminId')) || null)
-  const username = ref<string>(localStorage.getItem('adminUsername') || '')
-  const name = ref<string>(localStorage.getItem('adminName') || '')
-  const role = ref<string>(localStorage.getItem('role') || '')
-  const permissions = ref<string[]>(JSON.parse(localStorage.getItem('adminPermissions') || '[]'))
+  const token = ref('')
+  const adminId = ref<number | null>(null)
+  const username = ref('')
+  const role = ref('')
+  const permissions = ref<string[]>([])
 
-  const isLoggedIn = computed(() => !!token.value && !!adminId.value)
+  const isLoggedIn = computed(() => !!token.value)
 
   function setAuth(data: AdminLoginResult) {
     token.value = data.token
     adminId.value = data.adminId
-    username.value = data.username
-    name.value = data.name
     role.value = data.role
-    permissions.value = data.permissions || []
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('adminId', String(data.adminId))
-    localStorage.setItem('adminUsername', data.username)
-    localStorage.setItem('adminName', data.name)
-    localStorage.setItem('role', data.role)
-    localStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []))
+    if (data.role === 'SUPER_ADMIN') {
+      permissions.value = ['*']
+    }
+  }
+
+  function updateSession(data: { adminId: number; role: string }) {
+    adminId.value = data.adminId
+    role.value = data.role
+    if (data.role === 'SUPER_ADMIN') {
+      permissions.value = ['*']
+    }
   }
 
   function hasPermission(code: string): boolean {
@@ -51,16 +41,9 @@ export const useAdminStore = defineStore('admin', () => {
     token.value = ''
     adminId.value = null
     username.value = ''
-    name.value = ''
     role.value = ''
     permissions.value = []
-    localStorage.removeItem('token')
-    localStorage.removeItem('adminId')
-    localStorage.removeItem('adminUsername')
-    localStorage.removeItem('adminName')
-    localStorage.removeItem('role')
-    localStorage.removeItem('adminPermissions')
   }
 
-  return { token, adminId, username, name, role, permissions, isLoggedIn, setAuth, hasPermission, logout }
-})
+  return { token, adminId, username, role, permissions, isLoggedIn, setAuth, updateSession, hasPermission, logout }
+}, { persist: true })

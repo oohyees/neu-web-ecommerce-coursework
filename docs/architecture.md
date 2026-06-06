@@ -4,7 +4,7 @@
 
 ## 一、项目概述
 
-本仓库是一个课程电商平台，采用 **monorepo** 组织方式。默认架构是 Spring Cloud 微服务：前台商城、后台管理、Gateway、认证、商品、订单、后台服务分开构建部署；`legacy-web` 保留完整单体业务与 Servlet/JSP/Filter/Listener/JDBC 课程证据，作为对照和传统 Web 技术验收入口。
+本仓库是一个课程电商平台，采用 **monorepo** 组织方式。当前主验收架构是 Spring Cloud 微服务：前台商城、后台管理、Gateway、认证、商品、订单、后台服务分开构建部署；`legacy-web` 保留完整单体业务与 Servlet/JSP/Filter/Listener/JDBC 课程证据，作为对照和传统 Web 技术 fallback。
 
 - **仓库地址**：`web/`
 - **主分支**：`main`
@@ -23,7 +23,7 @@ web/
 ├── CLAUDE.md                        # 项目开发指南
 │
 ├── backend/
-│   ├── legacy-web/                  # Spring Boot legacy 单体后端
+│   ├── legacy-web/                  # Spring Boot legacy 单体后端/传统 Web 证据
 │   │   ├── pom.xml
 │   │   └── src/
 │   │       ├── main/java/com/example/ecommerce/
@@ -55,10 +55,11 @@ web/
 │
 ├── docs/                            # 课程文档
 │   ├── architecture.md              # 本文档
-│   ├── acceptance/                  # 验收证据
-│   ├── dev-log/                     # 开发日志
-│   ├── report/                      # 实验报告
-│   └── frontend-review/             # 前端审查
+│   ├── development.md               # 开发手册
+│   ├── deployment.md                # 部署说明
+│   ├── api-reference.md             # API 参考
+│   ├── course/                      # 指导书、实验报告、验收证据
+│   └── archive/                     # 历史资料，仅供追溯
 │
 └── scripts/                         # 自动化脚本
     ├── acceptance_api_smoke.py      # 全流程验收测试（Python）
@@ -127,9 +128,11 @@ web/
 
 ### 4.1 概览
 
-- **数据库名**：`ecommerce_minimal`
+- **数据库名**：legacy 单体使用 `ecommerce_minimal`；微服务栈按域使用 `ecommerce_auth`、`ecommerce_product`、`ecommerce_order`
 - **字符集**：`utf8mb4`
-- **表数量**：21 张表
+- **表数量**：核心业务表按用户、商品、订单、内容、营销等域拆分
+
+当前微服务 Docker 数据库已验证的商品图片状态：运行库主商品集使用 30 条 `/catalog/...` 本地图片路径；`sql/product/data.sql` 仍保留 DummyJSON 远程 URL 种子块，但当前演示路径不依赖 `cdn.dummyjson.com`。
 
 ### 4.2 表结构清单
 
@@ -477,90 +480,83 @@ OrderService.createOrder()
 
 ### 7.1 路由设计
 
-**公开路由** (6 个)：首页、登录、注册、忘记密码、商品列表、商品详情
+当前前台与后台是两个独立 Vue 应用。前台部署在 `http://localhost:18095`，后台部署在 `http://localhost:18082`；后台路径不再带 `/admin` 前缀。
 
-**用户路由** (11 个，需登录)：
+**前台公开/用户路由**：
 
 | 路由 | 组件 | 说明 |
 |------|------|------|
+| `/` | HomeView | 首页 |
+| `/login` | LoginView | 用户登录 |
+| `/register` | RegisterView | 用户注册 |
+| `/forgot-password` | ForgotPasswordView | 找回密码 |
+| `/search` | SearchView | 关键词搜索 |
+| `/category/:id` | CategoryView | 分类商品 |
+| `/product/:id` | ProductDetailView | 商品详情 |
 | `/cart` | CartView | 购物车 |
 | `/checkout` | CheckoutView | 结算 |
-| `/pay/:id` | PayView | 支付 |
-| `/user/profile` | UserProfile | 个人资料 |
-| `/user/orders` | UserOrders | 我的订单 |
-| `/user/addresses` | UserAddress | 收货地址 |
-| `/user/favorites` | UserFavorites | 我的收藏 |
-| `/user/coupons` | UserCoupons | 我的优惠券 |
-| `/user/security` | UserSecurity | 安全设置 |
+| `/payment` | PaymentView | 支付 |
+| `/orders`、`/orders/:id` | OrdersView / OrderDetailView | 我的订单 |
+| `/profile` | ProfileView | 个人资料 |
+| `/address` | AddressView | 收货地址 |
+| `/favorites` | FavoritesView | 我的收藏 |
+| `/coupons` | CouponView | 我的优惠券 |
+| `/seckill` | SeckillView | 秒杀/促销 |
+| `/notices` | NoticeListView | 公告活动 |
 | `/feedback` | FeedbackView | 意见反馈 |
-| `/consultations` | ConsultationView | 客服咨询 |
+| `/service` | CustomerServiceView | 客服咨询 |
 
-**管理路由** (16 个，需管理员登录)：
+**后台路由**：
 
 | 路由 | 组件 | 说明 |
 |------|------|------|
-| `/admin/login` | AdminLogin | 管理员登录 |
-| `/admin/dashboard` | AdminDashboard | 仪表盘 (ECharts) |
-| `/admin/products` | AdminProducts | 商品管理 |
-| `/admin/categories` | AdminCategories | 分类管理 |
-| `/admin/orders` | AdminOrders | 订单管理 |
-| `/admin/users` | AdminUsers | 用户管理 |
-| `/admin/reviews` | AdminReviews | 评价管理 |
-| `/admin/banners` | AdminBanners | 轮播图管理 |
-| `/admin/announcements` | AdminAnnouncements | 公告管理 |
-| `/admin/activity-notices` | AdminActivityNotices | 活动通知 |
-| `/admin/promotions` | AdminPromotions | 促销管理 |
-| `/admin/feedback` | AdminFeedback | 反馈管理 |
-| `/admin/consultations` | AdminConsultations | 咨询管理 |
-| `/admin/admins` | AdminAdmins | 管理员管理 |
-| `/admin/profile` | AdminProfile | 管理员资料 |
+| `/login` | LoginView | 管理员登录 |
+| `/dashboard` | DashboardView | 仪表盘 (ECharts) |
+| `/products` | ProductsView | 商品管理 |
+| `/categories` | CategoriesView | 分类管理 |
+| `/orders` | OrdersView | 订单管理 |
+| `/users` | UsersView | 用户管理 |
+| `/reviews` | ReviewsView | 评价管理 |
+| `/banners` | BannersView | 轮播图管理 |
+| `/notices` | NoticesView | 公告/活动通知 |
+| `/promotions` | PromotionsView | 促销管理 |
+| `/feedbacks` | FeedbacksView | 反馈管理 |
+| `/cs` | CsView | 客服咨询 |
+| `/permissions` | PermissionManageView | 权限管理 |
+| `/profile` | AdminProfileView | 管理员资料 |
 
 ### 7.2 路由守卫
 
-在 `main.js` 中实现：
-- 需要认证的路由：检查 localStorage 中 token 是否存在，无 token 跳转登录页
-- 超管专属路由（管理员管理）：检查 role === 'SUPER_ADMIN'
-- ADMIN 用户无法访问超管路由
+在两个前端各自的 Vue Router 中实现：
+- 前台路由检查 Pinia 用户登录态，无 token 跳转 `/login`
+- 后台路由检查 Pinia 管理员登录态，无 token 跳转 `/login`
+- 后端 Gateway/AuthGatewayFilter 仍是最终权限边界，普通用户访问后台接口返回 403
 
 ### 7.3 状态管理
 
-`useSessionStore` (Pinia)：
-
-| State | 说明 |
-|-------|------|
-| userId | 当前用户 ID |
-| nickname | 用户昵称 |
-| adminId | 管理员 ID |
-| role | 角色 (USER/ADMIN/SUPER_ADMIN) |
-
-Actions：`setUser(data)`, `setAdmin(data)`, `logout()`
-
-持久化策略：`localStorage`
+前台使用 `stores/user`、`stores/cart`、`stores/favorite`；后台使用 `stores/admin`。登录态通过 Pinia 持久化到 localStorage，请求时写入 `Authorization: Bearer <token>`。
 
 ### 7.4 HTTP 请求层
 
 Axios 实例配置：
-- Base URL：`import.meta.env.VITE_API_BASE_URL || '/api'`
-- 请求拦截器：自动附加 `Authorization: Bearer <token>`（从 localStorage 读取）
+- Base URL：生产 Nginx 代理 `/api` 到 Gateway
+- 请求拦截器：自动附加 `Authorization: Bearer <token>`（从 Pinia store 读取）
 - 响应拦截器：401 时自动清除登录态并跳转 `/login`
 
 ### 7.5 布局组件
 
 | 布局 | 用途 | 结构 |
 |------|------|------|
-| ShopLayout | 商城前台 | Header + Sidebar/Nav + Main + Footer |
-| UserLayout | 用户中心 | 嵌套子路由：个人资料、订单、地址等 |
-| AdminLayout | 管理后台 | 侧边栏导航 + Header + Main |
+| 前台 App 布局 | 商城前台 | Header + Main + 浮动购物车/客服入口 |
+| 后台 Layout | 管理后台 | 侧边栏导航 + Header + Main + 移动端抽屉菜单 |
 
 ### 7.6 公共组件
 
 | 组件 | 用途 |
 |------|------|
-| ProductCard | 商品列表卡片 |
-| AdminPageHeader | 管理页面标题/描述 |
-| StatusTag | 订单状态标签 |
-| MoneySummary | 金额汇总展示 |
-| EmptyState | 空数据占位 |
+| ShopFloatingActions | 前台浮动购物车/客服入口 |
+| 后台 layout 组件 | 管理端菜单、退出、移动端抽屉 |
+| Element Plus 组件 | 表格、分页、表单、弹窗、消息、上传 |
 
 ---
 

@@ -40,12 +40,12 @@ npm --prefix frontend/admin-web run build
 docker compose -f docker/docker-compose.legacy.yml up -d mysql redis mailhog
 mvn test                            # 依赖 Docker MySQL/Redis/MailHog，71 个评分点测试
 
-# 默认微服务栈
+# 默认微服务栈（主演示路径）
 ./scripts/build_microservices.sh    # 构建全部微服务
 docker compose -f docker/docker-compose.yml up -d --build
 ./scripts/microservices_smoke_test.sh
 
-# legacy 单体对照栈
+# legacy 单体对照栈（传统 Web 技术证据/fallback）
 docker compose -f docker/docker-compose.legacy.yml up -d --build
 ./scripts/acceptance_check.sh       # 快速冒烟
 ```
@@ -121,5 +121,6 @@ docker compose -f docker/docker-compose.legacy.yml up -d --build
 |------|------|------|
 | SMTP | Docker 环境使用 MailHog 捕获真实 SMTP 邮件；生产环境可替换为外部 SMTP | 本地验收不依赖外网邮箱，验证码不由后端返回固定值 |
 | 微服务共享 MySQL | 所有微服务指向同一数据库实例 | 架构边界通过独立部署+网关转发证明，非功能缺陷 |
+| 商品图片 | 当前运行库使用 `/catalog/...` 本地图片路径，前端 `public/catalog` 打包进 Nginx | 演示不依赖外网图片；DummyJSON 远程 URL 仅保留在 SQL 种子块中 |
 | Shiro | `@Profile("shiro")` 控制，默认关闭 | Token+Redis+角色分级已覆盖鉴权全部需求，Shiro 作为框架运用证明可按需激活 |
 | 客服 | 当前实现为留言/回复模式 | WebSocket 端点存在，可升级为实时聊天 |

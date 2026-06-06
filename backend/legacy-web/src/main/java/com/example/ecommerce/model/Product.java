@@ -6,7 +6,9 @@ public class Product {
     private Long id;
     private Long categoryId;
     private String name;
+    private String subtitle;
     private BigDecimal price;
+    private BigDecimal originalPrice;
     private Integer stock;
     private Integer sales;
     private Boolean isOnSale;
@@ -19,8 +21,12 @@ public class Product {
     public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    public String getSubtitle() { return subtitle; }
+    public void setSubtitle(String subtitle) { this.subtitle = subtitle; }
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
+    public BigDecimal getOriginalPrice() { return originalPrice; }
+    public void setOriginalPrice(BigDecimal originalPrice) { this.originalPrice = originalPrice; }
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
     public Integer getSales() { return sales; }

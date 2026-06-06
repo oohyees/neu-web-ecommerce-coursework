@@ -1,0 +1,119 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { fetchMyOrders, cancelOrder, confirmOrder, refundOrder } from '@/api/order'
+
+const router = useRouter()
+const orders = ref<any[]>([])
+const activeStatus = ref('')
+const loading = ref(true)
+const statusTabs = [
+  { value: '', label: '全部' },
+  { value: 'PENDING', label: '待支付' },
+  { value: 'PAID', label: '待发货' },
+  { value: 'SHIPPED', label: '待收货' },
+  { value: 'COMPLETED', label: '已完成' },
+  { value: 'CANCELLED', label: '已取消' },
+]
+
+async function load() {
+  loading.value = true
+  try {
+    const params: any = { page: 1, size: 50 }
+    if (activeStatus.value) params.status = activeStatus.value
+    const res: any = await fetchMyOrders(params)
+    orders.value = res.data?.items ?? (Array.isArray(res.data) ? res.data : [])
+  } catch { orders.value = [] }
+  finally { loading.value = false }
+}
+
+async function handleCancel(order: any) {
+  try {
+    await ElMessageBox.confirm('确认取消该订单？', '提示', { type: 'warning' })
+    await cancelOrder(order.id)
+    ElMessage.success('已取消')
+    load()
+  } catch { /* cancelled */ }
+}
+
+async function handleConfirm(order: any) {
+  try {
+    await ElMessageBox.confirm('确认已收到商品？', '提示', { type: 'warning' })
+    await confirmOrder(order.id)
+    ElMessage.success('已确认收货')
+    load()
+  } catch { /* cancelled */ }
+}
+
+async function handleRefund(order: any) {
+  try {
+    await ElMessageBox.confirm('确认申请退款？', '提示', { type: 'warning' })
+    await refundOrder(order.id)
+    ElMessage.success('退款申请已提交')
+    load()
+  } catch { /* cancelled */ }
+}
+
+function viewDetail(id: number) { router.push(`/orders/${id}`) }
+
+onMounted(load)
+</script>
+
+<template>
+  <div class="page-container orders-page">
+    <h2 class="page-title">我的订单</h2>
+
+    <div class="status-tabs">
+      <button v-for="t in statusTabs" :key="t.value"
+              :class="['tab', { active: activeStatus === t.value }]"
+              @click="activeStatus = t.value; load()">{{ t.label }}</button>
+    </div>
+
+    <div v-if="loading"><el-skeleton :rows="5" animated /></div>
+
+    <div v-else-if="!orders.length" class="empty"><el-empty description="暂无订单" /></div>
+
+    <template v-else>
+      <div v-for="o in orders" :key="o.id" class="order-card">
+        <div class="order-header">
+          <span class="order-no">{{ o.orderNo }}</span>
+          <span class="order-status" :class="'status-'+o.status?.toLowerCase()">{{ o.status }}</span>
+        </div>
+        <div class="order-body" @click="viewDetail(o.id)">
+          <div class="order-summary">共 {{ o.items?.length || '-' }} 件商品</div>
+          <div class="order-amount">合计 ¥{{ o.totalAmount }}</div>
+        </div>
+        <div class="order-actions">
+          <el-button v-if="o.status==='PENDING'" size="small" @click="handleCancel(o)">取消</el-button>
+          <el-button v-if="o.status==='PENDING'" size="small" type="primary" @click="router.push(`/payment?orderNo=${o.orderNo}`)">去支付</el-button>
+          <el-button v-if="o.status==='SHIPPED'" size="small" type="primary" @click="handleConfirm(o)">确认收货</el-button>
+          <el-button v-if="o.status==='PAID'||o.status==='SHIPPED'" size="small" @click="handleRefund(o)">退款</el-button>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>
+
+<style scoped>
+.orders-page { max-width: 800px; }
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+
+.status-tabs { display: flex; gap: 0; margin-bottom: 20px; background: #f5f7fa; border-radius: 8px; overflow: hidden; }
+.tab { flex: 1; padding: 10px 0; border: none; background: transparent; font-size: 13px; cursor: pointer; color: #666; transition: all 0.2s; }
+.tab.active { background: var(--color-primary); color: #fff; font-weight: 600; }
+
+.order-card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.order-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.order-no { font-size: 13px; color: #888; }
+.order-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.status-pending { color: #f59e0b; background: #fef3c7; }
+.status-paid { color: #3b82f6; background: #dbeafe; }
+.status-shipped { color: #8b5cf6; background: #ede9fe; }
+.status-completed { color: #22c55e; background: #dcfce7; }
+.status-cancelled { color: #ef4444; background: #fee2e2; }
+
+.order-body { display: flex; justify-content: space-between; padding: 10px 0; border-top:1px solid #f0f0f0; cursor: pointer; }
+.order-amount { font-size: 16px; font-weight: 700; color: var(--color-price, #ff0036); }
+.order-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+</style>

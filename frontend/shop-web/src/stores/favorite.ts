@@ -1,24 +1,56 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Favorite } from '../types/index'
+import { addFavorite, removeFavorite, fetchFavorites } from '@/api/product'
 
 export const useFavoriteStore = defineStore('favorite', () => {
-  const items = ref<Favorite[]>([])
+  const ids = ref<Set<number>>(new Set())
   const loading = ref(false)
-  const count = ref(0)
 
-  async function fetch() {
-    const { api } = await import('../api/index')
-    const res = await api.get('/favorites')
-    items.value = res.data.data || []
-    count.value = items.value.length
+  function isFavorite(productId: number): boolean {
+    return ids.value.has(productId)
   }
 
-  function isFavorited(productId: number): boolean {
-    return items.value.some((f) => f.productId === productId)
+  async function refresh() {
+    loading.value = true
+    try {
+      const res = await fetchFavorites()
+      const list = Array.isArray(res.data) ? res.data : []
+      ids.value = new Set(list.map((item: any) => item.productId ?? item.id))
+    } catch {
+      ids.value = new Set()
+    } finally {
+      loading.value = false
+    }
   }
 
-  function clear() { items.value = []; count.value = 0 }
+  function clear() {
+    ids.value = new Set()
+  }
 
-  return { items, loading, count, fetch, isFavorited, clear }
+  async function toggle(productId: number): Promise<boolean> {
+    const wasFavorite = isFavorite(productId)
+    if (wasFavorite) {
+      ids.value.delete(productId)
+    } else {
+      ids.value.add(productId)
+    }
+    try {
+      if (wasFavorite) {
+        await removeFavorite(productId)
+      } else {
+        await addFavorite(productId)
+      }
+      return !wasFavorite
+    } catch {
+      // 回滚
+      if (wasFavorite) {
+        ids.value.add(productId)
+      } else {
+        ids.value.delete(productId)
+      }
+      throw new Error('操作失败')
+    }
+  }
+
+  return { ids, loading, isFavorite, refresh, clear, toggle }
 })

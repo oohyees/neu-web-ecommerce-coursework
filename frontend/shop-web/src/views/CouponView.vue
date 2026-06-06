@@ -1,0 +1,62 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { fetchMyCoupons, fetchAvailableCoupons, claimCoupon } from '@/api/coupon'
+
+const myCoupons = ref<any[]>([])
+const available = ref<any[]>([])
+
+async function load() {
+  try {
+    const [my, all] = await Promise.all([fetchMyCoupons(), fetchAvailableCoupons()])
+    myCoupons.value = (my as any).data ?? []
+    available.value = (all as any).data ?? []
+  } catch { /* handled */ }
+}
+
+async function handleClaim(couponId: number) {
+  try {
+    await claimCoupon(couponId)
+    ElMessage.success('领取成功')
+    load()
+  } catch { /* handled */ }
+}
+
+onMounted(load)
+</script>
+
+<template>
+  <div class="page-container">
+    <h2 class="page-title">我的优惠券</h2>
+    <div v-if="available.length" class="section">
+      <h3>可领取</h3>
+      <div class="coupon-list">
+        <div v-for="c in available" :key="c.id" class="coupon-card">
+          <div class="coupon-amount">¥{{ c.value || c.discountAmount }}</div>
+          <div class="coupon-cond">满{{ c.minAmount || c.thresholdAmount }}可用</div>
+          <el-button size="small" type="primary" @click="handleClaim(c.id)">领取</el-button>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <h3>已领取</h3>
+      <div v-if="myCoupons.length" class="coupon-list">
+        <div v-for="c in myCoupons" :key="c.id" class="coupon-card used">
+          <div class="coupon-amount">¥{{ c.value || c.discountAmount }}</div>
+          <div class="coupon-cond">{{ c.status === 'USED' ? '已使用' : '未使用' }}</div>
+        </div>
+      </div>
+      <div v-else class="empty"><el-empty description="暂无优惠券" /></div>
+    </div>
+  </div>
+</template>
+<style scoped>
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 24px; }
+.section { margin-bottom: 24px; }
+.section h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+.coupon-list { display: flex; flex-wrap: wrap; gap: 12px; }
+.coupon-card { background: #fff; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.coupon-card.used { opacity: 0.5; }
+.coupon-amount { font-size: 24px; font-weight: 700; color: var(--color-price, #ff0036); }
+.coupon-cond { font-size: 13px; color: #888; }
+</style>

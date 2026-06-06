@@ -1,120 +1,70 @@
-<template>
-  <ShopLayout>
-    <div class="page-wrap feedback-layout">
-      <!-- 提交反馈卡片 -->
-      <section class="page-card">
-        <h2 class="card-title">提交反馈</h2>
-        <p class="card-desc">欢迎提出宝贵意见，我们将尽快处理并回复。</p>
-        <el-form :model="form" label-width="80px" class="feedback-form">
-          <el-form-item label="反馈类型">
-            <el-select v-model="form.type" placeholder="请选择反馈类型" style="width: 100%">
-              <el-option label="商品问题" value="product" />
-              <el-option label="订单问题" value="order" />
-              <el-option label="物流问题" value="logistics" />
-              <el-option label="售后问题" value="aftersale" />
-              <el-option label="账户问题" value="account" />
-              <el-option label="其他建议" value="other" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="反馈内容">
-            <el-input v-model="form.content" type="textarea" :rows="5" placeholder="请详细描述你的反馈内容..." />
-          </el-form-item>
-          <el-form-item label="联系方式">
-            <el-input v-model="form.contact" placeholder="选填，方便我们联系你" />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="danger" @click="submit" :loading="submitting">提交反馈</el-button>
-          </el-form-item>
-        </el-form>
-      </section>
-
-      <!-- 我的反馈记录卡片 -->
-      <section class="page-card">
-        <h2 class="card-title">我的反馈记录</h2>
-        <el-table v-if="items.length" :data="items" class="feedback-table">
-          <el-table-column prop="content" label="反馈内容" min-width="200" show-overflow-tooltip />
-          <el-table-column label="状态" width="100">
-            <template #default="{ row }">
-              <StatusTag :value="row.status" kind="order" />
-            </template>
-          </el-table-column>
-          <el-table-column prop="reply" label="回复" min-width="150" show-overflow-tooltip>
-            <template #default="{ row }">
-              <span :class="{ muted: !row.reply }">{{ row.reply || '暂无回复' }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="createdAt" label="提交时间" width="170" />
-        </el-table>
-        <EmptyState v-else title="暂无反馈记录" description="提交反馈后可在此查看处理和回复状态。" />
-      </section>
-    </div>
-  </ShopLayout>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { api } from '@/api'
-import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
-import ShopLayout from '../layouts/ShopLayout.vue'
-import EmptyState from '../components/EmptyState.vue'
-import StatusTag from '../components/StatusTag.vue'
+import { fetchMyFeedback, submitFeedback } from '@/api/feedback'
 
-const userStore = useUserStore()
 const items = ref<any[]>([])
+const form = ref({ type: '建议', content: '', contact: '' })
 const submitting = ref(false)
-const form = ref({ type: '', content: '', contact: '' })
 
 async function load() {
-  items.value = (await api.get('/feedback', { params: { userId: userStore.userId } })).data.data || []
+  try {
+    const res: any = await fetchMyFeedback()
+    items.value = res.data ?? []
+  } catch { items.value = [] }
 }
 
-async function submit() {
-  if (!form.value.content) return ElMessage.warning('请输入反馈内容')
+async function handleSubmit() {
+  if (!form.value.content.trim()) { ElMessage.warning('请输入反馈内容'); return }
   submitting.value = true
   try {
-    await api.post('/feedback', { userId: userStore.userId, type: form.value.type, content: form.value.content, contact: form.value.contact })
-    ElMessage.success('反馈提交成功')
-    form.value = { type: '', content: '', contact: '' }
+    await submitFeedback(form.value)
+    ElMessage.success('提交成功')
+    form.value.content = ''
     load()
-  } catch {
-    ElMessage.error('提交失败，请稍后重试')
-  } finally {
-    submitting.value = false
-  }
+  } catch { /* handled */ }
+  finally { submitting.value = false }
 }
 
 onMounted(load)
 </script>
 
+<template>
+  <div class="page-container feedback-page">
+    <h2 class="page-title">意见反馈</h2>
+
+    <div class="form-card">
+      <h3>提交反馈</h3>
+      <el-form>
+        <el-form-item label="类型">
+          <el-select v-model="form.type"><el-option value="建议" label="建议" /><el-option value="问题" label="问题" /><el-option value="其他" label="其他" /></el-select>
+        </el-form-item>
+        <el-form-item label="内容"><el-input v-model="form.content" type="textarea" :rows="4" placeholder="请描述你的问题或建议..." /></el-form-item>
+        <el-form-item label="联系方式"><el-input v-model="form.contact" placeholder="邮箱/手机（选填）" /></el-form-item>
+        <el-form-item><el-button type="primary" :loading="submitting" @click="handleSubmit">提交</el-button></el-form-item>
+      </el-form>
+    </div>
+
+    <div v-if="items.length" class="history">
+      <h3>我的反馈记录</h3>
+      <div v-for="item in items" :key="item.id" class="item">
+        <div class="item-header"><span class="item-type">{{ item.type }}</span><span :class="'item-status status-'+item.status?.toLowerCase()">{{ item.status }}</span></div>
+        <p>{{ item.content }}</p>
+        <p v-if="item.reply" class="reply">回复：{{ item.reply }}</p>
+      </div>
+    </div>
+  </div>
+</template>
 <style scoped>
-.feedback-layout {
-  display: grid;
-  gap: 20px;
-  max-width: 900px;
-}
-
-.card-title {
-  margin: 0 0 6px;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.card-desc {
-  margin: 0 0 20px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.feedback-form {
-  max-width: 560px;
-}
-
-.feedback-form :deep(.el-textarea__inner) {
-  min-height: 120px;
-}
-
-.feedback-table {
-  width: 100%;
-}
+.feedback-page { max-width: 600px; }
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+.form-card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.form-card h3, .history h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.item { background: #fff; border-radius: 8px; padding: 14px; margin-bottom: 8px; }
+.item-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.item-type { font-size: 13px; color: var(--color-primary); }
+.item-status { font-size: 12px; padding: 1px 6px; border-radius: 3px; }
+.status-pending { color: #f59e0b; }
+.status-replied { color: #22c55e; }
+.reply { color: #666; font-size: 13px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #f0f0f0; }
 </style>

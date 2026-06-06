@@ -1,58 +1,61 @@
-import { get, post, put, del } from './request'
-import type { Order, PageResult, Address } from '../types/index'
+import request from './request'
 
-export function createOrder(data: {
+export interface Order {
+  id: number
+  orderNo: string
   userId: number
   addressId: number
-  cartItemIds: number[]
+  couponId: number | null
+  totalAmount: number
+  status: string
+  paymentStatus: string
   paymentMethod: string
+  logisticsStatus: string
+  refundStatus: string | null
+  createdAt: string
+}
+
+export interface LogisticsRecord {
+  id: number
+  orderId: number
+  content: string
+  createdAt: string
+}
+
+export function createOrder(data: {
+  addressId: number
+  cartItemIds?: number[]
+  productIds?: number[]
   couponId?: number
-  remark?: string
+  paymentMethod?: string
 }) {
-  return post<Order>('/orders', data)
+  return request.post('/orders', data)
 }
 
-export function getOrders(params: {
-  userId: number
-  status?: string
-  page?: number
-  pageSize?: number
-}) {
-  return get<PageResult<Order>>('/orders', params as Record<string, any>)
+export function fetchMyOrders(params?: { status?: string; page?: number; size?: number }) {
+  return request.get('/orders', { params })
 }
 
-export function getOrderById(orderId: number) {
-  return get<Order>(`/orders/${orderId}`)
+export function fetchOrderDetail(id: number) {
+  return request.get(`/orders/${id}`)
 }
 
-export function cancelOrder(orderId: number) {
-  return put<void>(`/orders/${orderId}/cancel`)
+export function payOrder(id: number) {
+  return request.put(`/orders/${id}/pay`)
 }
 
-export function confirmReceipt(orderId: number) {
-  return put<void>(`/orders/${orderId}/confirm`)
+export function cancelOrder(id: number) {
+  return request.put(`/orders/${id}/cancel`)
 }
 
-export function requestRefund(orderId: number, reason?: string) {
-  return post<void>(`/orders/${orderId}/refund`, { reason })
+export function confirmOrder(id: number) {
+  return request.put(`/orders/${id}/confirm`)
 }
 
-export function payOrder(orderId: number, paymentMethod: string) {
-  return post<{ payUrl?: string }>(`/orders/${orderId}/pay`, { paymentMethod })
+export function refundOrder(id: number) {
+  return request.put(`/orders/${id}/refund`)
 }
 
-export function getAddresses(userId: number) {
-  return get<Address[]>('/addresses', { userId })
-}
-
-export function createAddress(data: Omit<Address, 'id'>) {
-  return post<Address>('/addresses', data)
-}
-
-export function updateAddress(id: number, data: Partial<Address>) {
-  return put<Address>(`/addresses/${id}`, data)
-}
-
-export function deleteAddress(id: number) {
-  return del<void>(`/addresses/${id}`)
+export function fetchLogistics(id: number) {
+  return request.get(`/orders/${id}/logistics`)
 }

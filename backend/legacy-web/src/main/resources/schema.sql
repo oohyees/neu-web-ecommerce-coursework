@@ -15,12 +15,17 @@ DROP TABLE IF EXISTS activity_notice;
 DROP TABLE IF EXISTS customer_consultation;
 DROP TABLE IF EXISTS feedback;
 DROP TABLE IF EXISTS user_address;
+DROP TABLE IF EXISTS product_image;
+DROP TABLE IF EXISTS product_sku;
 DROP TABLE IF EXISTS product;
 DROP TABLE IF EXISTS product_spec;
 DROP TABLE IF EXISTS promotion;
+DROP TABLE IF EXISTS hot_search;
 DROP TABLE IF EXISTS coupon;
 DROP TABLE IF EXISTS verification_code;
 DROP TABLE IF EXISTS product_category;
+DROP TABLE IF EXISTS admin_role_permission;
+DROP TABLE IF EXISTS admin_permission;
 DROP TABLE IF EXISTS admin_user;
 DROP TABLE IF EXISTS user;
 
@@ -45,17 +50,63 @@ CREATE TABLE admin_user (
   role VARCHAR(32) NOT NULL DEFAULT 'ADMIN'
 );
 
+CREATE TABLE admin_permission (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  code VARCHAR(64) NOT NULL UNIQUE,
+  name VARCHAR(64) NOT NULL,
+  group_name VARCHAR(64)
+);
+
+CREATE TABLE admin_role_permission (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  role VARCHAR(32) NOT NULL,
+  permission_id BIGINT NOT NULL,
+  UNIQUE KEY uk_role_perm (role, permission_id)
+);
+
+CREATE TABLE hot_search (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  keyword VARCHAR(100) NOT NULL UNIQUE,
+  search_count INT DEFAULT 0,
+  enabled TINYINT DEFAULT 1,
+  sort_order INT DEFAULT 0
+);
+
 CREATE TABLE product (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   category_id BIGINT NOT NULL,
-  name VARCHAR(128) NOT NULL,
+  name VARCHAR(256) NOT NULL,
+  subtitle VARCHAR(512),
   price DECIMAL(10,2) NOT NULL,
+  original_price DECIMAL(10,2),
   stock INT NOT NULL,
   sales INT NOT NULL DEFAULT 0,
   is_on_sale TINYINT NOT NULL DEFAULT 1,
-  image_url VARCHAR(255),
-  detail_html TEXT,
+  image_url VARCHAR(1024),
+  detail_html MEDIUMTEXT,
   params_text VARCHAR(500)
+);
+
+CREATE TABLE product_sku (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  product_id BIGINT NOT NULL,
+  sku_code VARCHAR(64) NOT NULL,
+  color VARCHAR(32),
+  size VARCHAR(32),
+  price DECIMAL(10,2),
+  stock INT DEFAULT 0,
+  image VARCHAR(1024),
+  deleted TINYINT NOT NULL DEFAULT 0,
+  KEY idx_product_id (product_id)
+);
+
+CREATE TABLE product_image (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  product_id BIGINT NOT NULL,
+  url VARCHAR(1024) NOT NULL,
+  sort_order INT DEFAULT 0,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  KEY idx_product_id (product_id)
 );
 
 CREATE TABLE product_spec (
@@ -139,6 +190,7 @@ CREATE TABLE cart_item (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   user_id BIGINT NOT NULL,
   product_id BIGINT NOT NULL,
+  sku_id BIGINT,
   spec_text VARCHAR(255),
   quantity INT NOT NULL,
   UNIQUE KEY uk_user_product_spec (user_id, product_id, spec_text)
@@ -212,6 +264,7 @@ CREATE TABLE order_item (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   order_id BIGINT NOT NULL,
   product_id BIGINT NOT NULL,
+  sku_id BIGINT,
   product_name VARCHAR(128) NOT NULL,
   spec_text VARCHAR(255),
   unit_price DECIMAL(10,2) NOT NULL,

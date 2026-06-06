@@ -55,7 +55,7 @@
 | 方法 | 路径 | 鉴权 | 说明 |
 |------|------|------|------|
 | GET | `/api/products` | 公开 | 商品列表 `?keyword&categoryId&sort=default/new/sales/price&searchMode=fuzzy/exact&page&size` |
-| GET | `/api/products/{id}` | 公开 | 商品详情（含规格、评价） |
+| GET | `/api/products/{id}` | 公开 | 商品详情。微服务当前返回单商品对象；前端会将 `imageUrl` 和 `paramsText` 规范化为详情页图片和参数结构。legacy 单体可返回更完整的商品扩展数据 |
 | GET | `/api/products/admin/all` | ADMIN | 后台商品列表 |
 | POST | `/api/products/admin` | ADMIN | 新增商品 |
 | PUT | `/api/products/admin` | ADMIN | 编辑商品 |
@@ -78,7 +78,7 @@
 | 方法 | 路径 | 鉴权 | 说明 |
 |------|------|------|------|
 | GET | `/api/cart` | 登录 | 购物车列表 |
-| POST | `/api/cart/items` | 登录 | 添加商品 `{ productId, specText, quantity }` |
+| POST | `/api/cart/items` | 登录 | 添加商品 `{ productId, skuId?, specText?, quantity }`，支持传 `skuId` 关联 SKU |
 | PUT | `/api/cart/items` | 登录 | 按 `cartItemId` 或 `productId + specText` 修改数量 |
 | DELETE | `/api/cart/items` | 登录 | 按 `cartItemId` 或 `productId + specText` 删除单项 |
 

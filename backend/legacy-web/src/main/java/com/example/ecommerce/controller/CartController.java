@@ -16,7 +16,9 @@ public class CartController {
 
     @PostMapping("/items")
     public ApiResponse<?> add(@RequestBody Map<String, Object> body, HttpServletRequest request) {
+        Long skuId = body.get("skuId") != null ? Long.valueOf(String.valueOf(body.get("skuId"))) : null;
         cartMapper.upsert(CurrentSession.userId(request), Long.valueOf(String.valueOf(body.get("productId"))),
+                skuId,
                 body.get("specText")==null?null:String.valueOf(body.get("specText")), Integer.valueOf(String.valueOf(body.get("quantity"))));
         return ApiResponse.ok(null);
     }

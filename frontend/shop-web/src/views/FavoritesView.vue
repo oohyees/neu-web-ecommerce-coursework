@@ -1,55 +1,60 @@
-<template>
-  <ShopLayout>
-    <div class="page-wrap">
-      <section class="fav-head">
-        <div>
-          <h1>我的收藏</h1>
-          <p>展示所有已收藏的商品。</p>
-        </div>
-        <el-button @click="$router.push('/products')">继续逛</el-button>
-      </section>
-      <section v-if="products.length" class="product-grid">
-        <ProductCard v-for="p in products" :key="p.id" :product="p" @add="addToCart" @favorite="unfavorite" />
-      </section>
-      <EmptyState v-else title="暂无收藏商品" description="浏览商品时点击心形图标即可收藏。">
-        <el-button type="danger" @click="$router.push('/products')">去逛逛</el-button>
-      </EmptyState>
-    </div>
-  </ShopLayout>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { api } from '@/api'
-import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
-import ShopLayout from '../layouts/ShopLayout.vue'
-import ProductCard from '../components/ProductCard.vue'
-import EmptyState from '../components/EmptyState.vue'
+import { useRouter } from 'vue-router'
+import { useFavoriteStore } from '@/stores/favorite'
+import { fetchFavorites, type Product } from '@/api/product'
+import { imageOrPlaceholder } from '@/utils/image'
 
-const products = ref<any[]>([]), session = useUserStore() as any
+const router = useRouter()
+const favoriteStore = useFavoriteStore()
+const items = ref<Product[]>([])
+const loading = ref(true)
 
-async function load() { products.value = (await api.get('/favorites', { params: { userId: useUserStore().userId } })).data.data || [] }
-
-async function addToCart(product) {
-  await api.post('/cart/items', { userId: useUserStore().userId, productId: product.id, quantity: 1 })
-  ElMessage.success('已加入购物车')
+async function load() {
+  loading.value = true
+  try {
+    const res: any = await fetchFavorites()
+    items.value = res.data ?? []
+  } catch { items.value = [] }
+  finally { loading.value = false }
 }
 
-async function unfavorite(product) {
-  await api.delete(`/favorites/${product.id}`, { params: { userId: useUserStore().userId } })
-  ElMessage.success('已取消收藏')
-  load()
+async function removeFav(productId: number) {
+  await favoriteStore.toggle(productId)
+  items.value = items.value.filter(i => i.id !== productId)
 }
+
+function goProduct(id: number) { router.push(`/product/${id}`) }
 
 onMounted(load)
 </script>
 
+<template>
+  <div class="page-container">
+    <h2 class="page-title">我的收藏</h2>
+    <div v-if="loading"><el-skeleton :rows="4" animated /></div>
+    <div v-else-if="!items.length" class="empty"><el-empty description="暂无收藏" /></div>
+    <div v-else class="product-grid">
+      <div v-for="p in items" :key="p.id" class="product-card" @click="goProduct(p.id)">
+        <div class="product-img-box"><img :src="imageOrPlaceholder(p.imageUrl)" :alt="p.name" /></div>
+        <div class="product-info">
+          <h3 class="product-name">{{ p.name }}</h3>
+          <div class="product-price">¥{{ p.price }}</div>
+        </div>
+        <el-button size="small" type="danger" text @click.stop="removeFav(p.id)">取消收藏</el-button>
+      </div>
+    </div>
+  </div>
+</template>
 <style scoped>
-.fav-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
-h1, p { margin: 0; }
-p { color: var(--muted); margin-top: 4px; }
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
 .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-@media (max-width: 1100px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 768px) { .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.product-card { background: #fff; border-radius: 12px; padding: 12px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: all 0.2s; text-align: center; }
+.product-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-2px); }
+.product-img-box { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #f8f8f8; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+.product-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.product-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.product-price { font-size: 16px; font-weight: 700; color: var(--color-price, #ff0036); }
+@media (max-width: 1024px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px) { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
 </style>

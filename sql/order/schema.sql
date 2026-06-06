@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS cart_item (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   user_id BIGINT NOT NULL,
   product_id BIGINT NOT NULL,
+  sku_id BIGINT,
   spec_text VARCHAR(255),
   quantity INT NOT NULL,
   UNIQUE KEY uk_user_product_spec (user_id, product_id, spec_text)
@@ -44,6 +45,7 @@ CREATE TABLE IF NOT EXISTS order_item (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   order_id BIGINT NOT NULL,
   product_id BIGINT NOT NULL,
+  sku_id BIGINT,
   product_name VARCHAR(128) NOT NULL,
   spec_text VARCHAR(255),
   unit_price DECIMAL(10,2) NOT NULL,

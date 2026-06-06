@@ -1,56 +1,79 @@
 import axios from 'axios'
-import type { ApiResponse } from '../types/index'
+import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
+import router from '@/router'
 
-export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+const http = axios.create({
+  baseURL: '/api',
   timeout: 15000,
 })
 
-// 请求拦截器：自动附加 token
 http.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  const userStore = useUserStore()
+  if (userStore.token) {
+    config.headers.Authorization = `Bearer ${userStore.token}`
   }
   return config
 })
 
-// 响应拦截器：统一错误处理
 http.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const body = response.data
+    if (body.success === false) {
+      ElMessage.error(body.message || '请求失败')
+      return Promise.reject(new Error(body.message))
+    }
+    return body as any
+  },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('userId')
-      localStorage.removeItem('nickname')
-      localStorage.removeItem('adminId')
-      localStorage.removeItem('role')
-      window.location.href = '/login'
+      const userStore = useUserStore()
+      userStore.logout()
+      const path = router.currentRoute.value.path
+      if (!['/login', '/register', '/forgot-password'].includes(path)) {
+        ElMessage.warning('登录已过期，请重新登录')
+        router.push({ path: '/login', query: { redirect: path } })
+      }
+    } else {
+      ElMessage.error(error.response?.data?.message || error.message || '网络错误')
     }
     return Promise.reject(error)
-  },
+  }
 )
 
-// 类型安全的请求辅助函数
-export async function get<T>(url: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
-  const res = await http.get<ApiResponse<T>>(url, { params })
-  return res.data
+function withDataAlias<T>(payload: T): T {
+  if (payload && typeof payload === 'object' && !Object.prototype.hasOwnProperty.call(payload, 'data')) {
+    Object.defineProperty(payload, 'data', {
+      value: payload,
+      configurable: true,
+    })
+  }
+  return payload
 }
 
-export async function post<T>(url: string, data?: any, params?: Record<string, any>): Promise<ApiResponse<T>> {
-  const res = await http.post<ApiResponse<T>>(url, data, { params })
-  return res.data
+function normalizeParams(input?: any) {
+  return input && typeof input === 'object' && Object.prototype.hasOwnProperty.call(input, 'params')
+    ? input.params
+    : input
 }
 
-export async function put<T>(url: string, data?: any): Promise<ApiResponse<T>> {
-  const res = await http.put<ApiResponse<T>>(url, data)
-  return res.data
+/** 类型安全的请求封装：axios 拦截器已将响应解包为 {success, data}，这里进一步提取 data */
+const request = {
+  get<T = any>(url: string, params?: any): Promise<T> {
+    return http.get(url, { params: normalizeParams(params) }).then((res: any) => withDataAlias(res.data as T))
+  },
+  post<T = any>(url: string, data?: any, config?: any): Promise<T> {
+    return http.post(url, data, config).then((res: any) => withDataAlias(res.data as T))
+  },
+  put<T = any>(url: string, data?: any, config?: any): Promise<T> {
+    return http.put(url, data, config).then((res: any) => withDataAlias(res.data as T))
+  },
+  delete<T = any>(url: string, config?: any): Promise<T> {
+    return http.delete(url, {
+      ...config,
+      params: normalizeParams(config),
+    }).then((res: any) => withDataAlias(res.data as T))
+  },
 }
 
-export async function del<T>(url: string, config?: Record<string, any>): Promise<ApiResponse<T>> {
-  const res = await http.delete<ApiResponse<T>>(url, { params: config?.params, ...config })
-  return res.data
-}
-
-// 向后兼容：保留 api 对象
-export const api = http
+export default request

@@ -1,96 +1,109 @@
-<template>
-  <ShopLayout>
-    <div class="page-wrap">
-      <section class="addr-head">
-        <div>
-          <h1>地址管理</h1>
-          <p class="muted">管理你的收货地址信息。</p>
-        </div>
-        <el-button @click="$router.push('/user/profile')">返回个人中心</el-button>
-      </section>
-
-      <section class="page-card">
-        <h2>{{ form.id ? '编辑地址' : '新增地址' }}</h2>
-        <el-form :inline="true" :model="form" class="addr-form">
-          <el-form-item label="收货人"><el-input v-model="form.receiverName" placeholder="请输入收货人" /></el-form-item>
-          <el-form-item label="手机号"><el-input v-model="form.phone" placeholder="请输入手机号" /></el-form-item>
-          <el-form-item label="省份"><el-input v-model="form.province" placeholder="省份" /></el-form-item>
-          <el-form-item label="城市"><el-input v-model="form.city" placeholder="城市" /></el-form-item>
-          <el-form-item label="区县"><el-input v-model="form.district" placeholder="区县" /></el-form-item>
-          <el-form-item label="详细地址"><el-input v-model="form.detailAddress" placeholder="街道、门牌号等" style="width:320px" /></el-form-item>
-          <el-form-item label="默认地址"><el-switch v-model="form.isDefault" /></el-form-item>
-          <el-form-item>
-            <el-button type="danger" @click="save">{{ form.id ? '保存修改' : '新增地址' }}</el-button>
-            <el-button v-if="form.id" @click="form = empty()">取消编辑</el-button>
-          </el-form-item>
-        </el-form>
-      </section>
-
-      <section class="page-card">
-        <el-table v-if="addresses.length" :data="addresses" class="addr-table">
-          <el-table-column prop="receiverName" label="收货人" width="100" />
-          <el-table-column prop="phone" label="手机号" width="130" />
-          <el-table-column label="地址" min-width="220">
-            <template #default="{ row }">{{ row.province }}{{ row.city }}{{ row.district }}{{ row.detailAddress }}</template>
-          </el-table-column>
-          <el-table-column label="默认" width="80">
-            <template #default="{ row }">
-              <el-tag v-if="row.isDefault" type="danger" size="small">默认</el-tag>
-              <span v-else class="muted">否</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="210">
-            <template #default="{ row }">
-              <div class="table-actions">
-                <el-button link size="small" @click="edit(row)">编辑</el-button>
-                <el-button link size="small" @click="setDefault(row.id)">设为默认</el-button>
-                <el-button link type="danger" size="small" @click="remove(row.id)">删除</el-button>
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
-        <EmptyState v-else title="暂无收货地址" description="新增地址后可在此管理和选择收货地址。" />
-      </section>
-    </div>
-  </ShopLayout>
-</template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '@/api'
-import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
-import ShopLayout from '../layouts/ShopLayout.vue'
-import EmptyState from '../components/EmptyState.vue'
+import { fetchAddresses, createAddress, updateAddress, deleteAddress, setDefaultAddress, type UserAddress } from '@/api/address'
 
-const userStore = useUserStore(), addresses = ref<any[]>([])
-const empty = (): any => ({ userId: userStore.userId, receiverName: '', phone: '', province: '', city: '', district: '', detailAddress: '', isDefault: false })
-const form = ref<any>(empty())
+const addresses = ref<UserAddress[]>([])
+const dialogVisible = ref(false)
+const editing = ref<UserAddress | null>(null)
+const form = ref({ receiver: '', phone: '', province: '', city: '', district: '', detail: '', isDefault: false })
 
-async function load() { addresses.value = (await api.get('/addresses', { params: { userId: userStore.userId } })).data.data || [] }
-async function save() {
-  if (!form.value.receiverName || !form.value.phone) return ElMessage.warning('请填写收货人和手机号')
-  if (form.value.id) { await api.put('/addresses', form.value); ElMessage.success('地址已更新') }
-  else { await api.post('/addresses', form.value); ElMessage.success('地址已新增') }
-  form.value = empty(); load()
+function resetForm() {
+  form.value = { receiver: '', phone: '', province: '', city: '', district: '', detail: '', isDefault: false }
+  editing.value = null
 }
-function edit(row) { form.value = { ...row } }
-async function setDefault(id) { await api.put(`/addresses/${id}/default`, null, { params: { userId: userStore.userId } }); ElMessage.success('已设为默认地址'); load() }
-async function remove(id) {
+
+function openAdd() { resetForm(); dialogVisible.value = true }
+function openEdit(a: UserAddress) {
+  editing.value = a
+  form.value = { receiver: a.receiver, phone: a.phone, province: a.province, city: a.city, district: a.district, detail: a.detail, isDefault: a.isDefault }
+  dialogVisible.value = true
+}
+
+async function handleSave() {
+  const f = form.value
+  if (!f.receiver || !f.phone || !f.province || !f.city || !f.district || !f.detail) {
+    ElMessage.warning('请填写完整地址信息'); return
+  }
   try {
-    await ElMessageBox.confirm('确定要删除该地址吗？', '确认删除', { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' })
-    await api.delete(`/addresses/${id}`)
-    ElMessage.success('地址已删除')
+    if (editing.value) {
+      await updateAddress({ ...editing.value, ...f } as UserAddress)
+    } else {
+      await createAddress(f as any)
+    }
+    ElMessage.success('已保存')
+    dialogVisible.value = false
     load()
-  } catch { /* user cancelled */ }
+  } catch { /* handled */ }
 }
+
+async function handleDelete(a: UserAddress) {
+  try {
+    await ElMessageBox.confirm('确认删除？', '提示', { type: 'warning' })
+    await deleteAddress(a.id)
+    ElMessage.success('已删除')
+    load()
+  } catch { /* cancelled */ }
+}
+
+async function handleSetDefault(a: UserAddress) {
+  await setDefaultAddress(a.id)
+  ElMessage.success('已设为默认')
+  load()
+}
+
+async function load() {
+  try {
+    const res: any = await fetchAddresses()
+    addresses.value = res.data ?? []
+  } catch { addresses.value = [] }
+}
+
 onMounted(load)
 </script>
+
+<template>
+  <div class="page-container addr-page">
+    <div class="addr-header">
+      <h2>收货地址</h2>
+      <el-button type="primary" @click="openAdd">新增地址</el-button>
+    </div>
+    <div v-for="a in addresses" :key="a.id" class="addr-card">
+      <div class="addr-info">
+        <div class="addr-receiver">{{ a.receiver }} <span class="addr-phone">{{ a.phone }}</span></div>
+        <div class="addr-detail">{{ a.province }}{{ a.city }}{{ a.district }} {{ a.detail }}</div>
+      </div>
+      <div class="addr-actions">
+        <span v-if="a.isDefault" class="addr-tag">默认</span>
+        <el-button text size="small" @click="handleSetDefault(a)">设为默认</el-button>
+        <el-button text size="small" @click="openEdit(a)">编辑</el-button>
+        <el-button text size="small" type="danger" @click="handleDelete(a)">删除</el-button>
+      </div>
+    </div>
+    <div v-if="!addresses.length" class="empty"><el-empty description="暂无收货地址" /></div>
+
+    <el-dialog v-model="dialogVisible" :title="editing ? '编辑地址' : '新增地址'" width="480px">
+      <el-form label-width="80px">
+        <el-form-item label="收货人"><el-input v-model="form.receiver" /></el-form-item>
+        <el-form-item label="手机号"><el-input v-model="form.phone" /></el-form-item>
+        <el-form-item label="省"><el-input v-model="form.province" /></el-form-item>
+        <el-form-item label="市"><el-input v-model="form.city" /></el-form-item>
+        <el-form-item label="区/县"><el-input v-model="form.district" /></el-form-item>
+        <el-form-item label="详细地址"><el-input v-model="form.detail" /></el-form-item>
+        <el-form-item label="默认地址"><el-switch v-model="form.isDefault" /></el-form-item>
+      </el-form>
+      <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" @click="handleSave">保存</el-button></template>
+    </el-dialog>
+  </div>
+</template>
 <style scoped>
-.addr-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
-h1, p { margin: 0; }
-h1 { font-size: 22px; }
-.page-card { margin-bottom: 16px; }
-.page-card h2 { margin: 0 0 16px; font-size: 16px; font-weight: 650; }
-.addr-form { display: flex; flex-wrap: wrap; gap: 8px; }
-.addr-table :deep(th) { background: #f8fafc; }
+.addr-page { max-width: 700px; }
+.addr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.addr-header h2 { font-size: 22px; font-weight: 700; }
+.addr-card { background: #fff; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.addr-receiver { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.addr-phone { font-weight: 400; font-size: 13px; color: #888; }
+.addr-detail { font-size: 13px; color: #666; }
+.addr-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.addr-tag { font-size: 11px; color: var(--color-primary); background: #fff0eb; padding: 1px 6px; border-radius: 3px; }
 </style>

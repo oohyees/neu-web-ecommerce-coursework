@@ -2,15 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.ecommerce.mapper.CartMapper">
     <insert id="upsert">
-        insert into cart_item(user_id, product_id, spec_text, quantity)
-        values(#{userId}, #{productId}, #{specText}, #{quantity})
+        insert into cart_item(user_id, product_id, sku_id, spec_text, quantity)
+        values(#{userId}, #{productId}, #{skuId}, #{specText}, #{quantity})
         on duplicate key update quantity = quantity + values(quantity)
     </insert>
     <select id="findByUserId" resultType="com.example.ecommerce.model.CartItemView">
-        select c.id, p.id as product_id, p.name as product_name, c.spec_text, p.image_url, p.price, c.quantity,
-               p.price * c.quantity as subtotal
+        select c.id, p.id as product_id, p.name as product_name,
+               c.sku_id, s.sku_code, s.color, s.size,
+               c.spec_text, p.image_url,
+               coalesce(s.price, p.price) as price,
+               c.quantity,
+               coalesce(s.price, p.price) * c.quantity as subtotal
         from cart_item c
         join product p on p.id = c.product_id
+        left join product_sku s on s.id = c.sku_id
         where c.user_id = #{userId}
         order by c.id
     </select>
