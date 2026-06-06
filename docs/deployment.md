@@ -2,10 +2,11 @@
 
 > 相关文档：[架构总览](architecture.md) · [开发手册](development.md) · [API 参考](api-reference.md)
 
-## 单体模式
+## 默认微服务模式
 
 ```bash
-docker compose up -d --build
+./scripts/build_microservices.sh
+docker compose -f deploy/docker-compose.yml up -d --build
 ```
 
 > 构建命令详见 [开发手册 § 常用命令](development.md)。
@@ -14,13 +15,46 @@ docker compose up -d --build
 
 | 服务 | 镜像 | 端口 |
 |------|------|------|
-| mysql | mysql:8.4 | 13306 |
-| redis | redis:7-alpine | 6380 |
-| mailhog | mailhog/mailhog:v1.0.1 | 11025 (SMTP), 18099 (UI) |
-| backend | 本地构建 `./apps/api` | 18080 |
-| frontend | 本地构建 `./apps/web` (Nginx) | 18081 |
+| nacos | nacos/nacos-server:v2.3.2 | 18098 |
+| mysql | mysql:8.4 | 18096 |
+| redis | redis:7-alpine | 18097 |
+| mailhog | mailhog/mailhog:v1.0.1 | 11125 (SMTP), 18199 (UI) |
+| gateway | 本地构建 `../backend/gateway-service` | 18090 |
+| auth-service | 本地构建 `../backend/auth-service` | 18091 |
+| product-service | 本地构建 `../backend/product-service` | 18092 |
+| order-service | 本地构建 `../backend/order-service` | 18093 |
+| admin-service | 本地构建 `../backend/admin-service` | 18094 |
+| shop frontend | 本地构建 `../frontend/shop-web` (Nginx) | 18095 |
+| admin frontend | 本地构建 `../frontend/admin-web` (Nginx) | 18082 |
 
 ### 验证
+
+```bash
+curl http://localhost:18090/api/home
+curl http://localhost:18095
+curl http://localhost:18082
+./scripts/microservices_smoke_test.sh
+```
+
+---
+
+## legacy 单体对照模式
+
+```bash
+docker compose -f deploy/docker-compose.legacy.yml up -d --build
+```
+
+### 服务清单
+
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| mysql | 13306 | 业务数据库 |
+| redis | 6380 | 缓存/会话 |
+| mailhog | 11025 (SMTP), 18099 (UI) | 邮件捕获 |
+| backend | 18080 | Spring Boot legacy 后端 |
+| frontend | 18081 | Nginx 静态文件 |
+
+### 健康检查
 
 ```bash
 curl http://localhost:18080/api/home
@@ -31,51 +65,11 @@ curl http://localhost:18080/legacy/status
 
 ---
 
-## 微服务模式
-
-```bash
-./scripts/build_microservices.sh
-docker compose -f docker-compose.microservices.yml up -d --build
-```
-
-### 服务清单
-
-| 服务 | 端口 | 说明 |
-|------|------|------|
-| nacos | 18098 | 注册中心/配置中心 |
-| mysql | 18096 | 共享数据库 |
-| redis | 18097 | 共享缓存/会话 |
-| mailhog | 11125 (SMTP), 18199 (UI) | 邮件捕获 |
-| gateway | 18090 | API 网关 + 全局鉴权 |
-| auth-service | 18091 | 认证 |
-| catalog-service | 18092 | 商品/分类/首页/营销 |
-| order-service | 18093 | 购物车/订单/地址 |
-| admin-service | 18094 | 管理后台 |
-| frontend | 18095 | Nginx 静态文件 |
-
-### 健康检查
-
-```bash
-# Nacos 服务列表
-curl http://localhost:18098/nacos/v1/ns/healthy-instances?serviceName=ecommerce-gateway
-
-# 通过网关访问各服务
-curl http://localhost:18090/api/home
-curl -X POST http://localhost:18090/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"alice","password":"123456"}'
-
-# 完整冒烟测试
-./scripts/microservices_smoke_test.sh
-```
-
----
-
 ## 数据库
 
 - 数据库名：`ecommerce_minimal`（utf8mb4）
-- Schema：`apps/api/src/main/resources/schema.sql`（21 张表）
-- 种子数据：`apps/api/src/main/resources/data.sql`（商品、用户、订单等演示数据）
+- Schema：`backend/legacy-web/src/main/resources/schema.sql`（21 张表）
+- 种子数据：`backend/legacy-web/src/main/resources/data.sql`（商品、用户、订单等演示数据）
 - Docker 启动时自动执行 schema.sql 和 data.sql
 
 ### 手动连接

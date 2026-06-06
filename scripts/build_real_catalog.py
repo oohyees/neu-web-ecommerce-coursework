@@ -10,9 +10,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_URL = "https://raw.githubusercontent.com/luminati-io/eCommerce-dataset-samples/main/amazon-products.csv"
-CATALOG_DIR = ROOT / "apps" / "web" / "public" / "catalog"
+CATALOG_DIR = ROOT / "frontend" / "shop-web" / "public" / "catalog"
 DATA_DIR = ROOT / ".refs" / "real_catalog"
-SQL_PATH = ROOT / "apps" / "api" / "src" / "main" / "resources" / "data.sql"
+SQL_PATH = ROOT / "backend" / "legacy-web" / "src" / "main" / "resources" / "data.sql"
 JSON_PATH = DATA_DIR / "real_catalog.json"
 PROVENANCE_PATH = ROOT / "docs" / "archive" / "DATA_PROVENANCE.md"
 

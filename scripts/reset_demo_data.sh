@@ -6,8 +6,8 @@ TARGET="${1:-monolith}"
 MYSQL_USER="${DB_USER:-root}"
 MYSQL_PASSWORD="${DB_PASSWORD:-123456}"
 DATABASE="${DB_NAME:-ecommerce_minimal}"
-SCHEMA="$ROOT/apps/api/src/main/resources/schema.sql"
-DATA="$ROOT/apps/api/src/main/resources/data.sql"
+SCHEMA="$ROOT/backend/legacy-web/src/main/resources/schema.sql"
+DATA="$ROOT/backend/legacy-web/src/main/resources/data.sql"
 
 usage() {
   cat <<'USAGE'
@@ -82,11 +82,11 @@ case "$TARGET" in
     reset_stack "monolith" 13306 6380 "-"
     ;;
   microservices)
-    reset_stack "microservices" 18096 18097 "docker-compose.microservices.yml"
+    reset_stack "microservices" 18096 18097 "docker/docker-compose.yml"
     ;;
   both)
     reset_stack "monolith" 13306 6380 "-"
-    reset_stack "microservices" 18096 18097 "docker-compose.microservices.yml"
+    reset_stack "microservices" 18096 18097 "docker/docker-compose.yml"
     ;;
   -h|--help|help)
     usage

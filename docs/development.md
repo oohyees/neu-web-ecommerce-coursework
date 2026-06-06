@@ -13,28 +13,18 @@
 
 ```
 web/
-├── apps/api/                  # Spring Boot 单体后端（MyBatis + Redis + MySQL）
-│   └── src/main/java/com/example/ecommerce/
-│       ├── controller/        # 16 个 REST Controller
-│       ├── service/           # AuthService, OrderService, SessionService, MailService
-│       ├── mapper/            # 14 个 MyBatis Mapper + resources/mappers/*.xml
-│       ├── model/             # 实体类
-│       ├── common/            # 配置、AuthInterceptor、ServiceScopeInterceptor
-│       └── legacy/            # Servlet/JSP/Filter/Listener/JDBC（课程证据）
-├── apps/web/                  # Vue 3 + Vite + Element Plus + Pinia
-│   └── src/
-│       ├── router.js          # 33 个路由
-│       ├── store.js           # Pinia session store
-│       ├── api.js             # Axios + Bearer token 拦截器
-│       ├── layouts/           # ShopLayout, UserLayout, AdminLayout
-│       └── views/             # 页面组件
-├── services/                  # 微服务（Spring Cloud + Nacos + Gateway）
-│   ├── gateway/               # :18090 Spring Cloud Gateway + AuthGatewayFilter
+├── backend/
+│   ├── gateway-service/       # :18090 Spring Cloud Gateway + AuthGatewayFilter
 │   ├── auth-service/          # :18091 认证
-│   ├── catalog-service/       # :18092 商品/分类/首页/营销
-│   ├── order-service/         # :18093 购物车/订单/地址（Feign → catalog）
-│   └── admin-service/         # :18094 管理后台
-├── libs/common/               # ApiResponse, SessionInfo
+│   ├── product-service/       # :18092 商品/分类/首页/营销
+│   ├── order-service/         # :18093 购物车/订单/地址（Feign → product）
+│   ├── admin-service/         # :18094 管理后台
+│   ├── common/                # ApiResponse, SessionInfo
+│   └── legacy-web/            # legacy 单体 + Servlet/JSP/Filter/Listener/JDBC 课程证据
+├── frontend/
+│   ├── shop-web/              # 前台商城 Vue 工程
+│   └── admin-web/             # 后台管理 Vue 工程
+├── deploy/                    # Docker Compose 部署配置
 └── scripts/                   # 构建/验收脚本
 ```
 
@@ -43,21 +33,21 @@ web/
 ```bash
 # 构建
 mvn -q -DskipTests package          # 后端
-npm --prefix apps/web run build     # 前端
+npm --prefix frontend/shop-web run build
+npm --prefix frontend/admin-web run build
 
 # 测试
-docker compose up -d mysql redis mailhog
+docker compose -f deploy/docker-compose.legacy.yml up -d mysql redis mailhog
 mvn test                            # 依赖 Docker MySQL/Redis/MailHog，71 个评分点测试
 
-# 单体栈
-docker compose up -d --build        # 启动
-docker compose down                 # 停止
-./scripts/acceptance_check.sh       # 快速冒烟
-
-# 微服务栈
+# 默认微服务栈
 ./scripts/build_microservices.sh    # 构建全部微服务
-docker compose -f docker-compose.microservices.yml up -d --build
+docker compose -f deploy/docker-compose.yml up -d --build
 ./scripts/microservices_smoke_test.sh
+
+# legacy 单体对照栈
+docker compose -f deploy/docker-compose.legacy.yml up -d --build
+./scripts/acceptance_check.sh       # 快速冒烟
 ```
 
 > 各模式启动的具体服务和端口见 [部署说明](deployment.md)。
@@ -80,10 +70,11 @@ docker compose -f docker-compose.microservices.yml up -d --build
 |------|------|
 | Gateway | 18090 |
 | Auth Service | 18091 |
-| Catalog Service | 18092 |
+| Product Service | 18092 |
 | Order Service | 18093 |
 | Admin Service | 18094 |
-| 前端 Nginx | 18095 |
+| 前台 Nginx | 18095 |
+| 后台 Nginx | 18082 |
 | MySQL | 18096 |
 | Redis | 18097 |
 | Nacos | 18098 |

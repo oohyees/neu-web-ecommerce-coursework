@@ -4,7 +4,7 @@
 
 ## 一、项目概述
 
-本仓库是一个课程电商平台，采用 **monorepo** 组织方式，支持**单体应用**和**微服务**两种部署模式。两种模式共享同一套 MySQL 数据库 schema 和初始数据，前端通过不同的 Nginx 配置反向代理到对应后端。
+本仓库是一个课程电商平台，采用 **monorepo** 组织方式。默认架构是 Spring Cloud 微服务：前台商城、后台管理、Gateway、认证、商品、订单、后台服务分开构建部署；`legacy-web` 保留完整单体业务与 Servlet/JSP/Filter/Listener/JDBC 课程证据，作为对照和传统 Web 技术验收入口。
 
 - **仓库地址**：`web/`
 - **主分支**：`main`
@@ -17,12 +17,13 @@
 ```
 web/
 ├── pom.xml                          # 根 Maven POM，聚合 7 个子模块
-├── docker-compose.yml               # 单体模式 Docker 部署
-├── docker-compose.microservices.yml # 微服务模式 Docker 部署
+├── deploy/
+│   ├── deploy/docker-compose.yml           # 默认微服务 Docker 部署
+│   └── docker-compose.legacy.yml    # legacy 单体对照 Docker 部署
 ├── CLAUDE.md                        # 项目开发指南
 │
-├── apps/
-│   ├── api/                         # Spring Boot 单体后端
+├── backend/
+│   ├── legacy-web/                  # Spring Boot legacy 单体后端
 │   │   ├── pom.xml
 │   │   └── src/
 │   │       ├── main/java/com/example/ecommerce/
@@ -41,33 +42,16 @@ web/
 │   │       └── test/
 │   │           └── java/.../EcommerceScoringTests.java  # 集成测试（~1200 行）
 │   │
-│   └── web/                         # Vue 3 + Vite 前端
-│       ├── package.json
-│       ├── vite.config.js
-│       ├── Dockerfile               # 单体模式 Nginx 构建
-│       ├── Dockerfile.microservices # 微服务模式 Nginx 构建
-│       ├── nginx.conf
-│       ├── nginx.microservices.conf
-│       └── src/
-│           ├── main.js              # 入口 + 路由守卫
-│           ├── router.js            # 路由配置（33 个视图）
-│           ├── store.js             # Pinia 状态管理
-│           ├── api.js               # Axios HTTP 封装
-│           ├── layouts/             # 3 个布局组件
-│           ├── views/               # 33 个视图页面
-│           └── components/          # 5 个公共组件
-│
-├── services/                        # Spring Cloud 微服务
-│   ├── gateway/                     # API 网关 (Spring Cloud Gateway)
+│   ├── gateway-service/             # API 网关 (Spring Cloud Gateway)
 │   ├── auth-service/                # 认证服务
-│   ├── catalog-service/             # 商品目录服务
+│   ├── product-service/             # 商品服务
 │   ├── order-service/               # 订单服务
-│   └── admin-service/               # 管理服务
+│   ├── admin-service/               # 管理服务
+│   └── common/                      # 共享模型
 │
-├── libs/common/                     # 共享模型
-│   └── src/.../
-│       ├── ApiResponse.java         # 统一响应封装
-│       └── SessionInfo.java         # 会话信息
+├── frontend/
+│   ├── shop-web/                    # Vue 3 前台商城
+│   └── admin-web/                   # Vue 3 后台管理
 │
 ├── docs/                            # 课程文档
 │   ├── architecture.md              # 本文档
@@ -131,10 +115,11 @@ web/
 | 后端 | - | 18080 | - |
 | Gateway | - | - | 18090 |
 | Auth Service | - | - | 18091 |
-| Catalog Service | - | - | 18092 |
+| Product Service | - | - | 18092 |
 | Order Service | - | - | 18093 |
 | Admin Service | - | - | 18094 |
-| 前端 (Nginx) | - | 18081 | 18095 |
+| 前台 (Nginx) | - | 18081 | 18095 |
+| 后台 (Nginx) | - | - | 18082 |
 
 ---
 
@@ -374,7 +359,7 @@ OrderService.createOrder()
           ┌───────────────────┤   │   ├───────────────────┐
           │                   │   │                       │
     ┌─────▼─────┐   ┌────────▼───▼──▼──────┐   ┌────────▼──────┐
-    │Auth :18091│   │  Catalog :18092       │   │ Order :18093  │
+    │Auth :18091│   │  Product :18092       │   │ Order :18093  │
     │ 认证服务   │   │  商品/分类/首页/营销    │   │ 购物车/订单    │
     │           │   │  评价/收藏/文件/公告    │   │ 地址          │
     └───────────┘   └──────────────────────┘   └───────┬───────┘
@@ -404,15 +389,15 @@ OrderService.createOrder()
 | 请求路径 | 目标服务 | StripPrefix |
 |---------|---------|-------------|
 | `/api/auth/**` | ecommerce-auth-service | 1 |
-| `/api/products/**` | ecommerce-catalog-service | 1 |
-| `/api/categories/**` | ecommerce-catalog-service | 1 |
-| `/api/home/**` | ecommerce-catalog-service | 1 |
-| `/api/marketing/**` | ecommerce-catalog-service | 1 |
-| `/api/reviews/**` | ecommerce-catalog-service | 1 |
-| `/api/favorites/**` | ecommerce-catalog-service | 1 |
-| `/api/files/**` | ecommerce-catalog-service | 1 |
-| `/api/announcements/**` | ecommerce-catalog-service | 1 |
-| `/api/activity-notices/**` | ecommerce-catalog-service | 1 |
+| `/api/products/**` | ecommerce-product-service | 1 |
+| `/api/categories/**` | ecommerce-product-service | 1 |
+| `/api/home/**` | ecommerce-product-service | 1 |
+| `/api/marketing/**` | ecommerce-product-service | 1 |
+| `/api/reviews/**` | ecommerce-product-service | 1 |
+| `/api/favorites/**` | ecommerce-product-service | 1 |
+| `/api/files/**` | ecommerce-product-service | 1 |
+| `/api/announcements/**` | ecommerce-product-service | 1 |
+| `/api/activity-notices/**` | ecommerce-product-service | 1 |
 | `/api/cart/**` | ecommerce-order-service | 1 |
 | `/api/orders/**` | ecommerce-order-service | 1 |
 | `/api/addresses/**` | ecommerce-order-service | 1 |
@@ -444,14 +429,14 @@ OrderService.createOrder()
 - **功能**：所有认证相关端点（登录、注册、邮箱验证、密码重置、个人资料、管理员 CRUD）
 - **额外依赖**：Spring Security Crypto (BCrypt)、Spring Mail、Redis
 
-#### Catalog Service (:18092)
+#### Product Service (:18092)
 
 - **数据访问**：JDBC Template
 - **Controller**：`ProductController`（~450 行大控制器）
 - **功能**：
   - 公开：商品列表/详情、分类、首页、轮播图、公告、活动通知、规格、优惠券、促销、评价、收藏、文件上传
   - 管理：商品 CRUD、Excel 导入导出、促销管理、评价管理
-  - 内部接口：`/internal/catalog/products/{id}/order-view` 和 `/internal/catalog/products/{id}/deduct-stock`（供 order-service 通过 Feign 调用）
+  - 内部接口：`/internal/products/{id}/order-view` 和 `/internal/products/{id}/deduct-stock`（供 order-service 通过 Feign 调用）
 - **额外依赖**：Apache POI (Excel)
 
 #### Order Service (:18093)
@@ -459,7 +444,7 @@ OrderService.createOrder()
 - **数据访问**：JDBC Template
 - **Controller**：`OrderController`
 - **功能**：购物车 CRUD、地址 CRUD、订单 CRUD
-- **跨服务调用**：通过 OpenFeign `CatalogClient` 调用 catalog-service 获取商品信息、扣减库存
+- **跨服务调用**：通过 OpenFeign 客户端调用 product-service 获取商品信息、扣减库存
 - **上下文获取**：从 Gateway 注入的 `X-User-Id` 和 `X-Role` 读取用户身份
 
 #### Admin Service (:18094)
@@ -472,17 +457,17 @@ OrderService.createOrder()
 
 ### 6.5 跨服务通信
 
-order-service → catalog-service 的 Feign 调用：
+order-service → product-service 的 Feign 调用：
 
 ```
 OrderService.createOrder()
   │
-  ├── 调用 CatalogClient.orderView(productId)
-  │     → GET /internal/catalog/products/{id}/order-view
+  ├── 调用 ProductClient.orderView(productId)
+  │     → GET /internal/products/{id}/order-view
   │     → 返回商品基本信息（名称、价格等）
   │
-  └── 调用 CatalogClient.deductStock(productId, quantity)
-        → POST /internal/catalog/products/{id}/deduct-stock
+  └── 调用 ProductClient.deductStock(productId, quantity)
+        → POST /internal/products/{id}/deduct-stock
         → 原子扣减库存
 ```
 
@@ -581,11 +566,28 @@ Axios 实例配置：
 
 ## 八、部署与运维
 
-### 8.1 单体模式启动
+### 8.1 默认微服务模式启动
 
 ```bash
 # 构建并启动
-docker compose up -d --build
+./scripts/build_microservices.sh
+docker compose -f deploy/docker-compose.yml up -d --build
+
+# 访问
+# 前台: http://localhost:18095
+# 后台: http://localhost:18082
+# Gateway: http://localhost:18090/api
+# Nacos: http://localhost:18098/nacos
+
+# 验收测试
+./scripts/microservices_smoke_test.sh
+```
+
+### 8.2 legacy 单体对照模式启动
+
+```bash
+# 构建并启动
+docker compose -f deploy/docker-compose.legacy.yml up -d --build
 
 # 访问
 # 前端: http://localhost:18081
@@ -595,23 +597,6 @@ docker compose up -d --build
 
 # 验收测试
 ./scripts/acceptance_check.sh
-```
-
-### 8.2 微服务模式启动
-
-```bash
-# 构建所有微服务
-./scripts/build_microservices.sh
-
-# 启动
-docker compose -f docker-compose.microservices.yml up -d --build
-
-# 访问
-# 前端: http://localhost:18095
-# Nacos: http://localhost:18098/nacos
-
-# 验收测试
-./scripts/microservices_smoke_test.sh
 ```
 
 ### 8.3 默认账户
@@ -636,7 +621,7 @@ docker compose -f docker-compose.microservices.yml up -d --build
 
 ### 9.1 双模设计
 
-- 单体（`apps/api`）包含全部业务代码，MyBatis 数据访问层
+- 单体（`backend/legacy-web`）包含全部业务代码，MyBatis 数据访问层
 - 微服务版本将同样的业务按领域拆分，数据访问改用 JDBC Template
 - 两套后端共享同一数据库 schema 和 seed data
 - 前端通过不同的 Nginx 配置切换代理目标

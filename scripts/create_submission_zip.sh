@@ -8,21 +8,20 @@ mkdir -p "$OUT_DIR"
 
 cd "$ROOT"
 zip -qr "$OUT_DIR/$NAME" \
-  apps \
-  services \
-  libs \
+  frontend \
+  backend \
+  deploy \
   docs \
   scripts \
   pom.xml \
   README.md \
   CLAUDE.md \
-  docker-compose.yml \
-  docker-compose.microservices.yml \
   -x '*/node_modules/*' \
      '*/target/*' \
      '*/dist/*' \
      '*/dist2/*' \
      '*/.git/*' \
+     '*/.npm-cache/*' \
      '*/.idea/*' \
      '*/.vscode/*' \
      '*/.DS_Store' \

@@ -16,7 +16,7 @@
 | 浏览器巡检用户端首页、商品列表、商品详情、购物车、结算、支付、订单 | 通过 |
 | 浏览器巡检后台登录、看板、商品、订单、用户 | 通过 |
 | 390px、768px 响应式巡检 | 通过 |
-| `npm --prefix apps/web run build` | 通过，仅既有 Vite chunk-size 警告 |
+| `npm --prefix frontend/shop-web run build` | 通过，仅既有 Vite chunk-size 警告 |
 | `./scripts/acceptance_check.sh` | 通过 |
 | `python3 scripts/acceptance_api_smoke.py` | 8 组全部 PASS |
 | `mvn test` | 71 tests, 0 failures, 0 errors |

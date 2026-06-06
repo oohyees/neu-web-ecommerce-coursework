@@ -1,0 +1,70 @@
+server:
+  port: 18090
+spring:
+  application:
+    name: ecommerce-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:nacos:8848}
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+      routes:
+        - id: auth-service
+          uri: lb://ecommerce-auth-service
+          predicates:
+            - Path=/api/auth,/api/auth/**
+          filters:
+            - StripPrefix=1
+        - id: product-products
+          uri: lb://ecommerce-product-service
+          predicates:
+            - Path=/api/products,/api/products/**
+          filters:
+            - StripPrefix=1
+        - id: product-categories
+          uri: lb://ecommerce-product-service
+          predicates:
+            - Path=/api/categories,/api/categories/**
+          filters:
+            - RewritePath=/api/categories(?<segment>/?.*), /categories$\{segment}
+        - id: product-home
+          uri: lb://ecommerce-product-service
+          predicates:
+            - Path=/api/home/**,/api/home
+          filters:
+            - StripPrefix=1
+        - id: product-public-extra
+          uri: lb://ecommerce-product-service
+          predicates:
+            - Path=/api/marketing,/api/marketing/**,/api/reviews,/api/reviews/**,/api/favorites,/api/favorites/**,/api/files,/api/files/**,/api/announcements,/api/announcements/**,/api/activity-notices,/api/activity-notices/**
+          filters:
+            - StripPrefix=1
+        - id: order-service
+          uri: lb://ecommerce-order-service
+          predicates:
+            - Path=/api/cart,/api/cart/**,/api/orders,/api/orders/**,/api/addresses,/api/addresses/**
+          filters:
+            - StripPrefix=1
+        - id: support-service
+          uri: lb://ecommerce-admin-service
+          predicates:
+            - Path=/api/feedback,/api/feedback/**,/api/consultations,/api/consultations/**
+          filters:
+            - StripPrefix=1
+        - id: admin-service
+          uri: lb://ecommerce-admin-service
+          predicates:
+            - Path=/api/admin,/api/admin/**
+          filters:
+            - StripPrefix=1

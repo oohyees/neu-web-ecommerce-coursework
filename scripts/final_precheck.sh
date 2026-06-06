@@ -5,7 +5,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 echo "[1/6] Frontend production build"
-npm --prefix apps/web run build
+npm --prefix frontend/shop-web run build
+npm --prefix frontend/admin-web run build
 
 echo "[2/6] Backend test suite"
 mvn test

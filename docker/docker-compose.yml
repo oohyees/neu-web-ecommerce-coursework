@@ -1,0 +1,211 @@
+name: ecommerce-platform-microservices
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: ecommerce-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: ecommerce_minimal
+      TZ: Asia/Shanghai
+    ports:
+      - "18096:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ../sql/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql:ro
+      - ../sql/data.sql:/docker-entrypoint-initdb.d/03-data.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    restart: unless-stopped
+    ports:
+      - "18097:6379"
+    volumes:
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    platform: linux/amd64
+    container_name: ecommerce-mailhog
+    restart: unless-stopped
+    ports:
+      - "18199:8025"
+      - "11125:1025"
+
+  nacos:
+    image: nacos/nacos-server:v2.3.2
+    platform: linux/amd64
+    container_name: ecommerce-nacos
+    restart: unless-stopped
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+      SPRING_DATASOURCE_PLATFORM: ""
+      TZ: Asia/Shanghai
+    ports:
+      - "18098:8848"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8848/nacos/v1/console/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.auth-service
+    container_name: ecommerce-auth-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_USERNAME: root
+      DB_PASSWORD: root123
+      REDIS_HOST: redis
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_USERNAME: noreply@example.test
+      MAIL_FROM: noreply@example.test
+      MAIL_SMTP_AUTH: "false"
+      MAIL_STARTTLS_ENABLE: "false"
+      NACOS_SERVER_ADDR: nacos:8848
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+      nacos:
+        condition: service_healthy
+    ports:
+      - "18091:18091"
+
+  product-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.product-service
+    container_name: ecommerce-product-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_USERNAME: root
+      DB_PASSWORD: root123
+      NACOS_SERVER_ADDR: nacos:8848
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    ports:
+      - "18092:18092"
+
+  order-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.order-service
+    container_name: ecommerce-order-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_USERNAME: root
+      DB_PASSWORD: root123
+      NACOS_SERVER_ADDR: nacos:8848
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    ports:
+      - "18093:18093"
+
+  admin-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.admin-service
+    container_name: ecommerce-admin-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:mysql://mysql:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_USERNAME: root
+      DB_PASSWORD: root123
+      NACOS_SERVER_ADDR: nacos:8848
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    ports:
+      - "18094:18094"
+
+  gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gateway-service
+    container_name: ecommerce-gateway
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      REDIS_HOST: redis
+      NACOS_SERVER_ADDR: nacos:8848
+      TZ: Asia/Shanghai
+    depends_on:
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      admin-service:
+        condition: service_started
+    ports:
+      - "18090:18090"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.shop-web
+    container_name: ecommerce-shop-web
+    restart: unless-stopped
+    depends_on:
+      - gateway
+    ports:
+      - "18095:80"
+
+  admin-frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.admin-web
+    container_name: ecommerce-admin-web
+    restart: unless-stopped
+    depends_on:
+      - gateway
+    ports:
+      - "18082:80"

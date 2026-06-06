@@ -35,12 +35,12 @@
     </dependencyManagement>
 
     <modules>
-        <module>apps/api</module>
-        <module>libs/common</module>
-        <module>services/auth-service</module>
-        <module>services/catalog-service</module>
-        <module>services/order-service</module>
-        <module>services/admin-service</module>
-        <module>services/gateway</module>
+        <module>backend/legacy-web</module>
+        <module>backend/common</module>
+        <module>backend/auth-service</module>
+        <module>backend/product-service</module>
+        <module>backend/order-service</module>
+        <module>backend/admin-service</module>
+        <module>backend/gateway-service</module>
     </modules>
 </project>

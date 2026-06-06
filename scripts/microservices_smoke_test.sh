@@ -4,7 +4,7 @@ set -euo pipefail
 GATEWAY_URL="${GATEWAY_URL:-http://127.0.0.1:18090}"
 FRONTEND_URL="${FRONTEND_URL:-http://127.0.0.1:18095}"
 NACOS_URL="${NACOS_URL:-http://127.0.0.1:18098/nacos}"
-COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.microservices.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker/docker-compose.yml}"
 SUBMIT_ORDER="${SUBMIT_ORDER:-1}"
 USER_USERNAME="${USER_USERNAME:-alice}"
 USER_PASSWORD="${USER_PASSWORD:-123456}"
@@ -85,7 +85,7 @@ echo
 echo "[1/10] Nacos registration"
 code="$(http_code GET "$NACOS_URL/v1/ns/catalog/services?pageNo=1&pageSize=20")"
 assert_code 200 "$code" "nacos service catalog reachable"
-for service in ecommerce-gateway ecommerce-auth-service ecommerce-catalog-service ecommerce-order-service ecommerce-admin-service; do
+for service in ecommerce-gateway ecommerce-auth-service ecommerce-product-service ecommerce-order-service ecommerce-admin-service; do
   grep -q "\"name\":\"$service\"" "$TMP_DIR/response.json" || fail "nacos missing service: $service"
   grep -q "\"healthyInstanceCount\":1" "$TMP_DIR/response.json" || true
   pass "nacos registered $service"
@@ -175,12 +175,12 @@ fi
 echo "[10/10] Feign log evidence"
 if command -v docker >/dev/null 2>&1 && [ "$SUBMIT_ORDER" = "1" ]; then
   (cd "$ROOT" && docker compose -f "$COMPOSE_FILE" logs --tail=240 order-service > "$TMP_DIR/order.log" 2>/dev/null) || fail "cannot read order-service logs"
-  (cd "$ROOT" && docker compose -f "$COMPOSE_FILE" logs --tail=240 catalog-service > "$TMP_DIR/catalog.log" 2>/dev/null) || fail "cannot read catalog-service logs"
-  grep -q "Feign call catalog-service productId=$PRODUCT_ID" "$TMP_DIR/order.log" || fail "order-service log missing Feign call evidence"
-  grep -q "Internal order query catalog-service productId=$PRODUCT_ID" "$TMP_DIR/catalog.log" || fail "catalog-service log missing internal query evidence"
-  grep -q "Internal order deduct stock catalog-service productId=$PRODUCT_ID" "$TMP_DIR/catalog.log" || fail "catalog-service log missing stock deduction evidence"
+  (cd "$ROOT" && docker compose -f "$COMPOSE_FILE" logs --tail=240 product-service > "$TMP_DIR/product.log" 2>/dev/null) || fail "cannot read product-service logs"
+  grep -q "Feign call product-service productId=$PRODUCT_ID" "$TMP_DIR/order.log" || fail "order-service log missing Feign call evidence"
+  grep -q "Internal order query product-service productId=$PRODUCT_ID" "$TMP_DIR/product.log" || fail "product-service log missing internal query evidence"
+  grep -q "Internal order deduct stock product-service productId=$PRODUCT_ID" "$TMP_DIR/product.log" || fail "product-service log missing stock deduction evidence"
   pass "order-service Feign log evidence"
-  pass "catalog-service internal endpoint log evidence"
+  pass "product-service internal endpoint log evidence"
 else
   pass "docker log evidence skipped"
 fi

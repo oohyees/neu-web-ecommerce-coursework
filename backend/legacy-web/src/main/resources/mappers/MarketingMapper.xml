@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.MarketingMapper">
+  <select id="findSpecs" resultType="com.example.ecommerce.model.ProductSpec">select * from product_spec where product_id=#{productId}</select>
+  <select id="findCoupons" resultType="com.example.ecommerce.model.Coupon">select * from coupon where enabled=1 order by threshold_amount asc</select>
+  <select id="findUserCoupons" resultType="com.example.ecommerce.model.Coupon">
+    select c.* from coupon c join user_coupon uc on uc.coupon_id=c.id
+    where uc.user_id=#{userId} and uc.status='UNUSED' and c.enabled=1
+    order by c.threshold_amount asc
+  </select>
+  <insert id="claimCoupon">
+    insert ignore into user_coupon(user_id,coupon_id,status,claimed_at) values(#{param1},#{param2},'UNUSED',now())
+  </insert>
+  <select id="findUsableCoupon" resultType="com.example.ecommerce.model.Coupon">
+    select c.* from coupon c join user_coupon uc on uc.coupon_id=c.id
+    where uc.user_id=#{param1} and uc.coupon_id=#{param2} and uc.status='UNUSED' and c.enabled=1
+  </select>
+  <update id="useCoupon">update user_coupon set status='USED',used_at=now() where user_id=#{param1} and coupon_id=#{param2} and status='UNUSED'</update>
+  <!-- Admin coupon CRUD -->
+  <select id="findAllCoupons" resultType="com.example.ecommerce.model.Coupon">
+    select * from coupon
+    <where>
+      <if test="keyword != null and keyword != ''">name like concat('%',#{keyword},'%')</if>
+    </where>
+    order by id desc
+  </select>
+  <insert id="insertCoupon" useGeneratedKeys="true" keyProperty="id">
+    insert into coupon(name,threshold_amount,discount_amount,enabled)
+    values(#{name},#{thresholdAmount},#{discountAmount},#{enabled})
+  </insert>
+  <update id="updateCoupon">
+    update coupon set name=#{name},threshold_amount=#{thresholdAmount},discount_amount=#{discountAmount},enabled=#{enabled}
+    where id=#{id}
+  </update>
+  <delete id="deleteCoupon">delete from coupon where id=#{id}</delete>
+  <select id="findPromotions" resultType="com.example.ecommerce.model.Promotion">select * from promotion where enabled=1 and now() between start_at and end_at order by id desc</select>
+  <select id="findActiveFlashSale" resultType="com.example.ecommerce.model.Promotion">
+    select * from promotion where product_id=#{productId} and promotion_type='FLASH_SALE' and enabled=1 and now() between start_at and end_at limit 1
+  </select>
+  <update id="decreaseFlashSaleStock">
+    update promotion set promotion_stock=promotion_stock-#{param2}
+    where product_id=#{param1} and promotion_type='FLASH_SALE' and enabled=1
+      and now() between start_at and end_at and promotion_stock &gt;= #{param2}
+  </update>
+  <select id="findAllPromotions" resultType="com.example.ecommerce.model.Promotion">
+    select * from promotion
+    <where>
+      <if test="keyword != null and keyword != ''">title like concat('%',#{keyword},'%')</if>
+    </where>
+    order by id desc
+  </select>
+  <insert id="insertPromotion" useGeneratedKeys="true" keyProperty="id">
+    insert into promotion(product_id,title,promotion_type,promotion_price,promotion_stock,start_at,end_at,enabled)
+    values(#{productId},#{title},#{promotionType},#{promotionPrice},#{promotionStock},#{startAt},#{endAt},#{enabled})
+  </insert>
+  <update id="updatePromotion">
+    update promotion set product_id=#{productId},title=#{title},promotion_type=#{promotionType},
+    promotion_price=#{promotionPrice},promotion_stock=#{promotionStock},start_at=#{startAt},end_at=#{endAt},enabled=#{enabled}
+    where id=#{id}
+  </update>
+  <delete id="deletePromotion">delete from promotion where id=#{id}</delete>
+</mapper>

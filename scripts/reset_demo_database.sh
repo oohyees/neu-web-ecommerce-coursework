@@ -10,8 +10,8 @@ DATABASE="${DB_NAME:-ecommerce_minimal}"
 REDIS_HOST="${REDIS_HOST:-127.0.0.1}"
 REDIS_PORT="${REDIS_PORT:-6380}"
 
-SCHEMA="$ROOT/apps/api/src/main/resources/schema.sql"
-DATA="$ROOT/apps/api/src/main/resources/data.sql"
+SCHEMA="$ROOT/backend/legacy-web/src/main/resources/schema.sql"
+DATA="$ROOT/backend/legacy-web/src/main/resources/data.sql"
 
 if [[ ! -f "$SCHEMA" || ! -f "$DATA" ]]; then
   echo "schema.sql or data.sql was not found." >&2

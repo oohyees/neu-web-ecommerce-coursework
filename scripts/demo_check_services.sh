@@ -6,11 +6,12 @@ BASE_URL="${BASE_URL:-http://localhost:18080}"
 FRONTEND_URL="${FRONTEND_URL:-http://localhost:18081}"
 MICRO_GATEWAY_URL="${MICRO_GATEWAY_URL:-http://localhost:18090}"
 MICRO_FRONTEND_URL="${MICRO_FRONTEND_URL:-http://localhost:18095}"
+MICRO_ADMIN_FRONTEND_URL="${MICRO_ADMIN_FRONTEND_URL:-http://localhost:18082}"
 
 cd "$ROOT"
 
 echo "[1/8] Monolith containers"
-docker compose ps
+docker compose -f docker/docker-compose.legacy.yml ps
 
 echo "[2/8] Monolith frontend"
 curl -fsS "$FRONTEND_URL/" >/dev/null
@@ -25,17 +26,18 @@ test -n "$ADMIN_TOKEN"
 curl -fsS -H "Authorization: Bearer $ADMIN_TOKEN" "$BASE_URL/legacy/status" | grep -q '传统 Web 技术状态页'
 
 echo "[5/8] Microservice containers"
-docker compose -f docker-compose.microservices.yml ps
+docker compose -f docker/docker-compose.yml ps
 
 echo "[6/8] Microservice frontend"
 curl -fsS "$MICRO_FRONTEND_URL/" >/dev/null
+curl -fsS "$MICRO_ADMIN_FRONTEND_URL/" >/dev/null
 
 echo "[7/8] Gateway API"
 curl -fsS "$MICRO_GATEWAY_URL/api/products?page=1&size=3" | grep -q '"success":true'
 
 echo "[8/8] Redis key evidence hints"
-echo "  Monolith Redis keys:      docker compose exec -T redis redis-cli keys '*'"
-echo "  Microservice Redis keys:  docker compose -f docker-compose.microservices.yml exec -T redis redis-cli keys '*'"
+echo "  Legacy Redis keys:        docker compose -f docker/docker-compose.legacy.yml exec -T redis redis-cli keys '*'"
+echo "  Microservice Redis keys:  docker compose -f docker/docker-compose.yml exec -T redis redis-cli keys '*'"
 echo "  Session key pattern:      session:<token>"
 echo "  Cache key examples:       home::SimpleKey [], productDetail::<id>"
 

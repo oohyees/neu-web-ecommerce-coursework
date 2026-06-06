@@ -4,9 +4,18 @@ target/
 
 # ===== 构建产物 =====
 dist/
-submission/
 *.zip
-ecommerce-minimal/
+
+# ===== 归档（历史提交包、旧作业截图等）=====
+_archive/
+
+# ===== Docker 持久化数据卷（运行时生成）=====
+docker/mysql/data/
+docker/redis/data/
+docker/uploads/
+
+# ===== npm 缓存 =====
+.npm-cache/
 
 # ===== 日志（运行时生成，收拢在 logs/）=====
 logs/
@@ -39,3 +48,6 @@ logs/
 .vscode/
 *.iml
 .DS_Store
+
+# ===== Claude Code 本地配置 =====
+.claude/

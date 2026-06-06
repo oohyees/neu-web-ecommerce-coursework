@@ -11,8 +11,8 @@ import base64
 from pathlib import Path
 
 
-BASE = os.environ.get("ACCEPTANCE_BASE_URL", "http://localhost:18080/api")
-MAILHOG = os.environ.get("ACCEPTANCE_MAILHOG_URL", "http://localhost:18099")
+BASE = os.environ.get("ACCEPTANCE_BASE_URL", "http://localhost:18090/api")
+MAILHOG = os.environ.get("ACCEPTANCE_MAILHOG_URL", "http://localhost:18199")
 RESULTS = []
 
 

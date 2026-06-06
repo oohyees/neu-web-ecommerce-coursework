@@ -2,14 +2,14 @@
 
 ## 当前验证状态
 
-更新时间：2026-05-27。
+更新时间：2026-06-06。
 
 已通过的自动化验证：
 
 | 验证项 | 命令/方式 | 当前结果 |
 | --- | --- | --- |
 | 后端评分点测试 | Docker MySQL/Redis/MailHog 启动后执行 `mvn test` | 71 tests, 0 failures, 0 errors |
-| 前端生产构建 | `npm run build` | 通过 |
+| 前端生产构建 | `npm --prefix frontend/shop-web run build`、`npm --prefix frontend/admin-web run build` | 通过 |
 | 单体快速冒烟 | `./scripts/acceptance_check.sh` | 通过 |
 | 单体完整接口冒烟 | `python3 scripts/acceptance_api_smoke.py` | 8 组流程全部 PASS |
 | 微服务专项冒烟 | `scripts/microservices_smoke_test.sh` | Nacos/Gateway/Feign/库存扣减全部 PASS |
@@ -34,7 +34,7 @@
 
 | 指导书要求 | 覆盖方式 | 状态 |
 | --- | --- | --- |
-| 工程压缩包只打包源码及配置文件，总大小不超过 50M | `scripts/create_submission_zip.sh` 只打包 `apps/services/libs/docs/scripts/pom.xml/README/compose`，排除 `node_modules`、`target`、`dist`、`uploads`、`logs`、`docs/archive` 等；本轮试打包大小约 4.4M | 已覆盖 |
+| 工程压缩包只打包源码及配置文件，总大小不超过 50M | `scripts/create_submission_zip.sh` 只打包 `frontend/backend/deploy/docs/scripts/pom.xml/README`，排除 `node_modules`、`target`、`dist`、`uploads`、`logs`、`docs/archive`、`.npm-cache` 等；本轮试打包大小约 4.9M | 已覆盖 |
 | 工程压缩包命名格式 | 脚本默认参数为 `学号-姓名-班级-大作业-工程压缩包.zip` | 已覆盖 |
 | 实验报告命名格式 | `docs/course/实验报告.md` 为报告正文源，导出 docx 时按 `学号-姓名-班级-大作业-实验报告.docx` 命名 | 已覆盖 |
 | 报告包含实验目的、内容、环境、过程与分析、创新点、总结 | `docs/course/实验报告.md` 已按这些章节组织 | 已覆盖 |
@@ -43,11 +43,11 @@
 
 | 指导书正文点 | 覆盖方式 | 证据 |
 | --- | --- | --- |
-| Java 语言 | Spring Boot 单体、Spring Cloud 微服务、JUnit 测试 | `apps/api`、`services/*`、`EcommerceScoringTests` |
-| Web 前端 HTML/JavaScript/CSS | Vue 3 单页应用、Vite 构建、响应式 CSS | `apps/web/src`，`npm run build` 通过 |
+| Java 语言 | Spring Boot 单体、Spring Cloud 微服务、JUnit 测试 | `backend/legacy-web`、`backend/*`、`EcommerceScoringTests` |
+| Web 前端 HTML/JavaScript/CSS | Vue 3 单页应用、Vite 构建、响应式 CSS | `frontend/shop-web/src`，`npm run build` 通过 |
 | Servlet/JSP/Listener/Filter/JDBC | legacy 模块保留传统 Web 技术证据 | `/legacy/status`、`/legacy/servlet/status`、`Legacy*` 类 |
 | MySQL 数据库 | 21 张业务表和种子数据 | `schema.sql`、`data.sql` |
-| Spring、Vue3、MyBatis | 单体 Spring Boot + MyBatis，前端 Vue3 | `apps/api`、`apps/web` |
+| Spring、Vue3、MyBatis | 单体 Spring Boot + MyBatis，前端 Vue3 | `backend/legacy-web`、`frontend/shop-web` |
 | 联合调试和系统测试 | 后端测试、接口冒烟、微服务冒烟、截图证据 | 测试命令与 `docs/course/acceptance/evidence` |
 
 ### 客户端基础功能
@@ -97,8 +97,8 @@
 
 | 指导书细项 | 覆盖方式 | 证据 |
 | --- | --- | --- |
-| Element Plus | 表格、表单、弹窗、分页、上传、Drawer、Message | `apps/web/package.json`、各后台页面 |
-| Pinia | 登录态、用户/管理员 session | `apps/web/src/store.js` |
+| Element Plus | 表格、表单、弹窗、分页、上传、Drawer、Message | `frontend/shop-web/package.json`、各后台页面 |
+| Pinia | 登录态、用户/管理员 session | `frontend/shop-web/src/store.js` |
 | 认证鉴权 | Redis token session、前端路由守卫、后端拦截器、Gateway 鉴权 | `AuthInterceptor`、`AuthGatewayFilter` |
 | OAuth 或 Shiro 可选 | Shiro profile 保留 `ShiroRealm`、`ShiroConfig` | `--spring.profiles.active=shiro` |
 | 界面简洁美观、操作流畅、布局统一 | 前台购买流、后台表格化管理、统一布局组件 | 截图证据、`npm run build` |
@@ -132,9 +132,9 @@
 | 指导书细项 | 覆盖方式 | 证据 |
 | --- | --- | --- |
 | Redis 缓存热点数据 | 首页、商品详情缓存；会话、验证码、节流存 Redis | `@Cacheable`、`SessionService`、Redis 配置 |
-| 微服务拆分商品/订单/用户核心模块 | gateway、auth、catalog、order、admin 多服务独立构建部署 | `services/*`、`docker-compose.microservices.yml` |
+| 微服务拆分商品/订单/用户核心模块 | gateway、auth、product、order、admin 多服务独立构建部署 | `backend/*`、`deploy/docker-compose.yml` |
 | 服务间高效通信 | Gateway + Nacos + OpenFeign，订单服务调用商品服务扣库存 | `microservices_smoke_test.sh` Feign 日志证据 |
-| Docker 容器化部署 | 单体栈和微服务栈 Compose | `docker-compose.yml`、`docker-compose.microservices.yml` |
+| Docker 容器化部署 | 单体栈和微服务栈 Compose | `deploy/docker-compose.legacy.yml`、`deploy/docker-compose.yml` |
 | 多环境一致性 | MySQL、Redis、MailHog、Nacos、后端、前端均容器化 | Docker 截图和启动脚本 |
 
 ## 评分表映射

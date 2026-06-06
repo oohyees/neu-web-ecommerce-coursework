@@ -14,7 +14,7 @@
 | 分类排序 | 后台分类表单可新增/编辑 `sortOrder`，列表显示排序值 | `/admin/categories` |
 | 商品/订单导入导出 | 商品页有导入/导出按钮，订单页有导出按钮；已新增小体量 CSV 样例 | `/admin/products`，`/admin/orders`，`sample-products-import.csv` |
 | Redis 可见证据 | Session key、验证码、缓存均使用 Redis；重置脚本会清理 Redis | `SessionService`，`CacheConfig`，`scripts/reset_demo_data.sh` |
-| 微服务证据 | Gateway/Nacos/OpenFeign/库存扣减由微服务烟测覆盖 | `docker-compose.microservices.yml`，`scripts/microservices_smoke_test.sh` |
+| 微服务证据 | Gateway/Nacos/OpenFeign/库存扣减由微服务烟测覆盖 | `deploy/docker-compose.yml`，`scripts/microservices_smoke_test.sh` |
 | Docker 兜底 | 已新增不重新构建的演示启动与服务检查脚本 | `scripts/demo_start_monolith.sh`，`scripts/demo_start_microservices.sh`，`scripts/demo_check_services.sh` |
 
 ## 本轮新增交付
@@ -41,7 +41,7 @@
 
 ## 建议执行顺序
 
-1. 先运行 `scripts/demo_start_monolith.sh`，确认主验收路径可访问。
+1. 先运行 `scripts/demo_start_microservices.sh`，确认默认微服务主展示路径可访问。
 2. 执行 `./scripts/acceptance_check.sh` 和 `python3 scripts/acceptance_api_smoke.py`。
 3. 运行 `scripts/demo_start_microservices.sh` 和 `scripts/microservices_smoke_test.sh`，保留 Nacos/Gateway/Feign 证据。
 4. 运行 `scripts/reset_demo_data.sh both`，再进行截图或课堂演示。
