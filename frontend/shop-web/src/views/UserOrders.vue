@@ -69,25 +69,25 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import StatusTag from '../components/StatusTag.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const session = useSessionStore()
-const orders = ref([])
+const userStore = useUserStore()
+const orders = ref<any[]>([])
 const total = ref(0)
 const page = ref(1)
 const size = 6
 const filterKey = ref('')
-const detail = ref(null)
+const detail = ref<any>(null)
 const detailVisible = ref(false)
 
 async function load() {
-  const params = { userId: session.userId, page: page.value, size }
+  const params: Record<string, any> = { userId: userStore.userId, page: page.value, size }
   if (filterKey.value === 'UNPAID') params.paymentStatus = 'UNPAID'
   else if (filterKey.value === 'PAID') params.status = 'PAID'
   else if (filterKey.value) params.status = filterKey.value

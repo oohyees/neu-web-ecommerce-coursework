@@ -18,17 +18,17 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import EmptyState from '../components/EmptyState.vue'
 
-const session = useSessionStore()
-const coupons = ref([])
+const userStore = useUserStore()
+const coupons = ref<any[]>([])
 
 onMounted(async () => {
-  coupons.value = (await api.get(`/marketing/coupons/user/${session.userId}`)).data.data || []
+  coupons.value = (await api.get(`/marketing/coupons/user/${userStore.userId}`)).data.data || []
 })
 </script>
 

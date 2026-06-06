@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   title: { type: String, default: '暂无数据' },
   description: { type: String, default: '当前没有可展示的内容。' }

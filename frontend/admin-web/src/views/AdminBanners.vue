@@ -43,15 +43,15 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const items = ref([]), form = ref({ title: '', imageUrl: '', linkUrl: '/products', sortOrder: 0 }), keyword = ref('')
+const items = ref<any[]>([]), form = ref<any>({ title: '', imageUrl: '', linkUrl: '/products', sortOrder: 0 }), keyword = ref('')
 async function load() { items.value = (await api.get('/home/banners', { params: { keyword: keyword.value } })).data.data || [] }
 async function save() {
   if (!form.value.title) return ElMessage.warning('请输入轮播标题')

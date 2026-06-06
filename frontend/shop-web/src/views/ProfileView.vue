@@ -93,20 +93,20 @@
   </ShopLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import ShopLayout from '../layouts/ShopLayout.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const session = useSessionStore()
+const userStore = useUserStore()
 const router = useRouter()
 const activeMenu = ref('profile')
-const form = ref({})
-const coupons = ref([])
+const form = ref<any>({})
+const coupons = ref<any[]>([])
 const pwd = ref({ oldPassword: '', newPassword: '', confirmPassword: '' })
 
 const menuItems = [
@@ -137,7 +137,7 @@ async function saveProfile() {
 async function changePassword() {
   if (!pwd.value.oldPassword || !pwd.value.newPassword) return ElMessage.warning('请填写完整密码信息')
   if (pwd.value.newPassword !== pwd.value.confirmPassword) return ElMessage.warning('两次输入的新密码不一致')
-  const { data } = await api.put('/auth/password', { userId: session.userId, oldPassword: pwd.value.oldPassword, newPassword: pwd.value.newPassword })
+  const { data } = await api.put('/auth/password', { userId: userStore.userId, oldPassword: pwd.value.oldPassword, newPassword: pwd.value.newPassword })
   if (!data.success) return ElMessage.error(data.message)
   ElMessage.success('密码已更新')
   pwd.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
@@ -150,8 +150,8 @@ async function uploadAvatar({ file }) {
 }
 
 onMounted(async () => {
-  form.value = (await api.get('/auth/profile', { params: { userId: session.userId } })).data.data || {}
-  coupons.value = (await api.get(`/marketing/coupons/user/${session.userId}`)).data.data || []
+  form.value = (await api.get('/auth/profile', { params: { userId: userStore.userId } })).data.data || {}
+  coupons.value = (await api.get(`/marketing/coupons/user/${userStore.userId}`)).data.data || []
 })
 </script>
 

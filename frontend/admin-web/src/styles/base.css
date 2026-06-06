@@ -1,0 +1,321 @@
+/* ============================================================
+   Base Styles — 全局基础样式与 Element Plus 深度覆盖
+   ============================================================ */
+
+/* ---- CSS Reset ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  /* 暖光渐变背景 (董耕赫风格) */
+  background:
+    radial-gradient(circle at 0% 0%, rgba(230, 0, 35, 0.06), transparent 40%),
+    radial-gradient(circle at 100% 10%, rgba(176, 77, 47, 0.04), transparent 30%),
+    linear-gradient(180deg, var(--soft-warm), var(--soft));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  background: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- 排版 ---- */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+button, input, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: var(--brand-light);
+  color: var(--brand);
+}
+
+/* ---- 滚动条美化 ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ---- 布局工具类 ---- */
+.page-wrap {
+  max-width: var(--page-max);
+  margin: 0 auto;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.page-card {
+  padding: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  margin: 28px 0 14px;
+}
+
+.section-title h2,
+.section-title h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title h2::before {
+  content: '';
+  width: 4px;
+  height: 22px;
+  background: linear-gradient(180deg, var(--brand), var(--brand-dark));
+  border-radius: 2px;
+}
+
+.section-title a {
+  font-size: 14px;
+  color: var(--muted);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.section-title a:hover {
+  color: var(--brand);
+}
+
+/* ---- 文本工具类 ---- */
+.muted {
+  color: var(--muted);
+}
+
+.price {
+  color: var(--brand);
+  font-weight: 800;
+}
+
+/* ---- 毛玻璃容器 ---- */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+/* ---- 管理员工具 ---- */
+.toolbar-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+  align-items: center;
+  padding: var(--gap);
+  margin-bottom: var(--gap);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.admin-card {
+  padding: 18px;
+  overflow-x: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ---- 响应式工具 ---- */
+.desktop-only {
+  /* 默认显示 */
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* ============================================================
+   Element Plus 全局覆盖 — 统一品牌色系
+   ============================================================ */
+
+/* 按钮 */
+.el-button--primary,
+.el-button--danger {
+  --el-button-bg-color: var(--brand);
+  --el-button-border-color: var(--brand);
+  --el-button-hover-bg-color: var(--brand-dark);
+  --el-button-hover-border-color: var(--brand-dark);
+  --el-button-active-bg-color: var(--brand-deep);
+  --el-button-active-border-color: var(--brand-deep);
+}
+
+.el-button--primary.is-plain,
+.el-button--danger.is-plain {
+  --el-button-text-color: var(--brand);
+  --el-button-bg-color: #fff;
+  --el-button-border-color: #f2b8c2;
+  --el-button-hover-text-color: #fff;
+  --el-button-hover-bg-color: var(--brand);
+  --el-button-hover-border-color: var(--brand);
+}
+
+.el-button--default {
+  --el-button-bg-color: #fff;
+  --el-button-border-color: var(--line);
+  --el-button-text-color: var(--ink);
+  --el-button-hover-bg-color: var(--soft);
+  --el-button-hover-border-color: var(--muted);
+}
+
+/* Tabs */
+.el-tabs__active-bar {
+  background-color: var(--brand) !important;
+}
+
+.el-tabs__item.is-active {
+  color: var(--brand) !important;
+}
+
+.el-tabs__item:hover {
+  color: var(--brand) !important;
+}
+
+/* Pagination */
+.el-pagination .el-pager li.is-active {
+  background-color: var(--brand) !important;
+}
+
+.el-pagination .el-pager li:hover {
+  color: var(--brand) !important;
+}
+
+/* Checkbox */
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: var(--brand) !important;
+  border-color: var(--brand) !important;
+}
+
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: var(--brand) !important;
+}
+
+/* Menu */
+.el-menu {
+  --el-menu-active-color: var(--brand);
+}
+
+/* Table 空状态 */
+.el-table__empty-text {
+  color: var(--muted);
+}
+
+/* Tag */
+.el-tag--danger {
+  --el-tag-bg-color: var(--brand-light);
+  --el-tag-border-color: #f2b8c2;
+  --el-tag-text-color: var(--brand);
+}
+
+/* Steps */
+.el-steps {
+  --el-color-primary: var(--brand);
+}
+
+/* Link */
+.el-link.el-link--danger {
+  --el-link-text-color: var(--brand);
+}
+
+/* ---- 响应式 (移动端) ---- */
+@media (max-width: 768px) {
+  :root {
+    --radius-lg: 14px;
+  }
+
+  .page-wrap {
+    max-width: none;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  .section-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbar-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbar-panel .el-input,
+  .toolbar-panel .el-select,
+  .toolbar-panel .el-date-editor {
+    width: 100% !important;
+  }
+}

@@ -15,11 +15,11 @@
     </el-card>
   </main>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 const router = useRouter()
 const form = ref({ email: '', code: '', password: '' })
 const sending = ref(false), loading = ref(false)

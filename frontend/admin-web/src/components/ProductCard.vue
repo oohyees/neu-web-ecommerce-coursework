@@ -2,7 +2,7 @@
   <article class="product-card" @click="$router.push(`/products/${product.id}`)">
     <div class="image-box">
       <img :src="product.imageUrl" :alt="product.name" @error="imgFail" />
-      <span v-if="badge" class="badge">{{ badge }}</span>
+      <span v-if="badge" :class="['badge', badgeClass]">{{ badge }}</span>
       <button class="fav-btn" :class="{ liked: liked }" type="button" @click.stop="toggleFav">
         {{ liked ? '♥' : '♡' }}
       </button>
@@ -14,23 +14,34 @@
         <span v-if="product.rating">★ {{ product.rating }}</span>
       </div>
       <div class="buy-row">
-        <span class="price">&yen;{{ product.price }}</span>
+        <span class="price">&yen;{{ product.promotionPrice || product.price }}</span>
+        <del v-if="product.promotionPrice" class="original-price">&yen;{{ product.price }}</del>
       </div>
       <el-button class="add-btn" size="large" @click.stop="$emit('add', product)">加入购物车</el-button>
     </div>
   </article>
 </template>
 
-<script setup>
-import { ref, watch } from 'vue'
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   product: { type: Object, required: true },
-  badge: { type: String, default: '' }
+  badge: { type: String, default: '' },
 })
 const emit = defineEmits(['add', 'favorite'])
 
 const liked = ref(false)
+
+const badgeClass = computed(() => {
+  const map: Record<string, string> = {
+    热卖: 'badge--hot',
+    新品: 'badge--new',
+    促销: 'badge--promo',
+    秒杀: 'badge--seckill',
+  }
+  return map[props.badge] || ''
+})
 
 watch(() => props.product?.id, () => { liked.value = false })
 
@@ -39,8 +50,8 @@ function toggleFav() {
   emit('favorite', props.product)
 }
 
-function imgFail(e) {
-  e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23f3f4f6" width="200" height="200"/><text x="100" y="100" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="14">暂无图片</text></svg>'
+function imgFail(e: Event) {
+  (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23f3f4f6" width="200" height="200"/><text x="100" y="100" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="14">暂无图片</text></svg>'
 }
 </script>
 
@@ -86,7 +97,13 @@ img {
   font-weight: 600;
   background: var(--brand);
   border-radius: 999px;
+  z-index: 1;
 }
+
+.badge--new { background: var(--info); }
+.badge--hot { background: var(--brand); }
+.badge--promo { background: var(--accent-warm); }
+.badge--seckill { background: linear-gradient(135deg, #ff0036, #ff5000); }
 
 .fav-btn {
   position: absolute;
@@ -146,6 +163,13 @@ h3 {
   color: var(--brand);
   font-size: 20px;
   font-weight: 800;
+}
+
+.original-price {
+  margin-left: 6px;
+  color: var(--muted-light);
+  font-size: 13px;
+  font-weight: 400;
 }
 
 .add-btn {

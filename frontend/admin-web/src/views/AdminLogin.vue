@@ -16,21 +16,22 @@
     </el-card>
   </main>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
-const username = ref('admin'), password = ref('admin123'), loading = ref(false)
-const router = useRouter(), session = useSessionStore()
+import { api } from '@/api'
+import { useAdminStore } from '@/stores/admin'
+const username = ref(''), password = ref(''), loading = ref(false)
+const router = useRouter()
+const adminStore = useAdminStore() as any
 async function login() {
   if (!username.value || !password.value) return ElMessage.warning('请输入用户名和密码')
   loading.value = true
   try {
     const { data } = await api.post('/auth/admin/login', { username: username.value, password: password.value })
     if (!data.success) return ElMessage.error(data.message)
-    session.setAdmin(data.data)
+    adminStore.setAdmin(data.data)
     ElMessage.success('登录成功')
     router.push('/admin/dashboard')
   } catch {

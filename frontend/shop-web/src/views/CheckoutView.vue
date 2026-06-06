@@ -70,21 +70,21 @@
   </ShopLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import ShopLayout from '../layouts/ShopLayout.vue'
 import EmptyState from '../components/EmptyState.vue'
 import MoneySummary from '../components/MoneySummary.vue'
 
-const session = useSessionStore()
+const userStore = useUserStore()
 const router = useRouter()
-const items = ref([])
-const addresses = ref([])
-const coupons = ref([])
+const items = ref<any[]>([])
+const addresses = ref<any[]>([])
+const coupons = ref<any[]>([])
 const addressId = ref(null)
 const couponId = ref(null)
 const paymentMethod = ref('MOCK_PAY')
@@ -100,8 +100,8 @@ async function load() {
     if (selectedCartItemIds.length) return selectedCartItemIds.includes(i.id)
     return !selectedProductIds.length || selectedProductIds.includes(i.productId)
   })
-  addresses.value = (await api.get('/addresses', { params: { userId: session.userId } })).data.data || []
-  coupons.value = (await api.get(`/marketing/coupons/user/${session.userId}`)).data.data || []
+  addresses.value = (await api.get('/addresses', { params: { userId: userStore.userId } })).data.data || []
+  coupons.value = (await api.get(`/marketing/coupons/user/${userStore.userId}`)).data.data || []
   const defaultAddress = addresses.value.find(a => a.isDefault) || addresses.value[0]
   if (defaultAddress) addressId.value = defaultAddress.id
 }
@@ -115,8 +115,8 @@ async function submit() {
   ElMessage.success(`下单成功：${data.data.orderNo}`)
   router.push('/orders')
 }
-function imgFallback(e) {
-  e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect fill="%23f3f4f6" width="64" height="64"/><text x="32" y="32" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="8">无图</text></svg>'
+function imgFallback(e: Event) {
+  (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect fill="%23f3f4f6" width="64" height="64"/><text x="32" y="32" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="8">无图</text></svg>'
 }
 
 onMounted(load)

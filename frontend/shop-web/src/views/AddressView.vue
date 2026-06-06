@@ -54,19 +54,19 @@
     </div>
   </ShopLayout>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import ShopLayout from '../layouts/ShopLayout.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const session = useSessionStore(), addresses = ref([])
-const empty = () => ({ userId: session.userId, receiverName: '', phone: '', province: '', city: '', district: '', detailAddress: '', isDefault: false })
-const form = ref(empty())
+const userStore = useUserStore(), addresses = ref<any[]>([])
+const empty = (): any => ({ userId: userStore.userId, receiverName: '', phone: '', province: '', city: '', district: '', detailAddress: '', isDefault: false })
+const form = ref<any>(empty())
 
-async function load() { addresses.value = (await api.get('/addresses', { params: { userId: session.userId } })).data.data || [] }
+async function load() { addresses.value = (await api.get('/addresses', { params: { userId: userStore.userId } })).data.data || [] }
 async function save() {
   if (!form.value.receiverName || !form.value.phone) return ElMessage.warning('请填写收货人和手机号')
   if (form.value.id) { await api.put('/addresses', form.value); ElMessage.success('地址已更新') }
@@ -74,7 +74,7 @@ async function save() {
   form.value = empty(); load()
 }
 function edit(row) { form.value = { ...row } }
-async function setDefault(id) { await api.put(`/addresses/${id}/default`, null, { params: { userId: session.userId } }); ElMessage.success('已设为默认地址'); load() }
+async function setDefault(id) { await api.put(`/addresses/${id}/default`, null, { params: { userId: userStore.userId } }); ElMessage.success('已设为默认地址'); load() }
 async function remove(id) {
   try {
     await ElMessageBox.confirm('确定要删除该地址吗？', '确认删除', { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' })

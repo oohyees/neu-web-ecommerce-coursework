@@ -80,21 +80,21 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const products = ref([])
+const products = ref<any[]>([])
 const total = ref(0)
 const page = ref(1)
 const size = 10
-const categories = ref([])
+const categories = ref<any[]>([])
 const keyword = ref('')
-const categoryFilter = ref(null)
+const categoryFilter = ref<any>(null)
 const drawerVisible = ref(false)
 const emptyForm = () => ({ categoryId: categories.value[0]?.id || null, name: '', price: 0, stock: 0, sales: 0, isOnSale: true, imageUrl: '', detailHtml: '', paramsText: '' })
 const form = ref(emptyForm())
@@ -148,8 +148,8 @@ async function importProducts({ file }) {
   search()
 }
 async function exportProducts() { const response = await api.get('/products/admin/export', { responseType: 'blob' }); const url = URL.createObjectURL(response.data); const a = document.createElement('a'); a.href = url; a.download = 'products.xlsx'; a.click(); URL.revokeObjectURL(url) }
-function imgFallback(e) {
-  e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56"><rect fill="%23f3f4f6" width="56" height="56"/><text x="28" y="28" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="8">无图</text></svg>'
+function imgFallback(e: Event) {
+  (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56"><rect fill="%23f3f4f6" width="56" height="56"/><text x="28" y="28" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="8">无图</text></svg>'
 }
 
 onMounted(load)

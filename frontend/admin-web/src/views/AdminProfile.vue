@@ -42,17 +42,17 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useAdminStore } from '@/stores/admin'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 
-const session = useSessionStore()
-const form = ref({ oldPassword: '', newPassword: '', confirmPassword: '' })
-const profile = ref({})
+const adminStore = useAdminStore()
+const form = ref<any>({ oldPassword: '', newPassword: '', confirmPassword: '' })
+const profile = ref<any>({})
 const savingProfile = ref(false)
 const savingPwd = ref(false)
 
@@ -61,7 +61,7 @@ async function save() {
   if (form.value.newPassword !== form.value.confirmPassword) return ElMessage.warning('两次输入的新密码不一致')
   savingPwd.value = true
   try {
-    const { data } = await api.put('/auth/admin/password', { adminId: session.adminId, oldPassword: form.value.oldPassword, newPassword: form.value.newPassword })
+    const { data } = await api.put('/auth/admin/password', { adminId: adminStore.adminId, oldPassword: form.value.oldPassword, newPassword: form.value.newPassword })
     if (!data.success) return ElMessage.error(data.message)
     ElMessage.success('密码已更新')
     form.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
@@ -72,14 +72,14 @@ async function save() {
 async function saveProfile() {
   savingProfile.value = true
   try {
-    await api.put('/auth/admin/profile', { adminId: session.adminId, ...profile.value })
+    await api.put('/auth/admin/profile', { adminId: adminStore.adminId, ...profile.value })
     ElMessage.success('资料已保存')
   } catch { ElMessage.error('保存失败') }
   finally { savingProfile.value = false }
 }
 
 onMounted(async () => {
-  profile.value = (await api.get('/auth/admin/profile', { params: { adminId: session.adminId } })).data.data || {}
+  profile.value = (await api.get('/auth/admin/profile', { params: { adminId: adminStore.adminId } })).data.data || {}
 })
 </script>
 

@@ -42,15 +42,15 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const items = ref([]), keyword = ref(''), form = ref({ title: '', content: '', enabled: true })
+const items = ref<any[]>([]), keyword = ref(''), form = ref<any>({ title: '', content: '', enabled: true })
 async function load() { items.value = (await api.get('/admin/activity-notices', { params: { keyword: keyword.value } })).data.data || [] }
 async function save() {
   if (!form.value.title) return ElMessage.warning('请输入通知标题')

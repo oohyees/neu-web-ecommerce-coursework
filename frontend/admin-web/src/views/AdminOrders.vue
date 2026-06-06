@@ -72,16 +72,16 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 import StatusTag from '../components/StatusTag.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const orders = ref([]), keyword = ref(''), status = ref(''), detail = ref(null), detailVisible = ref(false)
+const orders = ref<any[]>([]), keyword = ref(''), status = ref(''), detail = ref<any>(null), detailVisible = ref(false)
 const page = ref(1), size = 10, total = ref(0)
 
 async function load() {

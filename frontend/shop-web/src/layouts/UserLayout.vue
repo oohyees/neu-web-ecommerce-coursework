@@ -5,7 +5,7 @@
         <div class="user-card">
           <el-avatar :size="52" :src="userInfo.avatarUrl || ''" />
           <div>
-            <strong>{{ sessionStore.nickname || '未设置昵称' }}</strong>
+            <strong>{{ userStore.nickname || '未设置昵称' }}</strong>
             <span>{{ userInfo.email || '未绑定邮箱' }}</span>
           </div>
         </div>
@@ -25,14 +25,14 @@
   </ShopLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '../api/index'
+import { useUserStore } from '../stores/user'
 import ShopLayout from './ShopLayout.vue'
 
-const sessionStore = useSessionStore()
-const userInfo = ref({})
+const userStore = useUserStore()
+const userInfo = ref<Record<string, any>>({})
 
 const menuItems = [
   { key: 'profile', label: '个人资料', icon: '👤', path: '/user/profile' },
@@ -44,8 +44,8 @@ const menuItems = [
 ]
 
 onMounted(async () => {
-  if (sessionStore.userId) {
-    userInfo.value = (await api.get('/auth/profile', { params: { userId: sessionStore.userId } })).data.data || {}
+  if (userStore.userId) {
+    userInfo.value = (await api.get('/auth/profile', { params: { userId: userStore.userId } })).data.data || {}
   }
 })
 </script>

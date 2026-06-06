@@ -33,26 +33,26 @@
     </el-card>
   </main>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 const username = ref(localStorage.getItem('rememberUsername') || '')
 const password = ref('')
 const remember = ref(Boolean(localStorage.getItem('rememberUsername')))
 localStorage.removeItem('rememberPassword')
 const loading = ref(false)
 const router = useRouter()
-const session = useSessionStore()
+const userStore = useUserStore()
 async function login() {
   if (!username.value || !password.value) return ElMessage.warning('请输入用户名和密码')
   loading.value = true
   try {
     const { data } = await api.post('/auth/login', { username: username.value, password: password.value })
     if (!data.success) return ElMessage.error(data.message)
-    session.setUser(data.data)
+    userStore.setAuth(data.data)
     if (remember.value) {
       localStorage.setItem('rememberUsername', username.value)
     } else {

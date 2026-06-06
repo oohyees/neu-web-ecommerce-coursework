@@ -51,29 +51,29 @@
   </ShopLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import ShopLayout from '../layouts/ShopLayout.vue'
 import EmptyState from '../components/EmptyState.vue'
 import StatusTag from '../components/StatusTag.vue'
 
-const session = useSessionStore()
-const items = ref([])
+const userStore = useUserStore()
+const items = ref<any[]>([])
 const submitting = ref(false)
 const form = ref({ type: '', content: '', contact: '' })
 
 async function load() {
-  items.value = (await api.get('/feedback', { params: { userId: session.userId } })).data.data || []
+  items.value = (await api.get('/feedback', { params: { userId: userStore.userId } })).data.data || []
 }
 
 async function submit() {
   if (!form.value.content) return ElMessage.warning('请输入反馈内容')
   submitting.value = true
   try {
-    await api.post('/feedback', { userId: session.userId, type: form.value.type, content: form.value.content, contact: form.value.contact })
+    await api.post('/feedback', { userId: userStore.userId, type: form.value.type, content: form.value.content, contact: form.value.contact })
     ElMessage.success('反馈提交成功')
     form.value = { type: '', content: '', contact: '' }
     load()

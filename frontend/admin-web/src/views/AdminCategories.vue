@@ -45,16 +45,16 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const items = ref([])
-const form = ref({ name: '', sortOrder: 0, parentId: null })
+const items = ref<any[]>([])
+const form = ref<any>({ name: '', sortOrder: 0, parentId: null })
 const parentCategories = computed(() => items.value.filter(c => !c.parentId))
 
 async function load() { items.value = (await api.get('/categories')).data.data || [] }

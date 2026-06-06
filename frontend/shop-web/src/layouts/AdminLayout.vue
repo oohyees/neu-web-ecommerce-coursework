@@ -20,7 +20,7 @@
             <span class="menu-mark"></span>
           </el-button>
           <strong>管理员控制台</strong>
-          <span class="role-tag">{{ session.role || 'ADMIN' }}</span>
+          <span class="role-tag">{{ userStore.role || 'ADMIN' }}</span>
         </div>
         <el-button @click="logout">退出登录</el-button>
       </el-header>
@@ -37,12 +37,13 @@
     </el-drawer>
   </el-container>
 </template>
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useSessionStore } from '../store'
-import { api } from '../api'
-const route = useRoute(), router = useRouter(), session = useSessionStore()
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
+import { api } from '@/api'
+const route = useRoute(), router = useRouter()
+const userStore = useUserStore()
 const drawerVisible = ref(false)
 
 const menuGroups = computed(() => [
@@ -71,7 +72,7 @@ const menuGroups = computed(() => [
     items: [
       { path: '/admin/banners', label: '轮播管理' },
       { path: '/admin/promotions', label: '促销管理' },
-      ...(session.role === 'SUPER_ADMIN' ? [
+      ...(userStore.role === 'SUPER_ADMIN' ? [
         { path: '/admin/announcements', label: '公告管理' },
         { path: '/admin/activity-notices', label: '活动通知' }
       ] : [])
@@ -81,7 +82,7 @@ const menuGroups = computed(() => [
     index: 'system',
     label: '系统管理',
     items: [
-      ...(session.role === 'SUPER_ADMIN' ? [
+      ...(userStore.role === 'SUPER_ADMIN' ? [
         { path: '/admin/users', label: '用户管理' },
         { path: '/admin/admins', label: '管理员账号' }
       ] : []),
@@ -90,7 +91,7 @@ const menuGroups = computed(() => [
   }
 ])
 
-const menuRouteMap = {
+const menuRouteMap: Record<string, string> = {
   'products': 'goods', 'categories': 'goods', 'reviews': 'goods',
   'orders': 'orders', 'consultations': 'orders', 'feedback': 'orders',
   'banners': 'content', 'promotions': 'content', 'announcements': 'content', 'activity-notices': 'content',
@@ -104,7 +105,7 @@ watch(() => route.path, () => { drawerVisible.value = false })
 
 async function logout() {
   try { await api.post('/auth/logout', { token: localStorage.getItem('token') || '' }) } catch {}
-  session.logout(); router.push('/admin/login')
+  userStore.logout(); router.push('/admin/login')
 }
 </script>
 <style scoped>

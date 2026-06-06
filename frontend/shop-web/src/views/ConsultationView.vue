@@ -58,22 +58,22 @@
   </ShopLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import ShopLayout from '../layouts/ShopLayout.vue'
 import EmptyState from '../components/EmptyState.vue'
 import StatusTag from '../components/StatusTag.vue'
 
-const session = useSessionStore()
-const items = ref([]), form = ref({ subject: '', content: '' }), submitting = ref(false)
-const userId = String(session.userId || 2)
+const userStore = useUserStore()
+const items = ref<any[]>([]), form = ref({ subject: '', content: '' }), submitting = ref(false)
+const userId = String(userStore.userId || 2)
 
 // WebSocket 聊天
-const chatText = ref(''), chatMessages = ref([]), connected = ref(false), chatBox = ref(null)
-let ws = null
+const chatText = ref(''), chatMessages = ref<any[]>([]), connected = ref(false), chatBox = ref<any>(null)
+let ws: WebSocket | null = null
 
 function connectWebSocket() {
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -99,12 +99,12 @@ function sendMessage() {
 onMounted(() => { connectWebSocket(); load() })
 onUnmounted(() => { if (ws) ws.close() })
 
-async function load() { items.value = (await api.get('/consultations', { params: { userId: session.userId } })).data.data || [] }
+async function load() { items.value = (await api.get('/consultations', { params: { userId: userStore.userId } })).data.data || [] }
 async function submit() {
   if (!form.value.subject || !form.value.content) return ElMessage.warning('请填写主题和内容')
   submitting.value = true
   try {
-    await api.post('/consultations', { userId: session.userId, ...form.value })
+    await api.post('/consultations', { userId: userStore.userId, ...form.value })
     ElMessage.success('留言已提交')
     form.value = { subject: '', content: '' }
     load()

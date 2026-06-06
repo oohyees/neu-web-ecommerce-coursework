@@ -18,19 +18,19 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 
-const session = useSessionStore()
+const userStore = useUserStore()
 const pwd = ref({ oldPassword: '', newPassword: '', confirmPassword: '' })
 
 async function changePassword() {
   if (!pwd.value.oldPassword || !pwd.value.newPassword) return ElMessage.warning('请填写完整密码信息')
   if (pwd.value.newPassword !== pwd.value.confirmPassword) return ElMessage.warning('两次输入的新密码不一致')
-  const { data } = await api.put('/auth/password', { userId: session.userId, oldPassword: pwd.value.oldPassword, newPassword: pwd.value.newPassword })
+  const { data } = await api.put('/auth/password', { userId: userStore.userId, oldPassword: pwd.value.oldPassword, newPassword: pwd.value.newPassword })
   if (!data.success) return ElMessage.error(data.message)
   ElMessage.success('密码已更新')
   pwd.value = { oldPassword: '', newPassword: '', confirmPassword: '' }

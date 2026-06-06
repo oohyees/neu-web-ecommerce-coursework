@@ -33,15 +33,15 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const items = ref([]), page = ref(1), size = 10, total = ref(0)
+const items = ref<any[]>([]), page = ref(1), size = 10, total = ref(0)
 async function load() {
   const result = (await api.get('/reviews/admin/all', { params: { page: page.value, size } })).data.data
   items.value = result.items || []; total.value = result.total || 0

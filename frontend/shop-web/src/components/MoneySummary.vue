@@ -7,14 +7,14 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   total: { type: Number, default: 0 },
   shipping: { type: Number, default: 0 },
   discount: { type: Number, default: 0 },
   payable: { type: Number, default: 0 }
 })
-function amount(value) { return Number(value || 0).toFixed(2) }
+function amount(value: number) { return Number(value || 0).toFixed(2) }
 </script>
 
 <style scoped>

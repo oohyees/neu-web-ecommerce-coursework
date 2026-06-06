@@ -34,16 +34,16 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 import StatusTag from '../components/StatusTag.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const items = ref([]), page = ref(1), size = 10, total = ref(0)
+const items = ref<any[]>([]), page = ref(1), size = 10, total = ref(0)
 async function load() {
   const r = (await api.get('/admin/consultations', { params: { page: page.value, size } })).data.data
   items.value = r.items || []; total.value = r.total || 0

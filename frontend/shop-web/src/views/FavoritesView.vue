@@ -18,26 +18,26 @@
   </ShopLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import ShopLayout from '../layouts/ShopLayout.vue'
 import ProductCard from '../components/ProductCard.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const products = ref([]), session = useSessionStore()
+const products = ref<any[]>([]), session = useUserStore() as any
 
-async function load() { products.value = (await api.get('/favorites', { params: { userId: session.userId } })).data.data || [] }
+async function load() { products.value = (await api.get('/favorites', { params: { userId: useUserStore().userId } })).data.data || [] }
 
 async function addToCart(product) {
-  await api.post('/cart/items', { userId: session.userId, productId: product.id, quantity: 1 })
+  await api.post('/cart/items', { userId: useUserStore().userId, productId: product.id, quantity: 1 })
   ElMessage.success('已加入购物车')
 }
 
 async function unfavorite(product) {
-  await api.delete(`/favorites/${product.id}`, { params: { userId: session.userId } })
+  await api.delete(`/favorites/${product.id}`, { params: { userId: useUserStore().userId } })
   ElMessage.success('已取消收藏')
   load()
 }

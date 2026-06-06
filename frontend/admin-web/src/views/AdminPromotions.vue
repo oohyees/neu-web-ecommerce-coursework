@@ -72,15 +72,15 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const items = ref([]), keyword = ref(''), visible = ref(false)
+const items = ref<any[]>([]), keyword = ref(''), visible = ref(false)
 const emptyForm = () => ({ title: '', productId: null, promotionType: 'FLASH_SALE', promotionPrice: 0, promotionStock: 100, startAt: '', endAt: '', enabled: true })
 const form = ref(emptyForm())
 

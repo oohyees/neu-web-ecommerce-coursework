@@ -8,7 +8,7 @@
           <router-link to="/user/favorites">我的收藏</router-link>
           <router-link to="/consultations">客户服务</router-link>
           <router-link to="/admin/login">商家后台</router-link>
-          <button v-if="session.userId" @click="logout">退出</button>
+          <button v-if="userStore.userId" @click="logout">退出</button>
           <router-link v-else to="/login">登录/注册</router-link>
         </nav>
       </div>
@@ -63,29 +63,33 @@
     </footer>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSessionStore } from '../store'
-import { api } from '../api'
-const router = useRouter(), session = useSessionStore()
+import { useUserStore } from '../stores/user'
+import { useCartStore } from '../stores/cart'
+import { useFavoriteStore } from '../stores/favorite'
+import { api } from '../api/index'
+const router = useRouter()
+const userStore = useUserStore()
+const cartStore = useCartStore()
 const keyword = ref('')
 const cartCount = ref(0)
 const hotwords = ['键盘', '鼠标', 'SSD', '耳机']
 function search() { router.push({ path: '/products', query: { keyword: keyword.value } }) }
-function quickSearch(word) { keyword.value = word; search() }
+function quickSearch(word: string) { keyword.value = word; search() }
 async function fetchCartCount() {
-  if (!session.userId) { cartCount.value = 0; return }
+  if (!userStore.userId) { cartCount.value = 0; return }
   try {
-    const items = (await api.get('/cart', { params: { userId: session.userId } })).data.data || []
+    const items = (await api.get('/cart', { params: { userId: userStore.userId } })).data.data || []
     cartCount.value = items.length
   } catch { cartCount.value = 0 }
 }
 async function logout() {
   try { await api.post('/auth/logout', { token: localStorage.getItem('token') || '' }) } catch {}
-  session.logout(); router.push('/login')
+  userStore.logout(); router.push('/login')
 }
-watch(() => session.userId, () => { fetchCartCount() })
+watch(() => userStore.userId, () => { fetchCartCount() })
 onMounted(() => { fetchCartCount() })
 </script>
 <style scoped>

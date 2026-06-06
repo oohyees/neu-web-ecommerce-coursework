@@ -94,18 +94,18 @@
   </ShopLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import ShopLayout from '../layouts/ShopLayout.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const route = useRoute(), router = useRouter(), session = useSessionStore()
-const product = ref(null), reviews = ref([]), favorite = ref(false), specs = ref([])
-const selectedSpecs = ref({}), flashSale = ref(null), quantity = ref(1)
+const route = useRoute(), router = useRouter(), session = useUserStore() as any as any
+const product = ref<any>(null), reviews = ref<any[]>([]), favorite = ref(false), specs = ref<any[]>([])
+const selectedSpecs = ref({}), flashSale = ref<any>(null), quantity = ref(1)
 const reviewPage = ref(1), reviewSize = 5, reviewTotal = ref(0)
 const reviewForm = ref({ rating: 5, content: '', imageUrl: '' })
 const groupedSpecs = computed(() => specs.value.reduce((m, s) => ((m[s.specName] ??= []).push(s.specValue), m), {}))
@@ -116,7 +116,7 @@ async function load() {
   await loadReviews()
   specs.value = (await api.get(`/marketing/specs/${route.params.id}`)).data.data || []
   flashSale.value = (await api.get('/marketing/promotions')).data.data.find(p => p.productId === Number(route.params.id) && p.promotionType === 'FLASH_SALE')
-  if (session.userId) favorite.value = (await api.get(`/favorites/${route.params.id}/status`, { params: { userId: session.userId } })).data.data
+  if (useUserStore().userId) favorite.value = (await api.get(`/favorites/${route.params.id}/status`, { params: { userId: useUserStore().userId } })).data.data
   selectedSpecs.value = {}
 }
 
@@ -129,9 +129,9 @@ async function loadReviews() {
 function changeReviewPage(v) { reviewPage.value = v; loadReviews() }
 
 async function add() {
-  if (!session.userId) return ElMessage.warning('请先登录') && false
+  if (!useUserStore().userId) return ElMessage.warning('请先登录') && false
   if (!specsReady.value) return ElMessage.warning('请选择规格') && false
-  await api.post('/cart/items', { userId: session.userId, productId: Number(route.params.id), quantity: quantity.value, specText: specText.value })
+  await api.post('/cart/items', { userId: useUserStore().userId, productId: Number(route.params.id), quantity: quantity.value, specText: specText.value })
   ElMessage.success('已加入购物车')
   return true
 }
@@ -151,23 +151,23 @@ async function buyNow() {
   router.push('/checkout')
 }
 async function toggleFavorite() {
-  if (!session.userId) return ElMessage.warning('请先登录')
-  if (favorite.value) { await api.delete(`/favorites/${route.params.id}`, { params: { userId: session.userId } }); ElMessage.success('已取消收藏') }
-  else { await api.post(`/favorites/${route.params.id}`, null, { params: { userId: session.userId } }); ElMessage.success('已收藏') }
+  if (!useUserStore().userId) return ElMessage.warning('请先登录')
+  if (favorite.value) { await api.delete(`/favorites/${route.params.id}`, { params: { userId: useUserStore().userId } }); ElMessage.success('已取消收藏') }
+  else { await api.post(`/favorites/${route.params.id}`, null, { params: { userId: useUserStore().userId } }); ElMessage.success('已收藏') }
   favorite.value = !favorite.value
 }
 async function uploadImage({ file }) { const fd = new FormData(); fd.append('file', file); reviewForm.value.imageUrl = (await api.post('/files/upload', fd)).data.data }
 async function submitReview() {
-  if (!session.userId) return ElMessage.warning('请先登录')
-  await api.post('/reviews', { userId: session.userId, productId: Number(route.params.id), ...reviewForm.value })
+  if (!useUserStore().userId) return ElMessage.warning('请先登录')
+  await api.post('/reviews', { userId: useUserStore().userId, productId: Number(route.params.id), ...reviewForm.value })
   ElMessage.success('评价已提交')
   reviewForm.value = { rating: 5, content: '', imageUrl: '' }
   reviewPage.value = 1
   load()
 }
 const specsReady = computed(() => Object.keys(groupedSpecs.value).every(name => selectedSpecs.value[name]))
-function imgFallback(e) {
-  e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect fill="%23f3f4f6" width="400" height="400"/><text x="200" y="200" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="18">暂无图片</text></svg>'
+function imgFallback(e: Event) {
+  (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect fill="%23f3f4f6" width="400" height="400"/><text x="200" y="200" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="18">暂无图片</text></svg>'
 }
 
 onMounted(load)

@@ -74,15 +74,15 @@
   </AdminLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
+import { api } from '@/api'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminPageHeader from '../components/AdminPageHeader.vue'
 import EmptyState from '../components/EmptyState.vue'
 
-const items = ref([]), total = ref(0), page = ref(1), size = 10, keyword = ref(''), detail = ref(null), detailVisible = ref(false)
+const items = ref<any[]>([]), total = ref(0), page = ref(1), size = 10, keyword = ref(''), detail = ref<any>(null), detailVisible = ref(false)
 const visible = ref(false)
 const emptyForm = () => ({ username: '', password: '', nickname: '', email: '', phone: '' })
 const form = ref(emptyForm())

@@ -90,21 +90,21 @@
   </ShopLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 import ShopLayout from '../layouts/ShopLayout.vue'
 import EmptyState from '../components/EmptyState.vue'
 
 const router = useRouter()
-const items = ref([])
-const selected = ref([])
+const items = ref<any[]>([])
+const selected = ref<any[]>([])
 const loading = ref(true)
 const loadError = ref(false)
-const session = useSessionStore()
+const userStore = useUserStore()
 const tableRef = ref()
 const selectedTotal = computed(() => selected.value.reduce((sum, i) => sum + Number(i.subtotal), 0).toFixed(2))
 
@@ -112,7 +112,7 @@ async function load() {
   loading.value = true
   loadError.value = false
   try {
-    items.value = (await api.get('/cart', { params: { userId: session.userId } })).data.data || []
+    items.value = (await api.get('/cart', { params: { userId: userStore.userId } })).data.data || []
   } catch {
     loadError.value = true
     items.value = []
@@ -121,7 +121,7 @@ async function load() {
   }
 }
 
-async function updateQuantity(row, quantity) {
+async function updateQuantity(row: any, quantity: number) {
   await api.put('/cart/items', { cartItemId: row.id, productId: row.productId, specText: row.specText, quantity })
   load()
 }
@@ -135,7 +135,7 @@ async function removeItem(row) {
   } catch { /* user cancelled */ }
 }
 
-function changeSelection(rows) { selected.value = rows }
+function changeSelection(rows: any[]) { selected.value = rows }
 function selectAll() {
   selected.value = [...items.value]
   nextTick(() => {
@@ -158,8 +158,8 @@ function checkout() {
   sessionStorage.setItem('checkoutCartItemIds', JSON.stringify(selected.value.map(i => i.id)))
   router.push('/checkout')
 }
-function imgFallback(e) {
-  e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect fill="%23f3f4f6" width="80" height="80"/><text x="40" y="40" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="10">暂无图片</text></svg>'
+function imgFallback(e: Event) {
+  (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect fill="%23f3f4f6" width="80" height="80"/><text x="40" y="40" text-anchor="middle" dy=".35em" fill="%239ca3af" font-size="10">暂无图片</text></svg>'
 }
 
 onMounted(load)

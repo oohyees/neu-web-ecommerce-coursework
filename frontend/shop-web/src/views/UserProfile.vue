@@ -25,14 +25,14 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { api } from '../api'
-import { useSessionStore } from '../store'
+import { api } from '@/api'
+import { useUserStore, useCartStore, useFavoriteStore } from '@/stores'
 
-const session = useSessionStore()
-const form = ref({})
+const userStore = useUserStore()
+const form = ref<any>({})
 
 async function saveProfile() {
   await api.put('/auth/profile', form.value)
@@ -46,7 +46,7 @@ async function uploadAvatar({ file }) {
 }
 
 onMounted(async () => {
-  form.value = (await api.get('/auth/profile', { params: { userId: session.userId } })).data.data || {}
+  form.value = (await api.get('/auth/profile', { params: { userId: userStore.userId } })).data.data || {}
 })
 </script>
 
