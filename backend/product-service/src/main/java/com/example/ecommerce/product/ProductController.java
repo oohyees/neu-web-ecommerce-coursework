@@ -49,11 +49,11 @@ public class ProductController {
                                @RequestParam(defaultValue = "12") int size) {
         QueryParts query = productQuery(false, categoryId, keyword, searchMode, minPrice, maxPrice);
         String orderBy = switch (sort == null ? "default" : sort) {
-            case "price_asc" -> " order by price asc";
-            case "price_desc" -> " order by price desc";
-            case "sales_desc" -> " order by sales desc";
-            case "newest" -> " order by id desc";
-            default -> " order by id desc";
+            case "price_asc" -> " order by (image_url like '%dummyjson%') desc, price asc";
+            case "price_desc" -> " order by (image_url like '%dummyjson%') desc, price desc";
+            case "sales_desc" -> " order by (image_url like '%dummyjson%') desc, sales desc";
+            case "newest" -> " order by (image_url like '%dummyjson%') desc, id desc";
+            default -> " order by (image_url like '%dummyjson%') desc, id desc";
         };
         int offset = Math.max(page - 1, 0) * size;
         List<Object> listArgs = new ArrayList<>(query.args());
@@ -67,7 +67,22 @@ public class ProductController {
     @GetMapping("/products/{id}")
     public ApiResponse<?> detail(@PathVariable Long id) {
         var items = jdbc.queryForList(productSelect() + " where id=? and is_on_sale=1", id);
-        return items.isEmpty() ? ApiResponse.fail("商品不存在") : ApiResponse.ok(items.get(0));
+        if (items.isEmpty()) return ApiResponse.fail("商品不存在");
+        return ApiResponse.ok(Map.of(
+                "product", items.get(0),
+                "skus", jdbc.queryForList("""
+                        select id,product_id productId,sku_code skuCode,color,size,price,stock,image
+                        from product_sku where product_id=? and deleted=0 order by id
+                        """, id),
+                "images", jdbc.queryForList("""
+                        select id,product_id productId,url,sort_order sortOrder
+                        from product_image where product_id=? and deleted=0 order by sort_order,id
+                        """, id),
+                "specs", jdbc.queryForList("""
+                        select id,product_id productId,spec_name specName,spec_value specValue
+                        from product_spec where product_id=? order by id
+                        """, id)
+        ));
     }
 
     @GetMapping("/products/admin/all")
@@ -92,9 +107,10 @@ public class ProductController {
     @PostMapping("/products/admin")
     public ApiResponse<?> createProduct(@RequestBody Map<String, Object> body) {
         jdbc.update("""
-                insert into product(category_id,name,price,stock,sales,is_on_sale,image_url,detail_html,params_text)
-                values(?,?,?,?,?,?,?,?,?)
-                """, longValue(body.get("categoryId")), stringValue(body.get("name")), new BigDecimal(String.valueOf(body.getOrDefault("price", "0"))),
+                insert into product(category_id,name,subtitle,price,original_price,stock,sales,is_on_sale,image_url,detail_html,params_text)
+                values(?,?,?,?,?,?,?,?,?,?,?)
+                """, longValue(body.get("categoryId")), stringValue(body.get("name")), stringValue(body.get("subtitle")),
+                new BigDecimal(String.valueOf(body.getOrDefault("price", "0"))), decimalValue(body.get("originalPrice")),
                 intValue(body.get("stock"), 0), intValue(body.get("sales"), 0), boolValue(body.get("isOnSale")) ? 1 : 0,
                 stringValue(body.get("imageUrl")), stringValue(body.get("detailHtml")), stringValue(body.get("paramsText")));
         Long id = jdbc.queryForObject("select last_insert_id()", Long.class);
@@ -104,9 +120,10 @@ public class ProductController {
     @PutMapping("/products/admin")
     public ApiResponse<?> updateProduct(@RequestBody Map<String, Object> body) {
         jdbc.update("""
-                update product set category_id=?,name=?,price=?,stock=?,sales=?,is_on_sale=?,image_url=?,detail_html=?,params_text=?
+                update product set category_id=?,name=?,subtitle=?,price=?,original_price=?,stock=?,sales=?,is_on_sale=?,image_url=?,detail_html=?,params_text=?
                 where id=?
-                """, longValue(body.get("categoryId")), stringValue(body.get("name")), new BigDecimal(String.valueOf(body.getOrDefault("price", "0"))),
+                """, longValue(body.get("categoryId")), stringValue(body.get("name")), stringValue(body.get("subtitle")),
+                new BigDecimal(String.valueOf(body.getOrDefault("price", "0"))), decimalValue(body.get("originalPrice")),
                 intValue(body.get("stock"), 0), intValue(body.get("sales"), 0), boolValue(body.get("isOnSale")) ? 1 : 0,
                 stringValue(body.get("imageUrl")), stringValue(body.get("detailHtml")), stringValue(body.get("paramsText")), longValue(body.get("id")));
         return ApiResponse.ok(null);
@@ -176,10 +193,46 @@ public class ProductController {
 
     @GetMapping("/home")
     public ApiResponse<?> home() {
+        var promotions = jdbc.queryForList("""
+                select p.id,p.title,p.promotion_type promotionType,p.promotion_price promotionPrice,
+                       p.promotion_stock promotionStock,p.start_at startAt,p.end_at endAt,
+                       pr.id productId,pr.name productName,pr.image_url imageUrl,pr.price originalPrice
+                from promotion p join product pr on pr.id=p.product_id
+                where p.enabled=1 and now() between p.start_at and p.end_at
+                order by p.id desc
+                """);
+        var coupons = jdbc.queryForList("select id,name,threshold_amount thresholdAmount,discount_amount discountAmount from coupon where enabled=1 order by threshold_amount");
+        var reviews = jdbc.queryForList("""
+                select r.id,r.product_id productId,r.rating,r.content,r.image_url imageUrl,r.created_at createdAt,
+                       p.name productName,p.image_url productImage
+                from product_review r join product p on p.id=r.product_id
+                order by r.created_at desc limit 12
+                """);
+        // Banner with related products for composite display
+        var bannerRows = jdbc.queryForList("select id,title,image_url imageUrl,link_url linkUrl,sort_order sortOrder from banner order by sort_order,id");
+        for (var banner : bannerRows) {
+            String linkUrl = (String) banner.get("linkUrl");
+            Long productId = null;
+            if (linkUrl != null && linkUrl.startsWith("/products/")) {
+                try { productId = Long.parseLong(linkUrl.replace("/products/", "")); } catch (NumberFormatException ignored) {}
+            }
+            if (productId != null) {
+                // Get 2 sibling products from the same category
+                var related = jdbc.queryForList(
+                    productSelect() + " where is_on_sale=1 and category_id=(select category_id from product where id=?) and id!=? order by sales desc limit 2",
+                    productId, productId);
+                banner.put("relatedProducts", related);
+            } else {
+                banner.put("relatedProducts", List.of());
+            }
+        }
         return ApiResponse.ok(Map.of(
-                "banners", jdbc.queryForList("select id,title,image_url imageUrl,link_url linkUrl,sort_order sortOrder from banner order by sort_order,id"),
-                "hotProducts", jdbc.queryForList(productSelect() + " where is_on_sale=1 order by sales desc,id desc limit 6"),
-                "newProducts", jdbc.queryForList(productSelect() + " where is_on_sale=1 order by id desc limit 6")
+                "banners", bannerRows,
+                "hotProducts", jdbc.queryForList(productSelect() + " where is_on_sale=1 order by sales desc,id desc limit 12"),
+                "newProducts", jdbc.queryForList(productSelect() + " where is_on_sale=1 order by (image_url like '%dummyjson%') desc, id desc limit 12"),
+                "promotions", promotions,
+                "coupons", coupons,
+                "reviews", reviews
         ));
     }
 
@@ -341,7 +394,7 @@ public class ProductController {
         var items = jdbc.queryForList("""
                 select id,user_id userId,product_id productId,rating,content,image_url imageUrl,created_at createdAt
                 from product_review order by created_at desc,id desc limit ? offset ?
-                """, size, (page - 1) * size);
+                """, size, Math.max(0, (page - 1)) * size);
         return ApiResponse.ok(Map.of("items", items, "total", total == null ? 0 : total));
     }
 
@@ -412,7 +465,8 @@ public class ProductController {
 
     private String productSelect(String alias) {
         String p = alias == null || alias.isBlank() ? "" : alias + ".";
-        return "select " + p + "id," + p + "category_id categoryId," + p + "name," + p + "price," + p + "stock," + p + "sales," +
+        return "select " + p + "id," + p + "category_id categoryId," + p + "name," + p + "subtitle," + p + "price," +
+                p + "original_price originalPrice," + p + "stock," + p + "sales," +
                 p + "is_on_sale isOnSale," + p + "image_url imageUrl," + p + "detail_html detailHtml," + p + "params_text paramsText";
     }
 
@@ -421,8 +475,17 @@ public class ProductController {
         List<Object> args = new ArrayList<>();
         if (!includeDeleted) clauses.add("is_on_sale=1");
         if (categoryId != null) {
-            clauses.add("category_id=?");
-            args.add(categoryId);
+            List<Long> catIds = new ArrayList<>();
+            catIds.add(categoryId);
+            List<Map<String, Object>> children = jdbc.queryForList("select id from product_category where parent_id=?", categoryId);
+            for (Map<String, Object> child : children) catIds.add(((Number) child.get("id")).longValue());
+            if (catIds.size() == 1) {
+                clauses.add("category_id=?");
+                args.add(categoryId);
+            } else {
+                clauses.add("category_id in (" + String.join(",", catIds.stream().map(id -> "?").toList()) + ")");
+                args.addAll(catIds);
+            }
         }
         if (keyword != null && !keyword.isBlank()) {
             clauses.add("exact".equals(searchMode) ? "name=?" : "name like ?");

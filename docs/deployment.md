@@ -71,7 +71,7 @@ curl http://localhost:18080/legacy/status
 - 微服务数据库名：`ecommerce_auth`、`ecommerce_product`、`ecommerce_order`
 - 微服务 Docker 初始化脚本：`sql/user`、`sql/product`、`sql/order`、`sql/content`、`sql/marketing`
 - legacy 初始化脚本：`backend/legacy-web/src/main/resources/schema.sql` 与 `data.sql`
-- 当前演示商品图片使用前端 `public/catalog` 下的本地资源；`sql/product/data.sql` 保留 DummyJSON 远程 URL 种子块，但当前持久化运行库已验证为本地 `/catalog/...` 图片路径
+- 当前演示商品种子包含 DummyJSON 远程图片 URL 和本地 `/catalog/...` 图片路径，商品详情页支持主图和图集（`product_image` 表）
 
 ### 手动连接
 

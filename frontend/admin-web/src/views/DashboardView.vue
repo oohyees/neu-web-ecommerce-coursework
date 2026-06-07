@@ -30,11 +30,19 @@ function renderCharts() {
 onMounted(async () => { await load(); setTimeout(renderCharts, 200) })
 </script>
 <template>
-  <div>
-    <h2 class="dv-title">数据看板</h2>
+  <div class="admin-page dashboard-page">
+    <div class="tb-header">
+      <div>
+        <h2>数据看板</h2>
+        <p class="page-subtitle">集中查看用户、订单、销售额和商品表现，是后台演示的第一屏。</p>
+      </div>
+      <div class="dashboard-date">今日运营概览</div>
+    </div>
     <div class="stat-grid">
-      <div class="stat-card" v-for="s in [{v:stats.userCount,l:'用户数'},{v:stats.orderCount,l:'订单数'},{v:'¥'+(stats.salesAmount||0).toFixed(0),l:'销售额'},{v:stats.todayOrderCount,l:'今日订单'},{v:'¥'+(stats.todaySalesAmount||0).toFixed(0),l:'今日销售'},{v:stats.productCount,l:'商品数'}]" :key="s.l">
-        <div class="stat-val">{{ s.v || 0 }}</div><div class="stat-label">{{ s.l }}</div>
+      <div class="stat-card" v-for="s in [{v:stats.userCount,l:'用户数',h:'注册用户规模'},{v:stats.orderCount,l:'订单数',h:'交易闭环证据'},{v:'¥'+(stats.salesAmount||0).toFixed(0),l:'销售额',h:'平台累计收入'},{v:stats.todayOrderCount,l:'今日订单',h:'实时运营状态'},{v:'¥'+(stats.todaySalesAmount||0).toFixed(0),l:'今日销售',h:'今日成交金额'},{v:stats.productCount,l:'商品数',h:'可售商品规模'}]" :key="s.l">
+        <div class="stat-label">{{ s.l }}</div>
+        <div class="stat-val">{{ s.v || 0 }}</div>
+        <div class="stat-hint">{{ s.h }}</div>
       </div>
     </div>
     <div class="chart-row">
@@ -47,13 +55,16 @@ onMounted(async () => { await load(); setTimeout(renderCharts, 200) })
   </div>
 </template>
 <style scoped>
-.dv-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+.page-subtitle { margin-top: 8px; color: #6b7280; font-size: 13px; }
+.dashboard-date { align-self: center; padding: 8px 12px; border-radius: 999px; background: #fff5f0; color: var(--color-primary); font-size: 13px; font-weight: 700; }
 .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-.stat-card { background: #fff; border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
-.stat-val { font-size: 28px; font-weight: 700; color: var(--color-primary); }
-.stat-label { font-size: 13px; color: #888; margin-top: 4px; }
+.stat-card { background: #fff; border-radius: 8px; padding: 22px 24px; box-shadow: var(--shadow-card); border: 1px solid var(--color-line); }
+.stat-val { margin-top: 8px; font-size: 30px; font-weight: 800; color: #111827; }
+.stat-label { font-size: 13px; color: #6b7280; }
+.stat-hint { margin-top: 4px; color: #9ca3af; font-size: 12px; }
 .chart-row { display: flex; gap: 16px; margin-bottom: 16px; }
-.chart-box { flex: 1; background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
-.chart-box h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #666; }
+.chart-box { flex: 1; background: #fff; border-radius: 8px; padding: 18px; box-shadow: var(--shadow-card); border: 1px solid var(--color-line); }
+.chart-box h4 { font-size: 15px; font-weight: 800; margin-bottom: 8px; color: #1f2937; }
 @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } .chart-row { flex-direction: column; } }
+@media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
 </style>

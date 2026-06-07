@@ -120,7 +120,7 @@ public class AuthController {
         var listArgs = new java.util.ArrayList<>();
         java.util.Collections.addAll(listArgs, args);
         listArgs.add(size);
-        listArgs.add((page - 1) * size);
+        listArgs.add(Math.max(0, (page - 1)) * size);
         var items = jdbc.queryForList("select id,username,nickname,email,phone,enabled from user" + where + " order by id desc limit ? offset ?", listArgs.toArray());
         Integer total = jdbc.queryForObject("select count(*) from user" + where, Integer.class, args);
         return ApiResponse.ok(Map.of("items", items, "total", total == null ? 0 : total));

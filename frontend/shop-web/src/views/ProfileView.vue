@@ -43,7 +43,12 @@ onMounted(load)
 
 <template>
   <div class="page-container profile-page">
-    <h2 class="page-title">个人中心</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">个人中心</h2>
+        <p>维护昵称、邮箱、手机和头像信息，并提供账户安全入口。</p>
+      </div>
+    </div>
     <div class="profile-card">
       <h3>基本资料</h3>
       <el-form label-width="80px">

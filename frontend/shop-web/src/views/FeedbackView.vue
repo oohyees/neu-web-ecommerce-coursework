@@ -31,7 +31,17 @@ onMounted(load)
 
 <template>
   <div class="page-container feedback-page">
-    <h2 class="page-title">意见反馈</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">意见反馈</h2>
+        <p>提交使用问题和建议，后台反馈管理可回复并标记处理。</p>
+      </div>
+    </div>
+    <div class="page-metrics">
+      <div class="metric-card"><span>反馈记录</span><strong>{{ items.length }}</strong><small>历史反馈</small></div>
+      <div class="metric-card"><span>回复闭环</span><strong>支持</strong><small>后台处理</small></div>
+      <div class="metric-card"><span>类型</span><strong>多类</strong><small>问题/建议</small></div>
+    </div>
 
     <div class="form-card">
       <h3>提交反馈</h3>

@@ -31,7 +31,17 @@ onMounted(load)
 
 <template>
   <div class="page-container cs-page">
-    <h2 class="page-title">在线客服</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">在线客服</h2>
+        <p>提交咨询主题和内容，后台客服咨询页面可回复，形成服务闭环。</p>
+      </div>
+    </div>
+    <div class="page-metrics">
+      <div class="metric-card"><span>咨询记录</span><strong>{{ items.length }}</strong><small>历史咨询</small></div>
+      <div class="metric-card"><span>客服回复</span><strong>支持</strong><small>后台处理</small></div>
+      <div class="metric-card"><span>状态</span><strong>可追踪</strong><small>等待/已回复</small></div>
+    </div>
     <div class="form-card">
       <h3>发起咨询</h3>
       <el-form>

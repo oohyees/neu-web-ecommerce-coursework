@@ -41,6 +41,7 @@ async function handleReset() {
     <div class="auth-card">
       <h2>找回密码</h2>
       <p class="auth-subtitle">通过注册邮箱重置密码</p>
+      <div class="auth-benefits"><span>真实邮件</span><span>验证码校验</span><span>重置后登录</span></div>
       <el-form @submit.prevent="handleReset">
         <el-form-item><el-input v-model="form.email" placeholder="注册邮箱" size="large" /></el-form-item>
         <el-form-item>
@@ -62,6 +63,8 @@ async function handleReset() {
 .auth-card { width: 100%; max-width: 400px; padding: 40px; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
 .auth-card h2 { font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 4px; }
 .auth-subtitle { text-align: center; color: #999; font-size: 14px; margin-bottom: 28px; }
+.auth-benefits { display: flex; justify-content: center; gap: 8px; margin: -12px 0 22px; flex-wrap: wrap; }
+.auth-benefits span { padding: 5px 9px; border-radius: 999px; background: #fff5f0; color: var(--color-primary); font-size: 12px; font-weight: 700; }
 .auth-links { text-align: center; font-size: 13px; margin-top: 12px; }
 .auth-links a { color: var(--color-primary); }
 </style>

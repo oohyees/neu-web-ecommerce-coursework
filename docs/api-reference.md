@@ -35,6 +35,7 @@
 | PUT | `/api/auth/profile` | 登录 | 更新个人资料 |
 | PUT | `/api/auth/password` | 登录 | 修改当前用户密码 |
 | POST | `/api/auth/logout` | 登录 | 登出，销毁 Redis session |
+| GET | `/api/auth/session` | 登录 | 校验当前 token 有效性，返回用户信息 |
 | POST | `/api/auth/admin/login` | 公开 | 管理员登录 |
 | GET | `/api/auth/admin/profile` | ADMIN | 管理员资料 |
 | PUT | `/api/auth/admin/profile` | ADMIN | 更新管理员资料 |
@@ -55,7 +56,7 @@
 | 方法 | 路径 | 鉴权 | 说明 |
 |------|------|------|------|
 | GET | `/api/products` | 公开 | 商品列表 `?keyword&categoryId&sort=default/new/sales/price&searchMode=fuzzy/exact&page&size` |
-| GET | `/api/products/{id}` | 公开 | 商品详情。微服务当前返回单商品对象；前端会将 `imageUrl` 和 `paramsText` 规范化为详情页图片和参数结构。legacy 单体可返回更完整的商品扩展数据 |
+| GET | `/api/products/{id}` | 公开 | 商品详情（含 SKU 变体和图集）。微服务返回商品基本信息、`product_sku` 列表和 `product_image` 图集；legacy 单体可返回更完整的商品扩展数据 |
 | GET | `/api/products/admin/all` | ADMIN | 后台商品列表 |
 | POST | `/api/products/admin` | ADMIN | 新增商品 |
 | PUT | `/api/products/admin` | ADMIN | 编辑商品 |
@@ -115,7 +116,7 @@
 
 | 方法 | 路径 | 鉴权 | 说明 |
 |------|------|------|------|
-| GET | `/api/home` | 公开 | 首页数据（轮播图、热销、新品、公告） |
+| GET | `/api/home` | 公开 | 首页数据（轮播图含关联商品、热销、新品、促销活动、优惠券、评价、热门搜索、公告） |
 | GET | `/api/home/banners` | 公开 | 轮播图列表 |
 | POST | `/api/home/banners` | ADMIN | 新增轮播图 |
 | PUT | `/api/home/banners` | ADMIN | 编辑轮播图 |

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import { fetchBanners, createBanner, updateBanner, deleteBanner } from '@/api/banner'
 
 const banners = ref<any[]>([]); const dialogVisible = ref(false); const editing = ref<any>(null)
@@ -15,15 +16,31 @@ async function handleSave() {
   try { if (editing.value) await updateBanner({ id: editing.value.id, ...form.value }); else await createBanner(form.value); ElMessage.success('已保存'); dialogVisible.value = false; load() } catch { /* handled */ }
 }
 async function handleDelete(id: number) { try { await ElMessageBox.confirm('确认删除？','提示',{type:'warning'}); await deleteBanner(id); ElMessage.success('已删除'); load() } catch { /* cancelled */ } }
+const linkedCount = computed(() => banners.value.filter((b) => b.linkUrl).length)
 onMounted(load)
 </script>
 <template>
-  <div>
-    <div class="tb-header"><h2>轮播管理</h2><el-button type="primary" @click="openAdd">新增</el-button></div>
+  <div class="admin-page banners-page">
+    <div class="tb-header">
+      <div>
+        <h2>轮播管理</h2>
+        <p class="page-subtitle">管理首页首屏轮播图、跳转链接和展示顺序。</p>
+      </div>
+      <div class="tb-actions"><el-button type="primary" :icon="Plus" @click="openAdd">新增轮播</el-button></div>
+    </div>
+    <div class="admin-summary">
+      <div class="summary-card"><div class="summary-card__label">轮播数量</div><div class="summary-card__value">{{ banners.length }}</div><div class="summary-card__hint">首页视觉素材</div></div>
+      <div class="summary-card"><div class="summary-card__label">已配置链接</div><div class="summary-card__value">{{ linkedCount }}</div><div class="summary-card__hint">可点击跳转</div></div>
+      <div class="summary-card"><div class="summary-card__label">排序字段</div><div class="summary-card__value">sort</div><div class="summary-card__hint">控制展示顺序</div></div>
+      <div class="summary-card"><div class="summary-card__label">图片策略</div><div class="summary-card__value">本地</div><div class="summary-card__hint">避免外网依赖</div></div>
+    </div>
     <div class="banner-grid">
       <div v-for="b in banners" :key="b.id" class="banner-card">
         <img :src="b.imageUrl" />
-        <div class="banner-info"><span>排序:{{b.sortOrder}}</span><el-button text size="small" @click="openEdit(b)">编辑</el-button><el-button text size="small" type="danger" @click="handleDelete(b.id)">删除</el-button></div>
+        <div class="banner-info">
+          <div><strong>排序 {{b.sortOrder}}</strong><span>{{ b.linkUrl || '未配置跳转' }}</span></div>
+          <div class="action-stack"><el-button size="small" @click="openEdit(b)">编辑</el-button><el-button size="small" type="danger" @click="handleDelete(b.id)">删除</el-button></div>
+        </div>
       </div>
     </div>
     <el-dialog v-model="dialogVisible" :title="editing?'编辑轮播':'新增轮播'" width="500px">
@@ -37,9 +54,13 @@ onMounted(load)
   </div>
 </template>
 <style scoped>
-.tb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; } .tb-header h2 { font-size: 20px; font-weight: 700; }
+.page-subtitle { margin-top: 8px; color: #6b7280; font-size: 13px; }
 .banner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.banner-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
-.banner-card img { width: 100%; height: 120px; object-fit: cover; }
-.banner-info { padding: 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.banner-card { background: #fff; border: 1px solid var(--color-line); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-card); }
+.banner-card img { width: 100%; height: 150px; object-fit: cover; background: #f8fafc; }
+.banner-info { padding: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; }
+.banner-info div:first-child { display: grid; gap: 4px; min-width: 0; }
+.banner-info span { color: #8a94a6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1100px) { .banner-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .banner-grid { grid-template-columns: 1fr; } }
 </style>

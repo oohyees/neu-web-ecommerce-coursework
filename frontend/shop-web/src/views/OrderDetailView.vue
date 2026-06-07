@@ -29,7 +29,12 @@ onMounted(load)
 
 <template>
   <div class="page-container detail-page">
-    <h2 class="page-title">订单详情</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">订单详情</h2>
+        <p>查看订单编号、状态、物流、地址、商品清单和金额，验证交易状态链。</p>
+      </div>
+    </div>
 
     <div v-if="loading"><el-skeleton :rows="8" animated /></div>
 

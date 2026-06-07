@@ -26,7 +26,7 @@
 | legacy 传统 Web 证据 | `http://localhost:18080/legacy/status`、`http://localhost:18081` | Listener/Filter/JDBC/JSP/Servlet 证据可访问，作为 fallback |
 | 响应式布局 | 390px、768px 视口 | 用户端可浏览，后台移动菜单抽屉可打开 |
 
-人工巡检备注：当前数据库包含自动化冒烟和导入测试留下的 QA 用户、QA 分类、测试商品、测试订单、测试地址等数据；最终课堂演示或重新截图前应重置为干净种子数据。当前微服务库 `ecommerce_product.product` 已验证为 30 条 `/catalog/...` 本地商品图片路径，DummyJSON 远程 URL 种子块保留在 SQL 中但不属于当前运行库主数据。
+人工巡检备注：当前数据库可能包含自动化冒烟和导入测试留下的 QA 用户、QA 分类、测试商品、测试订单、测试地址等数据；最终课堂演示或重新截图前应重置为干净种子数据。商品主种子已切换为 30 条 DummyJSON 商品，包含远程商品图、品牌、评分、折扣、SKU、保修、配送、图集、规格和评价；若持久化运行库仍显示旧 `/catalog/...` 商品，执行 `scripts/reset_demo_data.sh microservices` 后再巡检。
 
 问题记录：本轮人工巡检发现的问题、影响和修复结果见 [manual-qa-issues.md](manual-qa-issues.md)。
 
@@ -57,7 +57,7 @@
 | 模块 | 指导书细项 | 覆盖方式 | 证据 |
 | --- | --- | --- | --- |
 | 商品 | 分类浏览、按分类筛选商品列表 | 分类表含一级/二级字段，商品列表支持 `categoryId` | `/category/:id`、`GET /api/products?categoryId=` |
-| 商品 | 商品详情页：图片、名称、价格、库存、参数、详情介绍 | 商品详情页展示基础信息、参数、详情、规格和评价 | `/product/:id`、`GET /api/products/{id}` |
+| 商品 | 商品详情页：图片、名称、价格、库存、参数、详情介绍 | 商品详情页展示基础信息、参数、详情、规格、SKU变体、图集和评价 | `/product/:id`、`GET /api/products/{id}` |
 | 商品 | 精准搜索、模糊搜索 | `searchMode=exact/fuzzy` | `SearchView.vue`、商品接口 |
 | 商品 | 排序：价格/销量/新品 | 商品列表支持 sort | `/api/products?sort=price_asc/sales_desc/newest` |
 | 商品 | 收藏/取消收藏、收藏列表 | 收藏接口和用户收藏页 | `/favorites` |
@@ -109,9 +109,9 @@
 | 用户登录、记住密码、退出 | 登录页记住密码，token session，退出销毁 | `LoginView.vue`、Redis session |
 | 找回密码、重置密码 | RESET 验证码 + 密码重置 | `/api/auth/password/reset` |
 | 个人信息修改：头像、昵称、邮箱、密码 | 资料页、上传头像、改密码 | `/profile` |
-| 首页轮播 | Banner 表和首页轮播 | `/api/home`、`/api/home/banners` |
-| 分类导航一级/二级 | `product_category.parent_id` 和分类导航/筛选 | `data.sql`、分类接口 |
-| 热门、新品、促销商品 | 首页 hot/new，详情页促销，促销管理 | `/api/home`、`/api/marketing/promotions` |
+| 首页轮播 | Banner 表和首页三合一轮播（中间大图+两侧关联商品），含促销标签和优惠券入口 | `/api/home`、`/api/home/banners` |
+| 分类导航一级/二级 | `product_category.parent_id` 和右侧分类侧边栏导航/筛选，9 个父分类含子分类 | `data.sql`、分类接口 |
+| 热门、新品、促销商品 | 首页 hot/new（各12条），促销活动和优惠券横向滚动列表，促销管理 | `/api/home`、`/api/marketing/promotions` |
 | 搜索框、关键词搜索、热门搜索词 | 首页/搜索页搜索框和热词入口 | `HomeView.vue`、`SearchView.vue` |
 | 收货地址新增、列表、修改、删除、默认 | 地址页和下单确认页 | `/api/addresses` |
 | 规格、优惠券、秒杀/促销 | 商品规格、用户券、促销活动、秒杀库存 | `/api/marketing/*` |

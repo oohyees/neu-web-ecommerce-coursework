@@ -2,6 +2,9 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useAdminStore } from '@/stores/admin'
 import router from '@/router'
+import { resolveMock } from './mock'
+
+const staticPreview = import.meta.env.VITE_STATIC_PREVIEW === 'true'
 
 const http = axios.create({
   baseURL: '/api',
@@ -59,15 +62,19 @@ function normalizeParams(input?: any) {
 
 const request = {
   get<T = any>(url: string, params?: any): Promise<T> {
+    if (staticPreview) return Promise.resolve(withDataAlias(resolveMock(url, 'get', normalizeParams(params)) as T))
     return http.get(url, { params: normalizeParams(params) }).then((res: any) => withDataAlias(res.data as T))
   },
   post<T = any>(url: string, data?: any, config?: any): Promise<T> {
+    if (staticPreview) return Promise.resolve(withDataAlias(resolveMock(url, 'post', data) as T))
     return http.post(url, data, config).then((res: any) => withDataAlias(res.data as T))
   },
   put<T = any>(url: string, data?: any, config?: any): Promise<T> {
+    if (staticPreview) return Promise.resolve(withDataAlias(resolveMock(url, 'put', data) as T))
     return http.put(url, data, config).then((res: any) => withDataAlias(res.data as T))
   },
   delete<T = any>(url: string, config?: any): Promise<T> {
+    if (staticPreview) return Promise.resolve(withDataAlias(resolveMock(url, 'delete', normalizeParams(config)) as T))
     return http.delete(url, {
       ...config,
       params: normalizeParams(config),

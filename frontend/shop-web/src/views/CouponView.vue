@@ -27,7 +27,17 @@ onMounted(load)
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">我的优惠券</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">我的优惠券</h2>
+        <p>展示可领取和已领取优惠券，结算页会校验门槛并抵扣金额。</p>
+      </div>
+    </div>
+    <div class="page-metrics">
+      <div class="metric-card"><span>可领取</span><strong>{{ available.length }}</strong><small>平台优惠</small></div>
+      <div class="metric-card"><span>我的券</span><strong>{{ myCoupons.length }}</strong><small>用户资产</small></div>
+      <div class="metric-card"><span>结算联动</span><strong>支持</strong><small>下单抵扣</small></div>
+    </div>
     <div v-if="available.length" class="section">
       <h3>可领取</h3>
       <div class="coupon-list">

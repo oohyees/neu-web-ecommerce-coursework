@@ -64,9 +64,17 @@ onMounted(load)
 
 <template>
   <div class="page-container addr-page">
-    <div class="addr-header">
-      <h2>收货地址</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">收货地址</h2>
+        <p>维护常用地址并设置默认地址，结算页会读取同一份地址数据。</p>
+      </div>
       <el-button type="primary" @click="openAdd">新增地址</el-button>
+    </div>
+    <div class="page-metrics">
+      <div class="metric-card"><span>地址数量</span><strong>{{ addresses.length }}</strong><small>当前用户地址</small></div>
+      <div class="metric-card"><span>默认地址</span><strong>{{ addresses.some(a => a.isDefault) ? '已设' : '未设' }}</strong><small>结算优先使用</small></div>
+      <div class="metric-card"><span>操作</span><strong>增删改</strong><small>完整管理能力</small></div>
     </div>
     <div v-for="a in addresses" :key="a.id" class="addr-card">
       <div class="addr-info">

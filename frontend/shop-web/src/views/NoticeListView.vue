@@ -16,7 +16,17 @@ onMounted(async () => {
 
 <template>
   <div class="page-container notice-page">
-    <h2 class="page-title">公告活动</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">公告活动</h2>
+        <p>集中展示平台公告和活动通知，和后台内容管理页面联动。</p>
+      </div>
+    </div>
+    <div class="page-metrics">
+      <div class="metric-card"><span>公告</span><strong>{{ announcements.length }}</strong><small>平台通知</small></div>
+      <div class="metric-card"><span>活动</span><strong>{{ notices.length }}</strong><small>运营内容</small></div>
+      <div class="metric-card"><span>总计</span><strong>{{ announcements.length + notices.length }}</strong><small>当前内容</small></div>
+    </div>
     <div v-if="notices.length" class="section">
       <h3>活动通知</h3>
       <div v-for="n in notices" :key="n.id" class="item">

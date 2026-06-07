@@ -18,7 +18,17 @@ onMounted(async () => {
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">限时秒杀</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">限时秒杀</h2>
+        <p>展示促销活动商品，点击后进入详情页继续选择规格、加购和下单。</p>
+      </div>
+    </div>
+    <div class="page-metrics">
+      <div class="metric-card"><span>活动数量</span><strong>{{ promotions.length }}</strong><small>当前秒杀列表</small></div>
+      <div class="metric-card"><span>价格展示</span><strong>促销价</strong><small>对比原价</small></div>
+      <div class="metric-card"><span>后台联动</span><strong>促销管理</strong><small>配置活动</small></div>
+    </div>
     <div v-if="loading"><el-skeleton :rows="4" animated /></div>
     <div v-else-if="!promotions.length" class="empty"><el-empty description="暂无秒杀活动" /></div>
     <div v-else class="promo-grid">

@@ -63,6 +63,16 @@ const currentSku = computed(() => {
 const displayPrice = computed(() => currentSku.value?.price ?? product.value?.price ?? 0)
 const displayStock = computed(() => currentSku.value?.stock ?? product.value?.stock ?? 0)
 const displayOriginalPrice = computed(() => product.value?.originalPrice ?? null)
+const specValue = computed(() => {
+  const map = new Map(specs.value.map((s) => [s.specName, s.specValue]))
+  if (product.value?.paramsText) {
+    product.value.paramsText.split(';').forEach((part) => {
+      const [name, ...valueParts] = part.split(':')
+      if (name && valueParts.length && !map.has(name.trim())) map.set(name.trim(), valueParts.join(':').trim())
+    })
+  }
+  return (name: string) => map.get(name) || ''
+})
 
 // 图片列表
 const mainImage = computed(() => imageOrPlaceholder(images.value[0]?.url || product.value?.imageUrl))
@@ -213,6 +223,12 @@ watch(() => route.params.id, loadProduct)
             ¥{{ displayOriginalPrice }}
           </span>
         </div>
+        <div class="dummy-meta">
+          <span>{{ product.brand || specValue('品牌') || 'DummyJSON' }}</span>
+          <span v-if="product.rating || specValue('评分')">评分 {{ product.rating || specValue('评分') }}</span>
+          <span v-if="product.discountPercentage || specValue('折扣')">折扣 {{ product.discountPercentage || specValue('折扣') }}</span>
+          <span v-if="product.sku || specValue('SKU')">SKU {{ product.sku || specValue('SKU') }}</span>
+        </div>
 
         <!-- SKU 选择器 -->
         <div v-if="colorOptions.length" class="sku-group">
@@ -246,6 +262,11 @@ watch(() => route.params.id, loadProduct)
           <span :class="displayStock > 0 ? 'in-stock' : 'out-stock'">
             {{ displayStock > 0 ? `${displayStock} 件` : '暂时缺货' }}
           </span>
+        </div>
+        <div class="detail-assurance">
+          <span>本地图片兜底</span>
+          <span>规格库存联动</span>
+          <span>评价可追溯</span>
         </div>
 
         <!-- 数量 + 操作 -->
@@ -350,6 +371,8 @@ watch(() => route.params.id, loadProduct)
 .info-price { margin-bottom: 20px; display: flex; align-items: baseline; gap: 10px; }
 .price-current { font-size: 28px; font-weight: 700; color: var(--color-price, #ff0036); }
 .price-original { font-size: 15px; color: #bbb; text-decoration: line-through; }
+.dummy-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: -8px 0 18px; }
+.dummy-meta span { padding: 6px 10px; border-radius: 999px; background: #f8fafc; border: 1px solid #e5e7eb; color: #475569; font-size: 12px; font-weight: 700; }
 
 /* SKU */
 .sku-group { margin-bottom: 14px; display: flex; align-items: flex-start; gap: 12px; }
@@ -398,6 +421,8 @@ watch(() => route.params.id, loadProduct)
 .review-empty { color: #aaa; padding: 24px 0; }
 .review-login-hint { color: #aaa; padding: 16px 0; }
 .review-login-hint a { color: var(--color-primary); }
+.detail-assurance { display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 18px; }
+.detail-assurance span { padding: 6px 10px; border-radius: 999px; background: #fff5f0; color: var(--color-primary); font-size: 12px; font-weight: 700; }
 .review-form { background: #f9fafb; padding: 20px; border-radius: 8px; margin-top: 16px; }
 .review-form h4 { margin-bottom: 12px; }
 .review-rating-input { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; }

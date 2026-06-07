@@ -1,0 +1,28 @@
+# Build artifacts
+**/target/
+**/node_modules/
+**/dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Git
+.git/
+.gitignore
+
+# Docker volumes / runtime data
+docker/mysql/data/
+docker/redis/data/
+uploads/
+logs/
+
+# Docs archive (not needed in build)
+docs/archive/
+submission/
+
+# Misc
+*.zip
+*.log
+.DS_Store

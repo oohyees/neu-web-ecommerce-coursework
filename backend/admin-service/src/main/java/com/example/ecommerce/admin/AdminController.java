@@ -47,7 +47,7 @@ public class AdminController {
         var listArgs = new ArrayList<>();
         java.util.Collections.addAll(listArgs, args);
         listArgs.add(size);
-        listArgs.add((page - 1) * size);
+        listArgs.add(Math.max(0, (page - 1)) * size);
         var items = jdbc.queryForList("select id,username,nickname,email,phone,enabled from ecommerce_auth.user" + where + " order by id desc limit ? offset ?", listArgs.toArray());
         Integer total = jdbc.queryForObject("select count(*) from ecommerce_auth.user" + where, Integer.class, args);
         return ApiResponse.ok(Map.of("items", items, "total", total == null ? 0 : total));
@@ -71,7 +71,7 @@ public class AdminController {
         }
         Integer total = jdbc.queryForObject("select count(*) from ecommerce_order.orders" + where, Integer.class, args.toArray());
         args.add(size);
-        args.add((page - 1) * size);
+        args.add(Math.max(0, (page - 1)) * size);
         var items = jdbc.queryForList(orderSelect() + where + " order by created_at desc,id desc limit ? offset ?", args.toArray());
         return ApiResponse.ok(Map.of("items", items, "total", total == null ? 0 : total));
     }
@@ -241,7 +241,7 @@ public class AdminController {
         var items = jdbc.queryForList("""
                 select id,user_id userId,type,content,contact,reply,status,created_at createdAt
                 from feedback order by id desc limit ? offset ?
-                """, size, (page - 1) * size);
+                """, size, Math.max(0, (page - 1)) * size);
         return ApiResponse.ok(Map.of("items", items, "total", total));
     }
 
@@ -263,7 +263,7 @@ public class AdminController {
         var items = jdbc.queryForList("""
                 select id,user_id userId,subject,content,reply,status,created_at createdAt
                 from customer_consultation order by id desc limit ? offset ?
-                """, size, (page - 1) * size);
+                """, size, Math.max(0, (page - 1)) * size);
         return ApiResponse.ok(Map.of("items", items, "total", total));
     }
 

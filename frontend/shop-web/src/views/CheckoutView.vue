@@ -68,7 +68,17 @@ onMounted(load)
 
 <template>
   <div class="page-container checkout-page">
-    <h2 class="page-title">确认订单</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">确认订单</h2>
+        <p>核对收货地址、商品清单、优惠券和应付金额，提交后进入模拟支付流程。</p>
+      </div>
+    </div>
+    <div v-if="cartItems.length" class="page-metrics">
+      <div class="metric-card"><span>结算商品</span><strong>{{ cartItems.length }}</strong><small>来自购物车</small></div>
+      <div class="metric-card"><span>可用地址</span><strong>{{ addresses.length }}</strong><small>选择收货信息</small></div>
+      <div class="metric-card"><span>应付金额</span><strong>¥{{ totalAmount }}</strong><small>优惠后金额</small></div>
+    </div>
 
     <div v-if="!cartItems.length" class="empty">
       <el-empty description="没有待结算商品" />

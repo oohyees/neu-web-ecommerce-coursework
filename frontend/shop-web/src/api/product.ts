@@ -14,6 +14,11 @@ export interface Product {
   imageUrl: string
   detailHtml?: string
   paramsText?: string
+  brand?: string
+  rating?: number
+  discountPercentage?: number
+  sku?: string
+  images?: string[]
 }
 
 export interface ProductSku {

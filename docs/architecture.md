@@ -132,27 +132,31 @@ web/
 - **字符集**：`utf8mb4`
 - **表数量**：核心业务表按用户、商品、订单、内容、营销等域拆分
 
-当前微服务 Docker 数据库已验证的商品图片状态：运行库主商品集使用 30 条 `/catalog/...` 本地图片路径；`sql/product/data.sql` 仍保留 DummyJSON 远程 URL 种子块，但当前演示路径不依赖 `cdn.dummyjson.com`。
+当前微服务 Docker 数据库的商品种子包含 DummyJSON 远程图片 URL 和本地 `/catalog/...` 图片路径。首页轮播使用 DummyJSON CDN 图片，商品详情页展示商品主图和图集（`product_image` 表）。
 
 ### 4.2 表结构清单
 
-#### 用户与认证（3 张）
+#### 用户与认证（5 张）
 
 | 表名 | 说明 | 关键字段 |
 |------|------|---------|
 | `user` | 前端用户 | id, username(UNIQUE), password, nickname, email, phone, avatar_url, enabled |
 | `admin_user` | 管理员 | id, username(UNIQUE), password, nickname, email, phone, role(ADMIN/SUPER_ADMIN) |
 | `verification_code` | 邮箱验证码 | id, email, code, purpose, expires_at |
+| `admin_permission` | 权限定义 | id, name, code |
+| `admin_role_permission` | 角色-权限关联 | id, role, permission_id |
 
-#### 商品与分类（3 张）
+#### 商品与分类（5 张）
 
 | 表名 | 说明 | 关键字段 |
 |------|------|---------|
 | `product` | 商品 | id, category_id, name, price, stock, sales, is_on_sale, image_url, detail_html, params_text |
 | `product_spec` | 商品规格 | id, product_id, spec_name, spec_value |
 | `product_category` | 商品分类（树形） | id, parent_id(自引用), name, sort_order |
+| `product_sku` | 商品 SKU 变体 | id, product_id, sku_name, price, stock, deleted |
+| `product_image` | 商品图集 | id, product_id, image_url, sort_order, deleted |
 
-#### 营销（5 张）
+#### 营销（6 张）
 
 | 表名 | 说明 | 关键字段 |
 |------|------|---------|
@@ -162,6 +166,7 @@ web/
 | `coupon` | 优惠券模板 | id, name, threshold_amount, discount_amount, enabled |
 | `user_coupon` | 用户优惠券 | id, user_id, coupon_id(UNIQUE pair), status, claimed_at, used_at |
 | `promotion` | 促销/秒杀 | id, product_id, title, promotion_type, promotion_price, promotion_stock, start_at, end_at, enabled |
+| `hot_search` | 热门搜索词 | id, keyword, search_count |
 
 #### 交易（5 张）
 
@@ -232,7 +237,7 @@ web/
 | 5 | CategoryController | `/api/categories`, `/api/admin/categories` | 分类 CRUD |
 | 6 | AddressController | `/api/addresses` | 收货地址 CRUD、设置默认 |
 | 7 | FavoriteController | `/api/favorites` | 收藏/取消收藏、状态查询 |
-| 8 | HomeController | `/api/home` | 首页数据：轮播图、热销、新品 |
+| 8 | HomeController | `/api/home` | 首页数据：轮播图（含关联商品）、热销、新品、促销活动、优惠券、评价、热门搜索 |
 | 9 | ReviewController | `/api/reviews` | 商品评价 CRUD |
 | 10 | FileController | `/api/files` | 图片上传（jpg/png/gif/webp，最大 5MB） |
 | 11 | MarketingController | `/api/marketing` | 商品规格、优惠券、促销活动、领取优惠券 |
@@ -435,9 +440,9 @@ OrderService.createOrder()
 #### Product Service (:18092)
 
 - **数据访问**：JDBC Template
-- **Controller**：`ProductController`（~450 行大控制器）
+- **Controller**：`ProductController`（~460 行大控制器）
 - **功能**：
-  - 公开：商品列表/详情、分类、首页、轮播图、公告、活动通知、规格、优惠券、促销、评价、收藏、文件上传
+  - 公开：商品列表/详情（含 SKU 和图集）、分类、首页数据聚合（轮播图含关联商品、热销、新品、促销、优惠券、评价、热门搜索）、轮播图、公告、活动通知、规格、优惠券、促销、评价、收藏、文件上传
   - 管理：商品 CRUD、Excel 导入导出、促销管理、评价管理
   - 内部接口：`/internal/products/{id}/order-view` 和 `/internal/products/{id}/deduct-stock`（供 order-service 通过 Feign 调用）
 - **额外依赖**：Apache POI (Excel)
@@ -486,7 +491,7 @@ OrderService.createOrder()
 
 | 路由 | 组件 | 说明 |
 |------|------|------|
-| `/` | HomeView | 首页 |
+| `/` | HomeView | 首页（三合一轮播、右侧分类侧边栏、促销/优惠券横向滚动） |
 | `/login` | LoginView | 用户登录 |
 | `/register` | RegisterView | 用户注册 |
 | `/forgot-password` | ForgotPasswordView | 找回密码 |
@@ -522,7 +527,7 @@ OrderService.createOrder()
 | `/promotions` | PromotionsView | 促销管理 |
 | `/feedbacks` | FeedbacksView | 反馈管理 |
 | `/cs` | CsView | 客服咨询 |
-| `/permissions` | PermissionManageView | 权限管理 |
+| `/permission-manage` | PermissionManageView | 权限管理（含角色/管理员账号） |
 | `/profile` | AdminProfileView | 管理员资料 |
 
 ### 7.2 路由守卫

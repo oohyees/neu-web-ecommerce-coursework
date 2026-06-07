@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import { fetchAdminPromotions, createPromotion, updatePromotion, deletePromotion, fetchAdminCoupons, createCoupon, updateCoupon, deleteCoupon } from '@/api/promotion'
 
 const promotions = ref<any[]>([])
@@ -30,25 +31,44 @@ async function handleSave() {
 async function handleDeletePromo(id: number) { try { await ElMessageBox.confirm('确认删除？','提示',{type:'warning'}); await deletePromotion(id); ElMessage.success('已删除'); loadPromotions() } catch { /* cancelled */ } }
 async function handleDeleteCoupon(id: number) { try { await ElMessageBox.confirm('确认删除？','提示',{type:'warning'}); await deleteCoupon(id); ElMessage.success('已删除'); loadCoupons() } catch { /* cancelled */ } }
 
+const activePromotions = computed(() => promotions.value.filter((p) => p.enabled).length)
+const activeCoupons = computed(() => coupons.value.filter((c) => c.enabled).length)
 onMounted(() => { loadPromotions(); loadCoupons() })
 </script>
 <template>
-  <div>
-    <div class="tb-header"><h2>促销管理</h2></div>
-    <el-tabs v-model="tab">
+  <div class="admin-page promotions-page">
+    <div class="tb-header">
+      <div>
+        <h2>促销管理</h2>
+        <p class="page-subtitle">统一维护秒杀促销和优惠券，下单页金额联动是主要验收点。</p>
+      </div>
+    </div>
+    <div class="admin-summary">
+      <div class="summary-card"><div class="summary-card__label">促销活动</div><div class="summary-card__value">{{ promotions.length }}</div><div class="summary-card__hint">商品促销入口</div></div>
+      <div class="summary-card"><div class="summary-card__label">启用促销</div><div class="summary-card__value">{{ activePromotions }}</div><div class="summary-card__hint">用户端可见</div></div>
+      <div class="summary-card"><div class="summary-card__label">优惠券</div><div class="summary-card__value">{{ coupons.length }}</div><div class="summary-card__hint">结算抵扣</div></div>
+      <div class="summary-card"><div class="summary-card__label">启用优惠券</div><div class="summary-card__value">{{ activeCoupons }}</div><div class="summary-card__hint">可领取可使用</div></div>
+    </div>
+    <el-tabs v-model="tab" class="ops-tabs">
       <el-tab-pane label="促销活动" name="promotion">
-        <el-button type="primary" size="small" @click="openAddPromo" style="margin-bottom:12px">新增促销</el-button>
-        <el-table :data="promotions" stripe>
-          <el-table-column prop="title" label="名称" /><el-table-column prop="productId" label="商品ID" width="80" /><el-table-column prop="promotionType" label="类型" width="100" /><el-table-column prop="promotionPrice" label="促销价" width="90" />
-          <el-table-column label="操作" width="120"><template #default="{row}"><el-button text size="small" @click="openEditPromo(row)">编辑</el-button><el-button text size="small" type="danger" @click="handleDeletePromo(row.id)">删除</el-button></template></el-table-column>
-        </el-table>
+        <div class="table-panel">
+          <div class="panel-toolbar"><el-button type="primary" :icon="Plus" @click="openAddPromo">新增促销</el-button></div>
+          <el-table :data="promotions" stripe>
+            <el-table-column prop="title" label="名称" min-width="180" /><el-table-column prop="productId" label="商品ID" width="90" /><el-table-column prop="promotionType" label="类型" width="120" /><el-table-column label="促销价" width="120"><template #default="{row}"><span class="money">¥{{ Number(row.promotionPrice || 0).toFixed(2) }}</span></template></el-table-column>
+            <el-table-column label="状态" width="110"><template #default="{row}"><span :class="['status-pill', row.enabled ? 'status-pill--success' : 'status-pill--info']">{{ row.enabled ? '启用' : '停用' }}</span></template></el-table-column>
+            <el-table-column label="操作" width="150" fixed="right"><template #default="{row}"><div class="action-stack"><el-button size="small" @click="openEditPromo(row)">编辑</el-button><el-button size="small" type="danger" @click="handleDeletePromo(row.id)">删除</el-button></div></template></el-table-column>
+          </el-table>
+        </div>
       </el-tab-pane>
       <el-tab-pane label="优惠券" name="coupon">
-        <el-button type="primary" size="small" @click="openAddCoupon" style="margin-bottom:12px">新增优惠券</el-button>
-        <el-table :data="coupons" stripe>
-          <el-table-column prop="name" label="名称" /><el-table-column prop="thresholdAmount" label="满减门槛" /><el-table-column prop="discountAmount" label="优惠金额" />
-          <el-table-column label="操作" width="120"><template #default="{row}"><el-button text size="small" @click="openEditCoupon(row)">编辑</el-button><el-button text size="small" type="danger" @click="handleDeleteCoupon(row.id)">删除</el-button></template></el-table-column>
-        </el-table>
+        <div class="table-panel">
+          <div class="panel-toolbar"><el-button type="primary" :icon="Plus" @click="openAddCoupon">新增优惠券</el-button></div>
+          <el-table :data="coupons" stripe>
+            <el-table-column prop="name" label="名称" min-width="180" /><el-table-column label="满减门槛"><template #default="{row}">满 ¥{{ Number(row.thresholdAmount || 0).toFixed(2) }}</template></el-table-column><el-table-column label="优惠金额"><template #default="{row}"><span class="money">-¥{{ Number(row.discountAmount || 0).toFixed(2) }}</span></template></el-table-column>
+            <el-table-column label="状态" width="110"><template #default="{row}"><span :class="['status-pill', row.enabled ? 'status-pill--success' : 'status-pill--info']">{{ row.enabled ? '启用' : '停用' }}</span></template></el-table-column>
+            <el-table-column label="操作" width="150" fixed="right"><template #default="{row}"><div class="action-stack"><el-button size="small" @click="openEditCoupon(row)">编辑</el-button><el-button size="small" type="danger" @click="handleDeleteCoupon(row.id)">删除</el-button></div></template></el-table-column>
+          </el-table>
+        </div>
       </el-tab-pane>
     </el-tabs>
     <el-dialog v-model="dialogVisible" :title="type==='edit'?'编辑':'新增'" width="500px">
@@ -73,4 +93,8 @@ onMounted(() => { loadPromotions(); loadCoupons() })
     </el-dialog>
   </div>
 </template>
-<style scoped>.tb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; } .tb-header h2 { font-size: 20px; font-weight: 700; }</style>
+<style scoped>
+.page-subtitle { margin-top: 8px; color: #6b7280; font-size: 13px; }
+.ops-tabs { background: #fff; border: 1px solid var(--color-line); border-radius: 8px; padding: 16px; box-shadow: var(--shadow-card); }
+.panel-toolbar { padding: 0 0 12px; }
+</style>

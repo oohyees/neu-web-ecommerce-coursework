@@ -75,6 +75,22 @@ assert_body_contains() {
 require_cmd curl
 require_cmd grep
 require_cmd sed
+require_cmd python3
+
+get_product_stock() {
+  python3 - "$TMP_DIR/response.json" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    payload = json.load(f)
+data = payload.get("data", {})
+if isinstance(data, dict) and isinstance(data.get("product"), dict):
+    print(data["product"].get("stock", ""))
+else:
+    print(data.get("stock", ""))
+PY
+}
 
 echo "Microservices smoke test"
 echo "Gateway:  $GATEWAY_URL"
@@ -133,7 +149,7 @@ echo "[9/10] Order cross-service chain"
 if [ "$SUBMIT_ORDER" = "1" ]; then
   code="$(http_code GET "$GATEWAY_URL/api/products/$PRODUCT_ID")"
   assert_code 200 "$code" "product detail before order"
-  BEFORE_STOCK="$(get_json_number stock)"
+  BEFORE_STOCK="$(get_product_stock)"
   [ -n "$BEFORE_STOCK" ] || fail "cannot read product stock before order"
 
   code="$(http_code POST "$GATEWAY_URL/api/cart/items" -H 'Content-Type: application/json' -H "Authorization: Bearer $USER_TOKEN" -d "{\"productId\":$PRODUCT_ID,\"quantity\":$QUANTITY,\"specText\":\"smoke-test\"}")"
@@ -163,7 +179,7 @@ if [ "$SUBMIT_ORDER" = "1" ]; then
 
   code="$(http_code GET "$GATEWAY_URL/api/products/$PRODUCT_ID")"
   assert_code 200 "$code" "product detail after order"
-  AFTER_STOCK="$(get_json_number stock)"
+  AFTER_STOCK="$(get_product_stock)"
   [ -n "$AFTER_STOCK" ] || fail "cannot read product stock after order"
   EXPECTED_STOCK=$((BEFORE_STOCK - QUANTITY))
   [ "$AFTER_STOCK" -eq "$EXPECTED_STOCK" ] || fail "stock deduction mismatch productId=$PRODUCT_ID before=$BEFORE_STOCK after=$AFTER_STOCK quantity=$QUANTITY"

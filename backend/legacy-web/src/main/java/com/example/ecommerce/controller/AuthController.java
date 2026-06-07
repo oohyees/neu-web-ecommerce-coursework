@@ -132,7 +132,7 @@ public class AuthController {
     public ApiResponse<?> users(@RequestParam(required = false) String keyword,
                                 @RequestParam(defaultValue = "1") Integer page,
                                 @RequestParam(defaultValue = "10") Integer size) {
-        int offset = (page - 1) * size;
+        int offset = Math.max(0, (page - 1)) * size;
         return ApiResponse.ok(Map.of(
                 "items", authService.findUsers(keyword, offset, size),
                 "total", authService.countUsers(keyword)

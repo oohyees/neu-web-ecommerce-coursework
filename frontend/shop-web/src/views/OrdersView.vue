@@ -62,7 +62,17 @@ onMounted(load)
 
 <template>
   <div class="page-container orders-page">
-    <h2 class="page-title">我的订单</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">我的订单</h2>
+        <p>按状态查看订单，支持支付、取消、确认收货、退款和物流查看。</p>
+      </div>
+    </div>
+    <div class="page-metrics">
+      <div class="metric-card"><span>当前订单</span><strong>{{ orders.length }}</strong><small>筛选结果</small></div>
+      <div class="metric-card"><span>当前状态</span><strong>{{ activeStatus || '全部' }}</strong><small>状态筛选</small></div>
+      <div class="metric-card"><span>业务链路</span><strong>完整</strong><small>下单到售后</small></div>
+    </div>
 
     <div class="status-tabs">
       <button v-for="t in statusTabs" :key="t.value"

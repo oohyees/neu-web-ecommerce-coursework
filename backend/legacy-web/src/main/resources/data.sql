@@ -47,16 +47,45 @@ INSERT INTO hot_search (keyword, search_count, enabled, sort_order) VALUES
 INSERT INTO product_category (parent_id, name, sort_order) VALUES
 (NULL, '数码办公', 1),
 (1, '输入设备', 1),
+(1, '办公文具', 2),
 (NULL, '影音与会议', 2),
 (3, '音视频', 1),
+(3, '耳机音箱', 2),
 (NULL, '扩展与连接', 3),
 (5, '存储网络', 1),
+(5, '线材配件', 2),
 (NULL, '桌面效率', 4),
-(7, '桌面办公', 1);
+(7, '桌面办公', 1),
+(7, '照明收纳', 2),
+(NULL, '美妆个护', 5),
+(9, '彩妆', 1),
+(9, '护肤', 2),
+(NULL, '香水香氛', 6),
+(11, '女士香水', 1),
+(11, '男士香水', 2),
+(NULL, '家居家具', 7),
+(13, '沙发座椅', 1),
+(13, '收纳整理', 2),
+(NULL, '鞋靴箱包', 8),
+(15, '男鞋', 1),
+(15, '女包', 2),
+(NULL, '智能设备', 9),
+(17, '智能手机', 1),
+(17, '智能手表', 2),
+(NULL, '笔记本电脑', 10),
+(19, '轻薄本', 1),
+(19, '游戏本', 2);
 
 INSERT INTO banner (title, image_url, link_url, sort_order) VALUES
-('机械键盘限时特惠', '/catalog/B076LRJ528.webp', '/products/1', 1),
-('电竞鼠标办公升级', '/catalog/B08F2Z6RJB.webp', '/products/2', 2);
+('Essence 睫毛膏 限时特惠', 'https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/1.webp', '/products/1', 1),
+('Dior J''adore 香水 新品上市', 'https://cdn.dummyjson.com/product-images/fragrances/dior-jadore/1.webp', '/products/8', 2),
+('Annibale Colombo 精品沙发', 'https://cdn.dummyjson.com/product-images/furniture/annibale-colombo-sofa/1.webp', '/products/12', 3),
+('Calvin Klein 经典香水', 'https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/1.webp', '/products/6', 4),
+('Razer 游戏鼠标 畅玩无限', 'https://cdn.dummyjson.com/product-images/mens-shoes/nike-air-jordan-1-red/1.webp', '/products/2', 5),
+('Sony 便携音箱 派对必备', 'https://cdn.dummyjson.com/product-images/mens-watches/brown-leather/1.webp', '/products/11', 6),
+('高品质真皮手提包', 'https://cdn.dummyjson.com/product-images/womens-bags/louis-vuitton/1.webp', '/products/15', 7),
+('Apple iPhone 15 Pro', 'https://cdn.dummyjson.com/product-images/smartphones/iphone-15/1.webp', '/products/16', 8),
+('Seagate 5TB 移动硬盘', 'https://cdn.dummyjson.com/product-images/laptops/macbook-pro/1.webp', '/products/16', 9);
 
 INSERT INTO announcement (title, content, created_at) VALUES
 ('真实商品目录已更新', '当前目录使用公开商品样本整理，商品图与商品信息均可追溯来源。', NOW());
@@ -222,14 +251,26 @@ INSERT INTO product_spec (product_id, spec_name, spec_value) VALUES
 
 INSERT INTO coupon (name, threshold_amount, discount_amount, enabled) VALUES
 ('满300减30', 300.00, 30.00, 1),
-('满500减80', 500.00, 80.00, 1);
+('满500减80', 500.00, 80.00, 1),
+('满100减10', 100.00, 10.00, 1),
+('满200减25', 200.00, 25.00, 1),
+('满1000减150', 1000.00, 150.00, 1),
+('满800减100', 800.00, 100.00, 1);
 
 INSERT INTO user_coupon (user_id, coupon_id, status, claimed_at) VALUES
 (1, 1, 'UNUSED', NOW());
 
 INSERT INTO promotion (product_id, title, promotion_type, promotion_price, promotion_stock, start_at, end_at, enabled) VALUES
 (1, '限时优惠', 'FLASH_SALE', 75.99, 10, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
-(2, '精选直降', 'PROMOTION', 53.20, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1);
+(2, '精选直降', 'PROMOTION', 53.20, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
+(3, '新品特惠', 'PROMOTION', 89.90, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
+(4, '爆款秒杀', 'FLASH_SALE', 8.99, 20, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
+(5, '办公好物', 'PROMOTION', 10.59, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
+(8, '蓝牙特惠', 'PROMOTION', 74.99, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
+(9, '音响直降', 'PROMOTION', 22.99, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
+(11, '索尼专场', 'PROMOTION', 349.00, NULL, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
+(12, '耳机限时', 'FLASH_SALE', 79.95, 15, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1),
+(16, '硬盘闪购', 'FLASH_SALE', 89.99, 8, DATE_SUB(NOW(), INTERVAL 1 DAY), GREATEST('2026-12-31 23:59:59', DATE_ADD(NOW(), INTERVAL 180 DAY)), 1);
 
 INSERT INTO user_address (user_id, receiver_name, phone, province, city, district, detail_address, is_default) VALUES
 (1, 'Alice', '13800000000', '辽宁省', '沈阳市', '和平区', '创新路 1 号', 1);

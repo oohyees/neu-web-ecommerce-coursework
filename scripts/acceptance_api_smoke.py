@@ -152,12 +152,14 @@ def password_and_profile_flow():
 def catalog_flow():
     cats = ok(request("GET", "/categories"))
     assert len(cats) >= 4
-    page = ok(request("GET", "/products", params={"keyword": "keyboard", "sort": "price_asc", "page": 1, "size": 9}))
-    assert page["total"] >= 1 and "keyboard" in page["items"][0]["name"].lower()
-    filtered = ok(request("GET", "/products", params={"categoryId": 2, "page": 1, "size": 9}))
+    page = ok(request("GET", "/products", params={"keyword": "mascara", "sort": "price_asc", "page": 1, "size": 9}))
+    assert page["total"] >= 1 and "mascara" in page["items"][0]["name"].lower()
+    filtered = ok(request("GET", "/products", params={"categoryId": 11, "page": 1, "size": 9}))
     assert filtered["total"] >= 2
-    product = ok(request("GET", "/products/1"))
-    assert "keyboard" in product["name"].lower()
+    detail = ok(request("GET", "/products/1"))
+    product = detail.get("product", detail)
+    assert "mascara" in product["name"].lower()
+    assert len(detail.get("skus", [])) >= 1 and len(detail.get("images", [])) >= 1
     specs = ok(request("GET", "/marketing/specs/1"))
     assert len(specs) >= 1
     promotions = ok(request("GET", "/marketing/promotions"))

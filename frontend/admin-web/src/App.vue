@@ -34,14 +34,17 @@ const drawerVisible = ref(false)
 .admin-layout {
   display: flex;
   min-height: 100vh;
+  background: var(--color-bg);
 }
 .admin-layout--login {
   display: block;
 }
 .admin-main {
   flex: 1;
-  padding: 24px;
-  background: #f5f7fa;
+  padding: 28px 32px 36px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 107, 53, 0.10), transparent 28%),
+    linear-gradient(180deg, #f7f8fb 0%, #eef2f6 100%);
   overflow: auto;
   min-width: 0;
 }
@@ -55,7 +58,7 @@ const drawerVisible = ref(false)
   height: 42px;
   border: none;
   border-radius: 10px;
-  background: #1f2d3d;
+  background: var(--color-sidebar, #182433);
   color: #fff;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -64,7 +67,7 @@ const drawerVisible = ref(false)
   .admin-layout { flex-direction: column; }
   .desktop-sidebar { display: none; }
   .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; }
-  .admin-main { padding: 56px 12px 16px; }
+  .admin-main { padding: 64px 14px 18px; }
 }
 </style>
 

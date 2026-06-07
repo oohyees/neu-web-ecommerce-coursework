@@ -4,6 +4,14 @@
 
 [checklist.md](checklist.md) — 评分清单，包含全部评分点的状态、演示入口、测试覆盖情况、满绩补齐记录。
 
+## 人工巡检
+
+[人工验收指南.md](人工验收指南.md) — 按实验指导书逐条拆分的人工页面验收表，适合最终演示前逐项勾选。
+
+[manual-qa-issues.md](manual-qa-issues.md) — 本轮人工巡检发现的问题、修复结果和复验记录。
+
+[spec-progress.md](spec-progress.md) — SPEC 改进项的阶段状态，记录哪些点已经闭环，哪些点只需最终演示前复检。
+
 ## 截图证据
 
 `evidence/` 目录包含 53 张页面截图，覆盖用户端、管理端、响应式适配、Docker 部署、微服务、Nacos、鉴权验证、冒烟测试。

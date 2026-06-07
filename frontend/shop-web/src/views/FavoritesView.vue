@@ -31,7 +31,17 @@ onMounted(load)
 
 <template>
   <div class="page-container">
-    <h2 class="page-title">我的收藏</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">我的收藏</h2>
+        <p>保存感兴趣的商品，支持从收藏列表继续进入详情和购物流程。</p>
+      </div>
+    </div>
+    <div class="page-metrics">
+      <div class="metric-card"><span>收藏商品</span><strong>{{ items.length }}</strong><small>当前收藏夹</small></div>
+      <div class="metric-card"><span>图片兜底</span><strong>已启用</strong><small>避免坏图</small></div>
+      <div class="metric-card"><span>快捷入口</span><strong>详情</strong><small>继续购买</small></div>
+    </div>
     <div v-if="loading"><el-skeleton :rows="4" animated /></div>
     <div v-else-if="!items.length" class="empty"><el-empty description="暂无收藏" /></div>
     <div v-else class="product-grid">

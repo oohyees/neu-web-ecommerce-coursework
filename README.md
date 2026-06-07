@@ -64,7 +64,7 @@ URLs:
 
 The microservice smoke test checks Nacos registration, Gateway routing, Redis token authentication, `401/403` permission behavior, user/admin login, cart access, order creation, stock deduction, and Feign log evidence between `order-service` and `product-service`.
 
-This is the primary classroom demo path. The product images used by the active seed data are local `/catalog/...` assets bundled under the frontend `public/catalog` directories, so the demo does not depend on external image hosts. The repository also keeps a DummyJSON seed block in `sql/product/data.sql`, but the current Docker database state verified on 2026-06-07 uses 30 local catalog image paths and no `cdn.dummyjson.com` product image URLs.
+This is the primary classroom demo path. The product seed contains DummyJSON products with `cdn.dummyjson.com` image URLs and local `/catalog/...` paths, with brand, rating, discount, SKU variants, image gallery, specs, and reviews mapped into the existing tables.
 
 ## Run Legacy Evidence Stack
 

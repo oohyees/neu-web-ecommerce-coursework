@@ -86,7 +86,17 @@ onMounted(load)
 
 <template>
   <div class="page-container cart-page">
-    <h2 class="page-title">我的购物车</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">我的购物车</h2>
+        <p>集中管理已选商品、规格和数量，确认无误后进入订单确认页。</p>
+      </div>
+    </div>
+    <div v-if="items.length" class="page-metrics">
+      <div class="metric-card"><span>购物车商品</span><strong>{{ items.length }}</strong><small>当前列表项</small></div>
+      <div class="metric-card"><span>已选数量</span><strong>{{ totalCount }}</strong><small>参与结算</small></div>
+      <div class="metric-card"><span>结算金额</span><strong>¥{{ totalPrice }}</strong><small>实时合计</small></div>
+    </div>
 
     <div v-if="loading" class="cart-loading">
       <el-skeleton :rows="6" animated />

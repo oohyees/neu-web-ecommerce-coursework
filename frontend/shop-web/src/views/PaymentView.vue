@@ -36,7 +36,12 @@ onMounted(load)
 
 <template>
   <div class="page-container pay-page">
-    <h2 class="page-title">订单支付</h2>
+    <div class="page-intro">
+      <div>
+        <h2 class="page-title">订单支付</h2>
+        <p>模拟支付订单，支付成功后订单状态会进入后续履约流程。</p>
+      </div>
+    </div>
 
     <div v-if="!orderInfo" class="loading"><el-skeleton :rows="4" /></div>
 
