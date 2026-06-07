@@ -15,7 +15,7 @@ jobs:
         image: mysql:8.4
         env:
           MYSQL_ROOT_PASSWORD: root123
-          MYSQL_DATABASE: ecommerce
+          MYSQL_DATABASE: ecommerce_minimal
         ports:
           - 3306:3306
         options: >-
@@ -33,10 +33,11 @@ jobs:
           --health-timeout=5s
           --health-retries=10
     env:
-      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/ecommerce_minimal?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root123
       SPRING_DATA_REDIS_HOST: 127.0.0.1
+      SPRING_SQL_INIT_MODE: always
       MAIL_HOST: localhost
     steps:
       - uses: actions/checkout@v4
@@ -45,6 +46,10 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
+      - name: Init database schema
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot123 < backend/legacy-web/src/main/resources/schema.sql
+          mysql -h 127.0.0.1 -uroot -proot123 < backend/legacy-web/src/main/resources/data.sql
       - name: Run Maven tests
         run: mvn test -B
 

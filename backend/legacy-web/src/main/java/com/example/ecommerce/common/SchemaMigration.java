@@ -22,6 +22,15 @@ public class SchemaMigration {
     }
 
     private void addColumnIfMissing(String tableName, String columnName, String definition) {
+        Integer tableCount = jdbc.queryForObject("""
+                select count(*)
+                from information_schema.tables
+                where table_schema = database()
+                  and table_name = ?
+                """, Integer.class, tableName);
+        if (tableCount == null || tableCount == 0) {
+            return;
+        }
         Integer count = jdbc.queryForObject("""
                 select count(*)
                 from information_schema.columns
