@@ -132,7 +132,7 @@ web/
 - **字符集**：`utf8mb4`
 - **表数量**：核心业务表按用户、商品、订单、内容、营销等域拆分
 
-当前微服务 Docker 数据库的商品种子包含 DummyJSON 远程图片 URL 和本地 `/catalog/...` 图片路径。首页轮播使用 DummyJSON CDN 图片，商品详情页展示商品主图和图集（`product_image` 表）。
+当前微服务 Docker 数据库的商品种子包含 194 条 DummyJSON 真实商品，图片全部使用 DummyJSON CDN 远程 URL（`cdn.dummyjson.com`）。商品详情页展示商品主图和图集（`product_image` 表），支持 SKU 变体选择（`product_sku` 表）。
 
 ### 4.2 表结构清单
 

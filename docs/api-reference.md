@@ -62,8 +62,8 @@
 | PUT | `/api/products/admin` | ADMIN | 编辑商品 |
 | DELETE | `/api/products/admin/{id}` | ADMIN | 软删除（下架+清零库存） |
 | DELETE | `/api/products/admin/{id}/force` | ADMIN | 物理删除 |
-| POST | `/api/products/admin/import` | ADMIN | CSV 批量导入 |
-| GET | `/api/products/admin/export` | ADMIN | Excel 导出 |
+| POST | `/api/products/admin/import` | ADMIN | 批量导入（支持 CSV 和 XLSX） |
+| GET | `/api/products/admin/export` | ADMIN | 导出（支持 XLSX 和 CSV） |
 
 ## 分类 `/api/categories`
 

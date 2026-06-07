@@ -14,7 +14,7 @@
 | 单体完整接口冒烟 | `python3 scripts/acceptance_api_smoke.py` | 8 组流程全部 PASS |
 | 微服务专项冒烟 | `scripts/microservices_smoke_test.sh` | Nacos/Gateway/Feign/库存扣减全部 PASS |
 | 微服务网关完整接口冒烟 | `ACCEPTANCE_BASE_URL=http://127.0.0.1:18090/api ACCEPTANCE_MAILHOG_URL=http://127.0.0.1:18199 python3 scripts/acceptance_api_smoke.py` | 8 组流程全部 PASS |
-| 浏览器图片加载 | 用户端首页 DOM 检查 `document.images`，并验证 `/catalog/*.webp`、`/catalog/placeholder.svg` MIME | 14/14 图片加载成功，坏图 0 |
+| 浏览器图片加载 | 用户端首页 DOM 检查 `document.images`，验证 DummyJSON CDN 图片 MIME | 图片全部加载成功 |
 
 已完成的人工巡检：
 
@@ -26,7 +26,7 @@
 | legacy 传统 Web 证据 | `http://localhost:18080/legacy/status`、`http://localhost:18081` | Listener/Filter/JDBC/JSP/Servlet 证据可访问，作为 fallback |
 | 响应式布局 | 390px、768px 视口 | 用户端可浏览，后台移动菜单抽屉可打开 |
 
-人工巡检备注：当前数据库可能包含自动化冒烟和导入测试留下的 QA 用户、QA 分类、测试商品、测试订单、测试地址等数据；最终课堂演示或重新截图前应重置为干净种子数据。商品主种子已切换为 30 条 DummyJSON 商品，包含远程商品图、品牌、评分、折扣、SKU、保修、配送、图集、规格和评价；若持久化运行库仍显示旧 `/catalog/...` 商品，执行 `scripts/reset_demo_data.sh microservices` 后再巡检。
+人工巡检备注：当前数据库可能包含自动化冒烟和导入测试留下的 QA 用户、QA 分类、测试商品、测试订单、测试地址等数据；最终课堂演示或重新截图前应重置为干净种子数据。商品主种子为 194 条 DummyJSON 真实商品（含远程 CDN 图片 URL、品牌、评分、折扣、SKU 变体、保修、配送、图集、规格和评价），图片全部来自 `cdn.dummyjson.com`；若持久化运行库仍显示旧 `/catalog/...` 商品，执行 `scripts/reset_demo_data.sh microservices` 后再巡检。
 
 问题记录：本轮人工巡检发现的问题、影响和修复结果见 [manual-qa-issues.md](manual-qa-issues.md)。
 
