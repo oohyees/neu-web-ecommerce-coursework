@@ -3,11 +3,10 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { fetchHomeData, trackSearch } from '@/api/notice'
 import { type Product, fetchCategories, type Category } from '@/api/product'
+import { normalizeCoupon } from '@/api/coupon'
 import { imageOrPlaceholder } from '@/utils/image'
 
 const router = useRouter()
-const searchKeyword = ref('')
-const placeholderIndex = ref(0)
 
 // ═══ 首页数据 ═══
 const banners = ref<{ id: number; imageUrl: string; linkUrl: string; title?: string; relatedProducts?: any[] }[]>([])
@@ -19,18 +18,6 @@ const promotions = ref<any[]>([])
 const coupons = ref<any[]>([])
 const reviews = ref<any[]>([])
 const hoverCatId = ref<number | null>(null)
-
-// 旋转搜索占位符
-const rotatingPlaceholders = computed(() => {
-  const fromHot = hotSearches.value
-  const fromProducts = hotProducts.value.slice(0, 6).map((p) => p.name)
-  return [...fromHot, ...fromProducts].filter(Boolean)
-})
-const currentPlaceholder = computed(() => {
-  const list = rotatingPlaceholders.value
-  if (!list.length) return '搜索你想要的商品...'
-  return list[placeholderIndex.value % list.length]
-})
 
 // 品牌推荐：从热门商品中提取品牌
 const brands = computed(() => {
@@ -62,18 +49,10 @@ async function loadHome() {
     newProducts.value = data.newProducts || []
     hotSearches.value = (data.hotSearches || []).map((h: any) => h.keyword || h)
     promotions.value = data.promotions || []
-    coupons.value = data.coupons || []
+    coupons.value = (data.coupons || []).map(normalizeCoupon)
     reviews.value = data.reviews || []
     categories.value = catRes
   } catch { /* 静默降级 */ }
-}
-
-function goSearch(kw?: string) {
-  const q = (kw || searchKeyword.value || currentPlaceholder.value).trim()
-  if (q) {
-    trackSearch(q)
-    router.push({ path: '/search', query: { keyword: q } })
-  }
 }
 
 function goSearchTag(kw: string) {
@@ -108,46 +87,11 @@ function formatSales(n?: number) {
 
 onMounted(() => {
   loadHome()
-  setInterval(() => {
-    const len = rotatingPlaceholders.value.length
-    if (len) placeholderIndex.value = (placeholderIndex.value + 1) % len
-  }, 2800)
 })
 </script>
 
 <template>
   <div class="home-page">
-
-    <!-- ═══ 搜索顶栏 ═══ -->
-    <section class="search-header">
-      <div class="search-top">
-        <div class="brand" @click="router.push('/')">
-          <span class="brand-main">优品</span>
-          <span class="brand-divider">|</span>
-          <span class="brand-sub">品质生活</span>
-        </div>
-        <div class="search-area">
-          <div class="search-box">
-            <input
-              v-model="searchKeyword"
-              :placeholder="currentPlaceholder"
-              class="search-input"
-              @keydown.enter="goSearch()"
-            />
-            <button class="search-btn" type="button" @click="goSearch()">搜索</button>
-          </div>
-          <div v-if="hotSearches.length" class="hot-keywords">
-            <span class="label">热搜</span>
-            <a v-for="kw in hotSearches.slice(0, 8)" :key="kw" href="#" @click.prevent="goSearch(kw)">{{ kw }}</a>
-          </div>
-        </div>
-        <nav class="header-nav">
-          <router-link to="/cart">购物车</router-link>
-          <router-link to="/orders">我的订单</router-link>
-          <router-link to="/seckill">限时秒杀</router-link>
-        </nav>
-      </div>
-    </section>
 
     <!-- ═══ 主体内容 ═══ -->
     <div class="home-body">
@@ -179,8 +123,8 @@ onMounted(() => {
                       </div>
                       <div v-if="coupons.length" class="banner-coupons">
                         <div v-for="c in coupons.slice(0, 3)" :key="c.id" class="mini-coupon" @click.stop>
-                          <span class="mc-amount">¥{{ c.discountAmount }}</span>
-                          <span class="mc-threshold">满{{ c.thresholdAmount }}可用</span>
+                          <span class="mc-amount">¥{{ c.value }}</span>
+                          <span class="mc-threshold">满{{ c.minAmount }}可用</span>
                         </div>
                       </div>
                     </div>
@@ -297,11 +241,11 @@ onMounted(() => {
           <div v-for="c in coupons" :key="c.id" class="coupon-card">
             <div class="coupon-left">
               <span class="coupon-symbol">¥</span>
-              <span class="coupon-amount">{{ c.discountAmount }}</span>
+              <span class="coupon-amount">{{ c.value }}</span>
             </div>
             <div class="coupon-right">
               <div class="coupon-name">{{ c.name }}</div>
-              <div class="coupon-threshold">满{{ c.thresholdAmount }}元可用</div>
+              <div class="coupon-threshold">满{{ c.minAmount }}元可用</div>
               <button class="coupon-btn">立即领取</button>
             </div>
           </div>
@@ -387,124 +331,6 @@ onMounted(() => {
 .home-page {
   min-height: 100vh;
   background: var(--color-bg, #f4f4f5);
-}
-
-/* ═══ 搜索顶栏 ═══ */
-.search-header {
-  background: linear-gradient(180deg, #fff 0%, #fffaf7 55%, #fff 100%);
-  padding: 28px 0 20px;
-  border-bottom: 1px solid rgba(255, 107, 53, 0.08);
-}
-.search-top {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  align-items: flex-end;
-  gap: 28px;
-}
-.brand {
-  flex-shrink: 0;
-  cursor: pointer;
-  padding-bottom: 8px;
-}
-.brand-main {
-  font-size: 40px;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 3px;
-}
-.brand-divider {
-  margin: 0 10px;
-  color: #e0e0e0;
-  font-weight: 200;
-  -webkit-text-fill-color: #e0e0e0;
-}
-.brand-sub {
-  font-size: 17px;
-  color: #555;
-  font-weight: 600;
-  -webkit-text-fill-color: #555;
-}
-.search-area {
-  flex: 1;
-  max-width: 640px;
-  padding-bottom: 4px;
-}
-.search-box {
-  display: flex;
-  height: 48px;
-  border-radius: 26px;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.12);
-  border: 2px solid var(--color-primary);
-}
-.search-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  padding: 0 22px;
-  font-size: 15px;
-  background: transparent;
-}
-.search-btn {
-  border: none;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
-  color: #fff;
-  padding: 0 32px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: filter 0.2s;
-}
-.search-btn:hover {
-  filter: brightness(1.08);
-}
-.hot-keywords {
-  margin-top: 12px;
-  font-size: 13px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 0;
-}
-.hot-keywords .label {
-  color: var(--color-primary);
-  font-weight: 600;
-  margin-right: 12px;
-  flex-shrink: 0;
-}
-.hot-keywords a {
-  margin-right: 18px;
-  color: #666;
-  transition: color 0.2s;
-}
-.hot-keywords a:hover {
-  color: var(--color-primary);
-}
-.header-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 18px;
-  flex-shrink: 0;
-  padding-bottom: 12px;
-}
-.header-nav a {
-  font-size: 14px;
-  color: #666;
-  white-space: nowrap;
-  transition: color 0.2s;
-}
-.header-nav a:hover {
-  color: var(--color-primary);
 }
 
 /* ═══ 主体 ═══ */
@@ -1305,9 +1131,6 @@ onMounted(() => {
   .mc-amount {
     font-size: 13px;
   }
-  .header-nav {
-    display: none;
-  }
   .promo-card {
     width: 280px;
     flex: 0 0 280px;
@@ -1315,21 +1138,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .search-top {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .brand-main {
-    font-size: 28px;
-  }
-  .brand-sub {
-    font-size: 14px;
-  }
-  .search-area {
-    order: 3;
-    max-width: none;
-    width: 100%;
-  }
   .composite-layout {
     flex-direction: column;
   }
@@ -1386,19 +1194,6 @@ onMounted(() => {
   .product-card {
     width: calc(50% - 8px);
     flex: 0 0 calc(50% - 8px);
-  }
-  .search-header {
-    padding: 16px 0 12px;
-  }
-  .search-box {
-    height: 42px;
-  }
-  .search-btn {
-    padding: 0 20px;
-    font-size: 14px;
-  }
-  .hot-keywords {
-    font-size: 12px;
   }
 }
 </style>

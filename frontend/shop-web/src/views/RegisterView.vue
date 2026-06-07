@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { sendCode, registerByEmail } from '@/api/user'
@@ -9,6 +9,9 @@ const form = ref({ username: '', password: '', nickname: '', email: '', phone: '
 const sending = ref(false)
 const loading = ref(false)
 const countdown = ref(0)
+let countdownTimer: ReturnType<typeof setInterval> | undefined
+
+onUnmounted(() => { if (countdownTimer) clearInterval(countdownTimer) })
 
 async function handleSendCode() {
   if (!form.value.email) { ElMessage.warning('请输入邮箱'); return }
@@ -17,7 +20,8 @@ async function handleSendCode() {
     await sendCode({ email: form.value.email, purpose: 'REGISTER' })
     ElMessage.success('验证码已发送')
     countdown.value = 60
-    const timer = setInterval(() => { countdown.value--; if (countdown.value <= 0) clearInterval(timer) }, 1000)
+    if (countdownTimer) clearInterval(countdownTimer)
+    countdownTimer = setInterval(() => { countdown.value--; if (countdown.value <= 0) { clearInterval(countdownTimer); countdownTimer = undefined } }, 1000)
   } catch { /* handled */ }
   finally { sending.value = false }
 }

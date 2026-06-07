@@ -11,6 +11,18 @@ export interface Coupon {
   startAt: string
   endAt: string
   enabled: boolean
+  /** 后端原始字段别名 */
+  discountAmount?: number
+  thresholdAmount?: number
+}
+
+/** 将后端字段映射为前端统一字段 */
+export function normalizeCoupon(raw: any): Coupon {
+  return {
+    ...raw,
+    value: raw.value ?? raw.discountAmount ?? 0,
+    minAmount: raw.minAmount ?? raw.thresholdAmount ?? 0,
+  }
 }
 
 export function fetchAvailableCoupons() {

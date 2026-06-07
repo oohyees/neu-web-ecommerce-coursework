@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#F97316" ss:Pattern="Solid"/><Font ss:Color="#FFFFFF"/></Style>
+  </Styles>
+  <Worksheet ss:Name="商品数据">
+    <Table>
+      <Row ss:StyleID="Header">
+        <Cell><Data ss:Type="String">ID</Data></Cell>
+        <Cell><Data ss:Type="String">名称</Data></Cell>
+        <Cell><Data ss:Type="String">副标题</Data></Cell>
+        <Cell><Data ss:Type="String">分类ID</Data></Cell>
+        <Cell><Data ss:Type="String">价格</Data></Cell>
+        <Cell><Data ss:Type="String">原价</Data></Cell>
+        <Cell><Data ss:Type="String">库存</Data></Cell>
+        <Cell><Data ss:Type="String">图片</Data></Cell>
+        <Cell><Data ss:Type="String">上架</Data></Cell>
+        <Cell><Data ss:Type="String">销量</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="Number">6011</Data></Cell>
+        <Cell><Data ss:Type="String">降噪耳机 Max</Data></Cell>
+        <Cell><Data ss:Type="String">主动降噪 40小时续航</Data></Cell>
+        <Cell><Data ss:Type="Number">5</Data></Cell>
+        <Cell><Data ss:Type="Number">899</Data></Cell>
+        <Cell><Data ss:Type="Number">1299</Data></Cell>
+        <Cell><Data ss:Type="Number">60</Data></Cell>
+        <Cell><Data ss:Type="String">https://cdn.dummyjson.com/product-images/mobile-accessories/apple-airpods-max-silver/1.webp</Data></Cell>
+        <Cell><Data ss:Type="String">是</Data></Cell>
+        <Cell><Data ss:Type="Number">88</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="Number">6012</Data></Cell>
+        <Cell><Data ss:Type="String">平板支架</Data></Cell>
+        <Cell><Data ss:Type="String">铝合金 可调节角度</Data></Cell>
+        <Cell><Data ss:Type="Number">8</Data></Cell>
+        <Cell><Data ss:Type="Number">69</Data></Cell>
+        <Cell><Data ss:Type="Number">99</Data></Cell>
+        <Cell><Data ss:Type="Number">250</Data></Cell>
+        <Cell><Data ss:Type="String">https://cdn.dummyjson.com/product-images/mobile-accessories/selfie-stick-monopod/1.webp</Data></Cell>
+        <Cell><Data ss:Type="String">是</Data></Cell>
+        <Cell><Data ss:Type="Number">520</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="Number">6013</Data></Cell>
+        <Cell><Data ss:Type="String">保温杯</Data></Cell>
+        <Cell><Data ss:Type="String">316不锈钢 12小时保温</Data></Cell>
+        <Cell><Data ss:Type="Number">20</Data></Cell>
+        <Cell><Data ss:Type="Number">79</Data></Cell>
+        <Cell><Data ss:Type="Number">129</Data></Cell>
+        <Cell><Data ss:Type="Number">400</Data></Cell>
+        <Cell><Data ss:Type="String">https://cdn.dummyjson.com/product-images/skin-care/cerave-moisturizing-cream/1.webp</Data></Cell>
+        <Cell><Data ss:Type="String">是</Data></Cell>
+        <Cell><Data ss:Type="Number">730</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="Number">6014</Data></Cell>
+        <Cell><Data ss:Type="String">USB-C 扩展坞</Data></Cell>
+        <Cell><Data ss:Type="String">7合1 HDMI+SD+USB3.0</Data></Cell>
+        <Cell><Data ss:Type="Number">7</Data></Cell>
+        <Cell><Data ss:Type="Number">159</Data></Cell>
+        <Cell><Data ss:Type="Number">229</Data></Cell>
+        <Cell><Data ss:Type="Number">90</Data></Cell>
+        <Cell><Data ss:Type="String">https://cdn.dummyjson.com/product-images/laptops/asus-rog-strix-g16/1.webp</Data></Cell>
+        <Cell><Data ss:Type="String">是</Data></Cell>
+        <Cell><Data ss:Type="Number">145</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="Number">6015</Data></Cell>
+        <Cell><Data ss:Type="String">瑜伽垫</Data></Cell>
+        <Cell><Data ss:Type="String">TPE环保 防滑加厚</Data></Cell>
+        <Cell><Data ss:Type="Number">20</Data></Cell>
+        <Cell><Data ss:Type="Number">59</Data></Cell>
+        <Cell><Data ss:Type="Number">89</Data></Cell>
+        <Cell><Data ss:Type="Number">350</Data></Cell>
+        <Cell><Data ss:Type="String">https://cdn.dummyjson.com/product-images/home-decoration/table-lamp/1.webp</Data></Cell>
+        <Cell><Data ss:Type="String">是</Data></Cell>
+        <Cell><Data ss:Type="Number">410</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>

@@ -2,9 +2,11 @@
 import { computed, ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Search } from '@element-plus/icons-vue'
-import { fetchAdminOrders, shipOrder, approveRefund, updateOrderStatus, exportOrders } from '@/api/order'
+import { fetchAdminOrders, shipOrder, approveRefund, updateOrderStatus } from '@/api/order'
+import { exportFile } from '@/utils/export'
 
 const orders = ref<any[]>([]); const total = ref(0); const page = ref(1); const keyword = ref(''); const status = ref(''); const loading = ref(false)
+const exportFormat = ref<'xlsx' | 'csv'>('xlsx')
 
 async function load() {
   loading.value = true
@@ -26,9 +28,28 @@ function statusClass(v: string) {
   return 'status-pill--info'
 }
 const paidCount = computed(() => orders.value.filter((o) => o.paymentStatus === 'PAID').length)
-const pendingCount = computed(() => orders.value.filter((o) => o.status === 'PENDING').length)
 const shipCount = computed(() => orders.value.filter((o) => o.status === 'PAID').length)
 const currentPageAmount = computed(() => orders.value.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0))
+
+function handleExport() {
+  if (!orders.value.length) { ElMessage.warning('当前无数据可导出'); return }
+  const columns = [
+    { key: 'orderNo', label: '订单号' },
+    { key: 'userId', label: '用户ID' },
+    { key: 'totalAmount', label: '金额' },
+    { key: 'status', label: '订单状态' },
+    { key: 'paymentStatus', label: '支付状态' },
+    { key: 'createTime', label: '创建时间' },
+  ]
+  const data = orders.value.map((o) => ({
+    ...o,
+    status: statusText[o.status] || o.status,
+    paymentStatus: paymentText[o.paymentStatus] || o.paymentStatus,
+  }))
+  exportFile(data, columns, `订单导出_${new Date().toISOString().slice(0, 10)}`, exportFormat.value)
+  ElMessage.success(`已导出 ${data.length} 条记录（${exportFormat.value.toUpperCase()}）`)
+}
+
 onMounted(load)
 </script>
 <template>
@@ -44,15 +65,19 @@ onMounted(load)
           <el-option label="待支付" value="PENDING" /><el-option label="已支付" value="PAID" /><el-option label="已发货" value="SHIPPED" /><el-option label="已完成" value="COMPLETED" /><el-option label="已取消" value="CANCELLED" />
         </el-select>
         <el-button @click="resetFilters">重置</el-button>
-        <el-button :icon="Download" @click="exportOrders()">导出Excel</el-button>
+        <el-select v-model="exportFormat" size="default" style="width:100px">
+          <el-option label="XLSX" value="xlsx" />
+          <el-option label="CSV" value="csv" />
+        </el-select>
+        <el-button :icon="Download" @click="handleExport">导出</el-button>
       </div>
     </div>
 
     <div class="admin-summary">
-      <div class="summary-card"><div class="summary-card__label">当前页金额</div><div class="summary-card__value">¥{{ currentPageAmount.toFixed(0) }}</div><div class="summary-card__hint">按筛选结果实时统计</div></div>
-      <div class="summary-card"><div class="summary-card__label">已支付</div><div class="summary-card__value">{{ paidCount }}</div><div class="summary-card__hint">可进入履约流程</div></div>
-      <div class="summary-card"><div class="summary-card__label">待发货</div><div class="summary-card__value">{{ shipCount }}</div><div class="summary-card__hint">后台最常用操作</div></div>
-      <div class="summary-card"><div class="summary-card__label">待支付</div><div class="summary-card__value">{{ pendingCount }}</div><div class="summary-card__hint">可取消或等待支付</div></div>
+      <div class="summary-card"><div class="summary-card__label">筛选总记录</div><div class="summary-card__value">{{ total }}</div><div class="summary-card__hint">符合当前筛选条件</div></div>
+      <div class="summary-card"><div class="summary-card__label">本页金额</div><div class="summary-card__value">¥{{ currentPageAmount.toFixed(0) }}</div><div class="summary-card__hint">当前页实时统计</div></div>
+      <div class="summary-card"><div class="summary-card__label">本页已支付</div><div class="summary-card__value">{{ paidCount }}</div><div class="summary-card__hint">可进入履约流程</div></div>
+      <div class="summary-card"><div class="summary-card__label">本页待发货</div><div class="summary-card__value">{{ shipCount }}</div><div class="summary-card__hint">后台最常用操作</div></div>
     </div>
 
     <div class="table-panel">

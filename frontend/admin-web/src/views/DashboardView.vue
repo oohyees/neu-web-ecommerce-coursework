@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import * as echarts from 'echarts'
 import { fetchDashboard } from '@/api/dashboard'
 
@@ -7,6 +7,7 @@ const stats = ref<any>({})
 const trendRef = ref<HTMLElement>()
 const hotRef = ref<HTMLElement>()
 const statusRef = ref<HTMLElement>()
+const chartInstances: echarts.ECharts[] = []
 
 async function load() {
   try { const res: any = await fetchDashboard(); stats.value = res.data ?? res } catch { /* handled */ }
@@ -15,19 +16,23 @@ async function load() {
 function renderCharts() {
   if (trendRef.value && stats.value.salesTrend) {
     const c = echarts.init(trendRef.value)
+    chartInstances.push(c)
     c.setOption({ tooltip:{trigger:'axis'}, xAxis:{type:'category',data:(stats.value.salesTrend||[]).map((t:any)=>t.day).reverse()}, yAxis:{type:'value'}, series:[{data:(stats.value.salesTrend||[]).map((t:any)=>t.amount).reverse(),type:'line',smooth:true,color:'#ff6b35',areaStyle:{color:'rgba(255,107,53,0.1)'}}] })
   }
   if (hotRef.value && stats.value.hotProducts) {
     const c = echarts.init(hotRef.value)
+    chartInstances.push(c)
     c.setOption({ tooltip:{trigger:'axis'}, xAxis:{type:'category',data:(stats.value.hotProducts||[]).map((p:any)=>p.name?.slice(0,8))}, yAxis:{type:'value'}, series:[{data:(stats.value.hotProducts||[]).map((p:any)=>p.sales),type:'bar',color:'#ff8c5a'}] })
   }
   if (statusRef.value && stats.value.orderStatus) {
     const c = echarts.init(statusRef.value)
+    chartInstances.push(c)
     c.setOption({ tooltip:{trigger:'item'}, series:[{type:'pie',radius:['40%','70%'],data:(stats.value.orderStatus||[]).map((s:any)=>({name:s.status,value:s.value})),color:['#f59e0b','#3b82f6','#8b5cf6','#22c55e','#ef4444','#6b7280']}] })
   }
 }
 
 onMounted(async () => { await load(); setTimeout(renderCharts, 200) })
+onUnmounted(() => { chartInstances.forEach(c => c.dispose()); chartInstances.length = 0 })
 </script>
 <template>
   <div class="admin-page dashboard-page">

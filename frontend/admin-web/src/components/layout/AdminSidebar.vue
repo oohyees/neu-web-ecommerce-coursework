@@ -207,6 +207,21 @@ function isVisible(item: { permission?: string; superOnly?: boolean }): boolean 
 .sidebar-menu :deep(.el-sub-menu__title) {
   font-weight: 700;
 }
+.sidebar-menu :deep(.el-sub-menu .el-menu) {
+  background: transparent;
+}
+.sidebar-menu :deep(.el-sub-menu .el-menu .el-menu-item) {
+  color: rgba(255,255,255,0.65);
+  min-width: 0;
+}
+.sidebar-menu :deep(.el-sub-menu .el-menu .el-menu-item:hover) {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+.sidebar-menu :deep(.el-sub-menu .el-menu .el-menu-item.is-active) {
+  background: var(--color-primary, #ff6b35);
+  color: #fff;
+}
 .sidebar-menu :deep(.el-menu-item .el-icon),
 .sidebar-menu :deep(.el-sub-menu__title .el-icon) {
   margin-right: 8px;

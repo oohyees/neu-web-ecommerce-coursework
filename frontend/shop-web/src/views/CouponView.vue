@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { fetchMyCoupons, fetchAvailableCoupons, claimCoupon } from '@/api/coupon'
+import { fetchMyCoupons, fetchAvailableCoupons, claimCoupon, normalizeCoupon } from '@/api/coupon'
 
 const myCoupons = ref<any[]>([])
 const available = ref<any[]>([])
@@ -9,8 +9,8 @@ const available = ref<any[]>([])
 async function load() {
   try {
     const [my, all] = await Promise.all([fetchMyCoupons(), fetchAvailableCoupons()])
-    myCoupons.value = (my as any).data ?? []
-    available.value = (all as any).data ?? []
+    myCoupons.value = ((my as any).data ?? []).map(normalizeCoupon)
+    available.value = ((all as any).data ?? []).map(normalizeCoupon)
   } catch { /* handled */ }
 }
 
@@ -42,8 +42,8 @@ onMounted(load)
       <h3>可领取</h3>
       <div class="coupon-list">
         <div v-for="c in available" :key="c.id" class="coupon-card">
-          <div class="coupon-amount">¥{{ c.value || c.discountAmount }}</div>
-          <div class="coupon-cond">满{{ c.minAmount || c.thresholdAmount }}可用</div>
+          <div class="coupon-amount">¥{{ c.value }}</div>
+          <div class="coupon-cond">满{{ c.minAmount }}可用</div>
           <el-button size="small" type="primary" @click="handleClaim(c.id)">领取</el-button>
         </div>
       </div>
@@ -52,7 +52,7 @@ onMounted(load)
       <h3>已领取</h3>
       <div v-if="myCoupons.length" class="coupon-list">
         <div v-for="c in myCoupons" :key="c.id" class="coupon-card used">
-          <div class="coupon-amount">¥{{ c.value || c.discountAmount }}</div>
+          <div class="coupon-amount">¥{{ c.value }}</div>
           <div class="coupon-cond">{{ c.status === 'USED' ? '已使用' : '未使用' }}</div>
         </div>
       </div>

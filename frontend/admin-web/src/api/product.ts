@@ -1,4 +1,16 @@
 import request from './request'
+import axios from 'axios'
+import { useAdminStore } from '@/stores/admin'
+
+// 文件上传
+export function uploadImage(file: File) {
+  const adminStore = useAdminStore()
+  const form = new FormData()
+  form.append('file', file)
+  return axios.post('/api/files/upload', form, {
+    headers: { 'Content-Type': 'multipart/form-data', Authorization: adminStore.token ? `Bearer ${adminStore.token}` : '' },
+  }).then(res => res.data)
+}
 
 // 商品管理
 export function fetchAdminProducts(params: Record<string, unknown>) {

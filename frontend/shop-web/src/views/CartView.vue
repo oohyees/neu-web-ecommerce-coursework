@@ -50,6 +50,10 @@ function toggleCheck(id: number) {
 async function changeQty(item: CartItem, delta: number) {
   const newQty = item.quantity + delta
   if (newQty < 1) return
+  if (item.stock != null && newQty > item.stock) {
+    ElMessage.warning(`库存不足，最多可购买 ${item.stock} 件`)
+    return
+  }
   try {
     await updateCartQuantity({ cartItemId: item.id, quantity: newQty })
     item.quantity = newQty

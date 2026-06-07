@@ -2,7 +2,8 @@
 import { computed, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Download, Plus, Search, Upload } from '@element-plus/icons-vue'
-import { fetchAdminProducts, createProduct, updateProduct, deleteProduct, forceDeleteProduct, exportProducts, importProducts, fetchCategories } from '@/api/product'
+import { fetchAdminProducts, createProduct, updateProduct, deleteProduct, forceDeleteProduct, fetchCategories, uploadImage } from '@/api/product'
+import { exportFile, parseImportFile } from '@/utils/export'
 
 const products = ref<any[]>([])
 const categories = ref<any[]>([])
@@ -10,7 +11,9 @@ const total = ref(0); const page = ref(1); const keyword = ref('')
 const categoryId = ref<number | undefined>()
 const saleStatus = ref<string>('')
 const dialogVisible = ref(false); const editing = ref<any>(null)
-const form = ref<any>({}); const loading = ref(false)
+const form = ref<any>({}); const loading = ref(false); const uploading = ref(false)
+const exportFormat = ref<'xlsx' | 'csv'>('xlsx')
+const importing = ref(false)
 
 async function load() {
   loading.value = true
@@ -47,7 +50,78 @@ async function handleSave() {
 }
 async function handleDelete(p: any) { try { await ElMessageBox.confirm('确定删除？','提示',{type:'warning'}); await deleteProduct(p.id); ElMessage.success('已下架'); load() } catch { /* cancelled */ } }
 async function handleForceDelete(p: any) { try { await ElMessageBox.confirm('物理删除不可恢复！','警告',{type:'error'}); await forceDeleteProduct(p.id); ElMessage.success('已删除'); load() } catch { /* cancelled */ } }
-async function handleImport(e: Event) { const f = (e.target as HTMLInputElement).files?.[0]; if (f) { try { await importProducts(f); ElMessage.success('导入成功'); load() } catch { /* handled */ } } }
+async function handleImport(e: Event) {
+  const f = (e.target as HTMLInputElement).files?.[0]
+  if (!f) return
+  importing.value = true
+  try {
+    const { headers, rows } = await parseImportFile(f)
+    let imported = 0
+    for (const row of rows) {
+      try {
+        const data: Record<string, unknown> = {}
+        headers.forEach((h) => {
+          const val = row[h]
+          if (h === '价格' || h === 'price') data.price = Number(val) || 0
+          else if (h === '原价' || h === 'originalPrice') data.originalPrice = Number(val) || null
+          else if (h === '库存' || h === 'stock') data.stock = Number(val) || 0
+          else if (h === '分类ID' || h === 'categoryId') data.categoryId = Number(val) || null
+          else if (h === '上架' || h === 'isOnSale') data.isOnSale = val === '是' || val === 'true' || val === '1'
+          else if (h === '名称' || h === 'name') data.name = val
+          else if (h === '副标题' || h === 'subtitle') data.subtitle = val
+          else if (h === '图片' || h === 'imageUrl') data.imageUrl = val
+          else if (h === '详情' || h === 'detailHtml') data.detailHtml = val
+          else if (h === '参数' || h === 'paramsText') data.paramsText = val
+          else data[h] = val
+        })
+        if (!data.name) continue
+        if (row['ID'] || row['id']) {
+          data.id = Number(row['ID'] || row['id'])
+          await updateProduct(data)
+        } else {
+          await createProduct(data)
+        }
+        imported++
+      } catch { /* skip row */ }
+    }
+    ElMessage.success(`成功导入 ${imported} 条商品`)
+    load()
+  } catch (e) {
+    ElMessage.error((e as Error).message || '导入失败')
+  } finally {
+    importing.value = false
+    ;(e.target as HTMLInputElement).value = ''
+  }
+}
+
+function handleExport() {
+  if (!products.value.length) { ElMessage.warning('当前无数据可导出'); return }
+  const columns = [
+    { key: 'id', label: 'ID' },
+    { key: 'name', label: '名称' },
+    { key: 'subtitle', label: '副标题' },
+    { key: 'categoryId', label: '分类ID' },
+    { key: 'price', label: '价格' },
+    { key: 'originalPrice', label: '原价' },
+    { key: 'stock', label: '库存' },
+    { key: 'imageUrl', label: '图片' },
+    { key: 'isOnSale', label: '上架' },
+    { key: 'sales', label: '销量' },
+  ]
+  const data = products.value.map((p) => ({
+    ...p,
+    isOnSale: p.isOnSale ? '是' : '否',
+  }))
+  exportFile(data, columns, `商品导出_${new Date().toISOString().slice(0, 10)}`, exportFormat.value)
+  ElMessage.success(`已导出 ${data.length} 条记录（${exportFormat.value.toUpperCase()}）`)
+}
+async function handleImageUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]; if (!file) return
+  uploading.value = true
+  try { const res: any = await uploadImage(file); form.value.imageUrl = res.data ?? res; ElMessage.success('图片上传成功') }
+  catch { ElMessage.error('上传失败') }
+  finally { uploading.value = false; (e.target as HTMLInputElement).value = '' }
+}
 const onSaleCount = computed(() => products.value.filter((p) => p.isOnSale).length)
 const offSaleCount = computed(() => products.value.filter((p) => !p.isOnSale).length)
 const lowStockCount = computed(() => products.value.filter((p) => Number(p.stock || 0) > 0 && Number(p.stock || 0) <= 5).length)
@@ -72,8 +146,16 @@ onMounted(load)
         </el-select>
         <el-button @click="resetFilters">重置</el-button>
         <el-button type="primary" :icon="Plus" @click="openAdd">新增</el-button>
-        <el-button :icon="Download" @click="exportProducts()">导出Excel</el-button>
-        <label class="import-btn"><el-icon><Upload /></el-icon><input type="file" accept=".csv" hidden @change="handleImport" />导入CSV</label>
+        <el-select v-model="exportFormat" size="default" style="width:100px">
+          <el-option label="XLSX" value="xlsx" />
+          <el-option label="CSV" value="csv" />
+        </el-select>
+        <el-button :icon="Download" @click="handleExport">导出</el-button>
+        <label class="import-btn" :class="{ 'is-loading': importing }">
+          <el-icon><Upload /></el-icon>
+          <input type="file" accept=".xlsx,.csv,.xls" hidden @change="handleImport" :disabled="importing" />
+          {{ importing ? '导入中...' : '导入' }}
+        </label>
       </div>
     </div>
 
@@ -136,7 +218,13 @@ onMounted(load)
         <el-form-item label="价格"><el-input-number v-model="form.price" :min="0" :step="0.01" /></el-form-item>
         <el-form-item label="原价"><el-input-number v-model="form.originalPrice" :min="0" :step="0.01" /></el-form-item>
         <el-form-item label="库存"><el-input-number v-model="form.stock" :min="0" /></el-form-item>
-        <el-form-item label="图片URL"><el-input v-model="form.imageUrl" /></el-form-item>
+        <el-form-item label="图片">
+          <div style="display:flex;gap:8px;width:100%">
+            <el-input v-model="form.imageUrl" placeholder="图片URL" style="flex:1" />
+            <label class="upload-btn"><span :class="{ 'is-loading': uploading }">{{ uploading ? '上传中...' : '上传图片' }}</span><input type="file" accept="image/*" hidden @change="handleImageUpload" :disabled="uploading" /></label>
+          </div>
+          <div v-if="form.imageUrl" style="margin-top:8px"><img :src="form.imageUrl" style="max-width:120px;max-height:80px;border-radius:6px;border:1px solid #eee" /></div>
+        </el-form-item>
         <el-form-item label="详情"><el-input v-model="form.detailHtml" type="textarea" :rows="3" /></el-form-item>
         <el-form-item label="参数"><el-input v-model="form.paramsText" /></el-form-item>
         <el-form-item label="上架"><el-switch v-model="form.isOnSale" /></el-form-item>
@@ -155,4 +243,7 @@ onMounted(load)
 .product-meta small { color: #f97316; font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .compact-cell { display: grid; gap: 3px; color: #f59e0b; font-size: 13px; font-weight: 800; }
 .compact-cell small { color: #ef4444; font-size: 12px; font-weight: 700; }
+.upload-btn { display:inline-flex;align-items:center;padding:0 15px;border:1px solid var(--color-primary);border-radius:4px;color:var(--color-primary);cursor:pointer;font-size:13px;white-space:nowrap;transition:all .2s; }
+.upload-btn:hover { background:var(--color-primary);color:#fff; }
+.upload-btn .is-loading { opacity:.6; }
 </style>

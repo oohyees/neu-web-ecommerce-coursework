@@ -1,4 +1,6 @@
 import request from './request'
+import axios from 'axios'
+import { useUserStore } from '@/stores/user'
 
 // ═══ 类型 ═══
 export interface LoginParams {
@@ -51,4 +53,13 @@ export function changePassword(data: { oldPassword: string; newPassword: string 
 
 export function logout(token: string) {
   return request.post('/auth/logout', { token })
+}
+
+export function uploadAvatar(file: File) {
+  const userStore = useUserStore()
+  const form = new FormData()
+  form.append('file', file)
+  return axios.post('/api/files/upload', form, {
+    headers: { 'Content-Type': 'multipart/form-data', Authorization: userStore.token ? `Bearer ${userStore.token}` : '' },
+  }).then(res => res.data)
 }

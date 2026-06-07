@@ -2,21 +2,27 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { payOrder, fetchMyOrders } from '@/api/order'
+import { payOrder, fetchMyOrders, fetchOrderDetail } from '@/api/order'
 
 const router = useRouter()
 const route = useRoute()
 
 const orderNo = ref((route.query.orderNo as string) || '')
+const orderId = ref(route.query.id ? Number(route.query.id) : 0)
 const orderInfo = ref<any>(null)
 const paying = ref(false)
 
 async function load() {
-  if (!orderNo.value) { router.replace('/orders'); return }
+  if (!orderNo.value && !orderId.value) { router.replace('/orders'); return }
   try {
-    const res: any = await fetchMyOrders()
-    const items = res.data?.items ?? (Array.isArray(res.data) ? res.data : [])
-    orderInfo.value = items.find((o: any) => o.orderNo === orderNo.value)
+    if (orderId.value) {
+      const res: any = await fetchOrderDetail(orderId.value)
+      orderInfo.value = res.data ?? res
+    } else {
+      const res: any = await fetchMyOrders()
+      const items = res.data?.items ?? (Array.isArray(res.data) ? res.data : [])
+      orderInfo.value = items.find((o: any) => o.orderNo === orderNo.value)
+    }
   } catch { /* handled */ }
 }
 

@@ -8,6 +8,9 @@ const router = useRouter()
 const orders = ref<any[]>([])
 const activeStatus = ref('')
 const loading = ref(true)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const statusTabs = [
   { value: '', label: '全部' },
   { value: 'PENDING', label: '待支付' },
@@ -20,10 +23,11 @@ const statusTabs = [
 async function load() {
   loading.value = true
   try {
-    const params: any = { page: 1, size: 50 }
+    const params: any = { page: currentPage.value, size: pageSize.value }
     if (activeStatus.value) params.status = activeStatus.value
     const res: any = await fetchMyOrders(params)
     orders.value = res.data?.items ?? (Array.isArray(res.data) ? res.data : [])
+    total.value = res.data?.total ?? orders.value.length
   } catch { orders.value = [] }
   finally { loading.value = false }
 }
@@ -77,7 +81,7 @@ onMounted(load)
     <div class="status-tabs">
       <button v-for="t in statusTabs" :key="t.value"
               :class="['tab', { active: activeStatus === t.value }]"
-              @click="activeStatus = t.value; load()">{{ t.label }}</button>
+              @click="activeStatus = t.value; currentPage = 1; load()">{{ t.label }}</button>
     </div>
 
     <div v-if="loading"><el-skeleton :rows="5" animated /></div>
@@ -96,11 +100,14 @@ onMounted(load)
         </div>
         <div class="order-actions">
           <el-button v-if="o.status==='PENDING'" size="small" @click="handleCancel(o)">取消</el-button>
-          <el-button v-if="o.status==='PENDING'" size="small" type="primary" @click="router.push(`/payment?orderNo=${o.orderNo}`)">去支付</el-button>
+          <el-button v-if="o.status==='PENDING'" size="small" type="primary" @click="router.push(`/payment?orderNo=${o.orderNo}&id=${o.id}`)">去支付</el-button>
           <el-button v-if="o.status==='SHIPPED'" size="small" type="primary" @click="handleConfirm(o)">确认收货</el-button>
           <el-button v-if="o.status==='PAID'||o.status==='SHIPPED'" size="small" @click="handleRefund(o)">退款</el-button>
         </div>
       </div>
+      <el-pagination v-if="total > pageSize" style="margin-top:16px;justify-content:center"
+        :current-page="currentPage" :page-size="pageSize" :total="total"
+        layout="prev, pager, next" @current-change="(p: number) => { currentPage = p; load() }" />
     </template>
   </div>
 </template>

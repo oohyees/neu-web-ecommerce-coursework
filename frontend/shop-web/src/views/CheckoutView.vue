@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { fetchCart, type CartItem } from '@/api/cart'
 import { fetchAddresses, type UserAddress } from '@/api/address'
-import { fetchMyCoupons, type Coupon } from '@/api/coupon'
+import { fetchMyCoupons, type Coupon, normalizeCoupon } from '@/api/coupon'
 import { createOrder } from '@/api/order'
 import { imageOrPlaceholder } from '@/utils/image'
 
@@ -18,8 +18,20 @@ const selectedAddrId = ref<number | null>(null)
 const selectedCouponId = ref<number | null>(null)
 const submitting = ref(false)
 
+const selectedCoupon = computed(() => {
+  return coupons.value.find(c => c.id === selectedCouponId.value) || null
+})
+
+const discountAmount = computed(() => {
+  if (!selectedCoupon.value) return 0
+  const subtotal = cartItems.value.reduce((s, i) => s + i.price * i.quantity, 0)
+  if (subtotal < selectedCoupon.value.minAmount) return 0
+  return selectedCoupon.value.value
+})
+
 const totalAmount = computed(() => {
-  return cartItems.value.reduce((s, i) => s + i.price * i.quantity, 0).toFixed(2)
+  const subtotal = cartItems.value.reduce((s, i) => s + i.price * i.quantity, 0)
+  return Math.max(0, subtotal - discountAmount.value).toFixed(2)
 })
 
 const cartItemIds = computed(() => {
@@ -41,7 +53,7 @@ async function load() {
       cartItems.value = allItems
     }
     addresses.value = (addrRes as any).data ?? []
-    coupons.value = (couponRes as any).data ?? []
+    coupons.value = ((couponRes as any).data ?? []).map(normalizeCoupon)
     if (addresses.value.length) selectedAddrId.value = addresses.value.find(a => a.isDefault)?.id ?? addresses.value[0].id
   } catch { /* handled */ }
 }
@@ -57,8 +69,9 @@ async function handleSubmit() {
       couponId: selectedCouponId.value ?? undefined,
     })
     const orderNo = res.data?.orderNo ?? res.data
+    const orderId = res.data?.id
     ElMessage.success('下单成功')
-    router.push(`/payment?orderNo=${orderNo}`)
+    router.push(`/payment?orderNo=${orderNo}${orderId ? `&id=${orderId}` : ''}`)
   } catch { /* handled */ }
   finally { submitting.value = false }
 }
@@ -129,7 +142,9 @@ onMounted(load)
 
       <!-- 总计 + 提交 -->
       <div class="checkout-footer">
-        <span class="total">合计：<b>¥{{ totalAmount }}</b></span>
+        <span class="total">合计：<b>¥{{ totalAmount }}</b>
+          <span v-if="discountAmount > 0" class="discount-info">（已优惠 ¥{{ discountAmount.toFixed(2) }}）</span>
+        </span>
         <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit">提交订单</el-button>
       </div>
     </template>
@@ -164,4 +179,5 @@ onMounted(load)
 .checkout-footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 2px solid var(--color-primary); padding: 14px 24px; display: flex; align-items: center; justify-content: flex-end; gap: 20px; z-index: 50; }
 .total { font-size: 14px; }
 .total b { font-size: 22px; color: var(--color-price, #ff0036); }
+.discount-info { font-size: 13px; color: #22c55e; margin-left: 8px; }
 </style>

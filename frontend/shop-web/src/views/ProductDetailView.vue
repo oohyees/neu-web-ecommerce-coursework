@@ -139,9 +139,19 @@ function handleAddToCart() {
   }).catch(() => {})
 }
 
-function handleBuyNow() {
-  handleAddToCart()
-  router.push('/cart')
+async function handleBuyNow() {
+  if (!product.value) return
+  try {
+    await addToCart({
+      productId: product.value.id,
+      skuId: currentSku.value?.id,
+      specText: specText.value ?? undefined,
+      quantity: quantity.value,
+    })
+    ElMessage.success('已添加到购物车')
+    cartStore.refresh()
+    router.push('/cart')
+  } catch { /* handled by interceptor */ }
 }
 
 async function toggleFavorite() {
