@@ -169,6 +169,23 @@ onMounted(() => {
         </aside>
       </section>
 
+      <!-- ═══ 热门搜索 ═══ -->
+      <section v-if="hotSearches.length" class="hot-search-section">
+        <span class="hot-search-label">热搜</span>
+        <div class="hot-search-tags">
+          <span
+            v-for="(kw, idx) in hotSearches"
+            :key="kw"
+            class="hot-search-tag"
+            :class="{ 'top3': idx < 3 }"
+            @click="goSearchTag(kw)"
+          >
+            <span class="hot-rank">{{ idx + 1 }}</span>
+            {{ kw }}
+          </span>
+        </div>
+      </section>
+
       <!-- ═══ 秒杀入口横幅 ═══ -->
       <div v-if="flashSales.length" class="seckill-entry" @click="router.push('/seckill')">
         <span class="seckill-tag">限时秒杀</span>
@@ -607,6 +624,61 @@ onMounted(() => {
 }
 .l2-item:hover {
   color: var(--color-primary);
+}
+
+/* ═══ 热门搜索 ═══ */
+.hot-search-section {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  margin-top: 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+.hot-search-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-price, #ff0036);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.hot-search-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hot-search-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: #f5f5f5;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hot-search-tag:hover {
+  background: var(--color-primary, #ff0036);
+  color: #fff;
+}
+.hot-search-tag.top3 {
+  background: #fff5f5;
+  color: var(--color-price, #ff0036);
+  font-weight: 600;
+}
+.hot-search-tag.top3:hover {
+  background: var(--color-price, #ff0036);
+  color: #fff;
+}
+.hot-rank {
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 16px;
+  text-align: center;
 }
 
 /* ═══ 秒杀入口 ═══ */

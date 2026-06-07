@@ -4,36 +4,39 @@
 
 ## 技术栈与核心机制
 
-### 缓存 — Redis
+### Redis 缓存
 
-Redis 在本项目中承担两个核心职责：
+Redis 用于 token session、邮箱验证码、验证码节流和热点数据缓存，认证服务写 Redis，网关从 Redis 查 session 做鉴权。
 
-1. **无状态会话鉴权**：用户/管理员登录后，auth-service 生成 UUID token，以 `session:{token}` → `{userId}:{role}` 的键值对写入 Redis（TTL 12h）。Gateway 的 `AuthGatewayFilter` 在每个请求到达业务服务前，从 `Authorization: Bearer {token}` 头中提取 token 查 Redis；命中则将 `X-User-Id` 和 `X-Role` 注入请求头放行，未命中返回 401。管理员路径额外校验角色，非 ADMIN/SUPER_ADMIN 返回 403。这样 Gateway 完全无状态，水平扩容不需要同步 session。
-2. **邮箱验证码限流**：注册和重置密码时，验证码存入 `verify:{purpose}:{email}`（TTL 10min），同时写入 `verify:throttle:{purpose}:{email}`（TTL 1min）防止频繁发送。
+- **会话鉴权**：auth-service 登录后写 `session:{token}` → `{userId}:{role}`（TTL 12h），Gateway 每个请求查 Redis 验证，命中则注入 `X-User-Id` / `X-Role` 放行，未命中返回 401；管理员路径额外校验角色。
+- **邮箱验证码**：`verify:{purpose}:{email}`（TTL 10min）存验证码，`verify:throttle:{purpose}:{email}`（TTL 1min）防频繁发送。
+- **热搜排行**：product-service 用 Redis ZSET `hot:search` 实时累计搜索词热度，`/home` 接口合并 DB 种子数据与 Redis 实时数据返回 Top 10 热搜词。
 
-### 微服务 — Spring Cloud Alibaba
+### 微服务架构
 
-四个业务服务 + 一个网关，全部注册到 Nacos：
+我们把系统拆成 gateway、auth、product、order、admin 等服务，通过 Nacos 注册发现、Gateway 统一入口、OpenFeign 服务间调用。
 
 | 服务 | 端口 | 数据库 | 职责 |
 |------|------|--------|------|
 | gateway-service | 18090 | — | 统一入口、路由转发、Redis 鉴权拦截、CORS |
 | auth-service | 18091 | ecommerce_auth | 用户/管理员登录注册、邮箱验证码、会话管理 |
-| product-service | 18092 | ecommerce_product | 商品/分类/库存/评价/收藏/文件上传 |
+| product-service | 18092 | ecommerce_product | 商品/分类/库存/评价/收藏/文件上传/热搜 |
 | order-service | 18093 | ecommerce_order | 购物车/订单/支付/退款/物流/地址 |
 | admin-service | 18094 | ecommerce_product | 后台看板/统计/导入导出/客服 |
 
-服务间调用使用 **OpenFeign**：order-service 通过 Feign Client 调 product-service 的 `/internal/products/{id}/order-view` 查商品信息和 `/internal/products/{id}/deduct-stock` 扣库存，Nacos 负责服务发现，Spring Cloud LoadBalancer 做客户端负载均衡。Gateway 通过 `StripPrefix=1` 将 `/api/auth/**` → auth-service `/auth/**`、`/api/products/**` → product-service `/products/**` 等路由规则分发请求。
+- **Nacos 注册发现**：各服务启动自动注册，Gateway 通过 `lb://service-name` 做负载均衡路由。
+- **OpenFeign 服务间调用**：order-service 通过 Feign Client 调 product-service 查商品信息和扣库存。
+- **Gateway 路由**：`StripPrefix=1` 将 `/api/auth/**` → auth-service、`/api/products/**` → product-service 等规则分发。
 
-### 容器化 — Docker Compose
+### Docker 容器化
 
-`docker/docker-compose.yml` 一键编排全部组件：
+我们用 Docker Compose 统一部署前端、网关、认证、商品、订单、后台、MySQL、Redis、Nacos 和 MailHog，保证环境一致。
 
-- **MySQL 8.4**：首次启动通过 `docker-entrypoint-initdb.d` 按顺序执行 schema + seed SQL，自动创建 `ecommerce_auth`、`ecommerce_product`、`ecommerce_order` 三个库并灌入种子数据。数据持久化到 `./mysql/data`。
-- **Redis 7 Alpine**：自定义 `redis.conf`，数据持久化到 `./redis/data`。Gateway 和 auth-service 通过容器内网络 `redis:6379` 访问。
-- **Nacos 2.3.2**：单机模式，各服务启动后自动注册，Gateway 通过 `lb://service-name` 做负载均衡路由。
-- **MailHog**：本地 SMTP 陷阱，auth-service 将验证码邮件发送到 `mailhog:1025`，前端通过 `http://localhost:18199` 查收。
-- **5 个 Spring Boot 服务**：各自 Dockerfile 多阶段构建（Maven build → JRE 运行），通过环境变量注入 DB_URL、REDIS_HOST、NACOS_SERVER_ADDR 等连接信息，`depends_on` + `healthcheck` 保证启动顺序。
+- **MySQL 8.4**：首次启动自动建库灌种子数据，数据持久化到 `./mysql/data`。
+- **Redis 7 Alpine**：自定义 `redis.conf`，数据持久化到 `./redis/data`，各服务通过容器网络访问。
+- **Nacos 2.3.2**：单机模式，各服务自动注册。
+- **MailHog**：本地 SMTP 陷阱，验证码邮件发送到 `mailhog:1025`，`http://localhost:18199` 查收。
+- **5 个 Spring Boot 服务**：多阶段构建，环境变量注入连接信息，`depends_on` + `healthcheck` 保证启动顺序。
 - **2 个 Nginx 前端容器**：Vue 构建产物由 Nginx 托管，`/api` 和 `/uploads` 反向代理到 Gateway。
 
 启动命令：`docker compose -f docker/docker-compose.yml up -d --build`

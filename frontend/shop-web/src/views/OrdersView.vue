@@ -62,6 +62,16 @@ async function handleRefund(order: any) {
 
 function viewDetail(id: number) { router.push(`/orders/${id}`) }
 
+function statusLabel(s: string) {
+  const map: Record<string, string> = { PENDING: '待支付', PAID: '已支付', SHIPPED: '已发货', DELIVERED: '已收货', CANCELLED: '已取消', REFUNDED: '已退款' }
+  return map[s] || s
+}
+
+function logisticsLabel(s: string) {
+  const map: Record<string, string> = { PENDING: '待发货', SHIPPED: '运输中', DELIVERED: '已签收' }
+  return map[s] || s
+}
+
 // 支持 ?status= 查询参数自动切换 Tab
 watch(() => route.query.status, (s) => {
   const status = (s as string) || ''
@@ -110,10 +120,16 @@ onMounted(() => {
       <div v-for="o in orders" :key="o.id" class="order-card">
         <div class="order-header">
           <span class="order-no">{{ o.orderNo }}</span>
-          <span class="order-status" :class="'status-'+o.status?.toLowerCase()">{{ o.status }}</span>
+          <span class="order-status" :class="'status-'+o.status?.toLowerCase()">{{ statusLabel(o.status) }}</span>
+          <span v-if="o.logisticsStatus" class="order-logistics">{{ logisticsLabel(o.logisticsStatus) }}</span>
         </div>
         <div class="order-body" @click="viewDetail(o.id)">
-          <div class="order-summary">共 {{ o.items?.length || '-' }} 件商品</div>
+          <div class="order-summary">
+            <span v-for="(it, idx) in (o.items || []).slice(0, 2)" :key="idx" class="order-item-brief">
+              {{ it.productName }}×{{ it.quantity }}
+            </span>
+            <span v-if="(o.items || []).length > 2" class="order-item-more">等{{ o.items.length }}件</span>
+          </div>
           <div class="order-amount">合计 ¥{{ o.totalAmount }}</div>
         </div>
         <div class="order-actions">
@@ -142,12 +158,15 @@ onMounted(() => {
 .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
 .order-no { font-size: 13px; color: #888; }
 .order-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.order-logistics { font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 500; color: #0ea5e9; background: #e0f2fe; margin-left: 8px; }
 .status-pending { color: #f59e0b; background: #fef3c7; }
 .status-paid { color: #3b82f6; background: #dbeafe; }
 .status-shipped { color: #8b5cf6; background: #ede9fe; }
 .status-completed { color: #22c55e; background: #dcfce7; }
 .status-cancelled { color: #ef4444; background: #fee2e2; }
 
+.order-item-brief { font-size: 13px; color: #333; margin-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; display: inline-block; vertical-align: bottom; }
+.order-item-more { font-size: 12px; color: #999; }
 .order-body { display: flex; justify-content: space-between; padding: 10px 0; border-top:1px solid #f0f0f0; cursor: pointer; }
 .order-amount { font-size: 16px; font-weight: 700; color: var(--color-price, #ff0036); }
 .order-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }

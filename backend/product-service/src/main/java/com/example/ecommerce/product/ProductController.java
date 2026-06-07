@@ -8,6 +8,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,9 +34,11 @@ public class ProductController {
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "gif", "webp");
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/jpeg", "image/png", "image/gif", "image/webp");
     private final JdbcTemplate jdbc;
+    private final StringRedisTemplate redis;
 
-    public ProductController(JdbcTemplate jdbc) {
+    public ProductController(JdbcTemplate jdbc, StringRedisTemplate redis) {
         this.jdbc = jdbc;
+        this.redis = redis;
     }
 
     @GetMapping("/products")
@@ -232,7 +235,8 @@ public class ProductController {
                 "newProducts", jdbc.queryForList(productSelect() + " where is_on_sale=1 order by (image_url like '%dummyjson%') desc, id desc limit 12"),
                 "promotions", promotions,
                 "coupons", coupons,
-                "reviews", reviews
+                "reviews", reviews,
+                "hotSearches", getHotSearches()
         ));
     }
 
@@ -570,4 +574,33 @@ public class ProductController {
     }
 
     private record QueryParts(String where, List<Object> args) {}
+
+    @PostMapping("/home/search/track")
+    public ApiResponse<?> trackSearch(@RequestBody Map<String, Object> body) {
+        String keyword = stringValue(body.get("keyword")).trim();
+        if (!keyword.isBlank()) {
+            redis.opsForZSet().incrementScore("hot:search", keyword, 1);
+        }
+        return ApiResponse.ok(null);
+    }
+
+    private List<Map<String, Object>> getHotSearches() {
+        var dbList = jdbc.queryForList("select keyword, search_count searchCount from hot_search where enabled=1 order by sort_order, id");
+        var redisScores = redis.opsForZSet().reverseRangeWithScores("hot:search", 0, -1);
+        var result = new ArrayList<Map<String, Object>>();
+        if (redisScores != null) {
+            for (var t : redisScores) {
+                result.add(Map.of("keyword", t.getValue(), "searchCount", t.getScore() != null ? t.getScore().intValue() : 0));
+            }
+        }
+        var redisKeys = redisScores == null ? Set.<String>of() :
+                redisScores.stream().map(t -> t.getValue()).collect(java.util.stream.Collectors.toSet());
+        for (var row : dbList) {
+            String kw = (String) row.get("keyword");
+            if (!redisKeys.contains(kw)) {
+                result.add(row);
+            }
+        }
+        return result.stream().limit(10).toList();
+    }
 }

@@ -203,7 +203,13 @@ public class OrderController {
             args.add(paymentStatus);
         }
         sql.append(" order by created_at desc,id desc");
-        return ApiResponse.ok(jdbc.queryForList(sql.toString(), args.toArray()));
+        var orders = jdbc.queryForList(sql.toString(), args.toArray());
+        for (var order : orders) {
+            Long oid = longValue(order.get("id"));
+            var items = jdbc.queryForList("select product_name productName,quantity from order_item where order_id=? order by id", oid);
+            order.put("items", items);
+        }
+        return ApiResponse.ok(orders);
     }
 
     @GetMapping("/orders/{id}")
