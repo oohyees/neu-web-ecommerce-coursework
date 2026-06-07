@@ -9,6 +9,7 @@ import {
   fetchProductDetail,
   fetchReviews,
   submitReview,
+  uploadReviewImage,
   type Product,
   type ProductSku,
   type ProductImage,
@@ -93,8 +94,10 @@ const specText = computed(() => {
 const isFav = computed(() => product.value ? favoriteStore.isFavorite(product.value.id) : false)
 
 // ═══ 评分 ═══
-const reviewForm = ref({ rating: 5, content: '' })
+const reviewForm = ref({ rating: 5, content: '', imageUrl: '' })
 const submittingReview = ref(false)
+const uploadingImage = ref(false)
+const reviewImagePreview = ref('')
 
 // ═══ 方法 ═══
 async function loadProduct() {
@@ -168,17 +171,49 @@ async function toggleFavorite() {
   }
 }
 
+async function handleReviewImageChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.warning('图片不能超过 5MB')
+    return
+  }
+  uploadingImage.value = true
+  try {
+    const res: any = await uploadReviewImage(file)
+    const url = typeof res === 'string' ? res : res?.data ?? res?.url ?? ''
+    reviewForm.value.imageUrl = url
+    reviewImagePreview.value = url.startsWith('http') ? url : window.location.origin + url
+    ElMessage.success('图片上传成功')
+  } catch {
+    ElMessage.error('图片上传失败')
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
+function removeReviewImage() {
+  reviewForm.value.imageUrl = ''
+  reviewImagePreview.value = ''
+}
+
 async function handleSubmitReview() {
-  if (!product.value || !reviewForm.value.content.trim()) return
+  if (!product.value || !reviewForm.value.content.trim()) {
+    ElMessage.warning('请输入评价内容')
+    return
+  }
   submittingReview.value = true
   try {
     await submitReview({
       productId: product.value.id,
       rating: reviewForm.value.rating,
       content: reviewForm.value.content,
+      imageUrl: reviewForm.value.imageUrl || undefined,
     })
     ElMessage.success('评价提交成功')
-    reviewForm.value.content = ''
+    reviewForm.value = { rating: 5, content: '', imageUrl: '' }
+    reviewImagePreview.value = ''
     loadProduct()
   } catch { /* handled by interceptor */ }
   finally { submittingReview.value = false }
@@ -312,7 +347,7 @@ watch(() => route.params.id, loadProduct)
             <span class="review-date">{{ r.createdAt?.slice(0, 10) }}</span>
           </div>
           <p class="review-content">{{ r.content }}</p>
-          <img v-if="r.imageUrl" :src="r.imageUrl" class="review-image" />
+          <img v-if="r.imageUrl" :src="imageOrPlaceholder(r.imageUrl)" class="review-image" />
         </div>
       </div>
       <div v-else class="review-empty">暂无评价，成为第一个评价的人～</div>
@@ -332,6 +367,16 @@ watch(() => route.params.id, loadProduct)
           maxlength="500"
           show-word-limit
         />
+        <div class="review-upload-row">
+          <label class="upload-btn" :class="{ disabled: uploadingImage }">
+            <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden @change="handleReviewImageChange" />
+            {{ uploadingImage ? '上传中...' : '+ 上传图片' }}
+          </label>
+          <div v-if="reviewImagePreview" class="upload-preview">
+            <img :src="reviewImagePreview" alt="评价图片" />
+            <span class="remove-image" @click="removeReviewImage">&times;</span>
+          </div>
+        </div>
         <el-button type="primary" :loading="submittingReview" @click="handleSubmitReview" style="margin-top:12px">
           提交评价
         </el-button>
@@ -415,7 +460,8 @@ watch(() => route.params.id, loadProduct)
 .review-rating { color: #f59e0b; font-size: 13px; }
 .review-date { color: #bbb; font-size: 12px; margin-left: auto; }
 .review-content { font-size: 14px; color: #444; line-height: 1.6; }
-.review-image { max-width: 120px; border-radius: 8px; margin-top: 8px; }
+.review-image { max-width: 160px; max-height: 160px; border-radius: 8px; margin-top: 8px; cursor: pointer; transition: transform 0.2s; }
+.review-image:hover { transform: scale(1.05); }
 .review-empty { color: #aaa; padding: 24px 0; }
 .review-login-hint { color: #aaa; padding: 16px 0; }
 .review-login-hint a { color: var(--color-primary); }
@@ -424,6 +470,15 @@ watch(() => route.params.id, loadProduct)
 .review-form { background: #f9fafb; padding: 20px; border-radius: 8px; margin-top: 16px; }
 .review-form h4 { margin-bottom: 12px; }
 .review-rating-input { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; }
+
+/* 评论图片上传 */
+.review-upload-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.upload-btn { display: inline-flex; align-items: center; justify-content: center; padding: 6px 16px; border: 1px dashed #d0d0d0; border-radius: 6px; font-size: 13px; color: #888; cursor: pointer; transition: all 0.2s; user-select: none; }
+.upload-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.upload-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+.upload-preview { position: relative; display: inline-block; }
+.upload-preview img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+.remove-image { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: #ff4444; color: #fff; font-size: 12px; line-height: 18px; text-align: center; cursor: pointer; }
 
 .detail-empty { padding: 80px 0; }
 

@@ -7,3 +7,11 @@ export function fetchMyConsultations() {
 export function submitConsultation(data: { subject: string; content: string }) {
   return request.post('/consultations', data)
 }
+
+export function fetchChatHistory() {
+  return request.get('/consultations/chat')
+}
+
+export function sendChatMessage(content: string) {
+  return request.post('/consultations/chat', { content })
+}

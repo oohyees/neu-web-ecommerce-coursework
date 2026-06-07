@@ -12,12 +12,13 @@ const total = ref(0)
 const page = ref(1)
 const loading = ref(false)
 const sort = ref((route.query.sort as string) || '')
+const searchMode = ref<'fuzzy' | 'exact'>((route.query.searchMode as 'fuzzy' | 'exact') || 'fuzzy')
 const isProductList = computed(() => route.path === '/products')
 
 async function search() {
   loading.value = true
   try {
-    const res: any = await fetchProducts({ keyword: keyword.value, searchMode: 'fuzzy', sort: sort.value || undefined, page: page.value, size: 12 })
+    const res: any = await fetchProducts({ keyword: keyword.value, searchMode: searchMode.value, sort: sort.value || undefined, page: page.value, size: 12 })
     products.value = res.data?.items ?? []
     total.value = res.data?.total ?? 0
   } catch { products.value = [] }
@@ -51,11 +52,16 @@ watch(() => route.query.sort, (v) => { sort.value = (v as string) || ''; page.va
     </div>
     <div class="search-bar">
       <input v-model="keyword" placeholder="搜索商品..." class="search-input" @keydown.enter="goSearch" />
+      <el-radio-group v-model="searchMode" size="small" @change="search" class="search-mode-toggle">
+        <el-radio-button value="fuzzy">模糊搜索</el-radio-button>
+        <el-radio-button value="exact">精准搜索</el-radio-button>
+      </el-radio-group>
       <el-button type="primary" @click="goSearch">搜索</el-button>
     </div>
     <div class="page-metrics">
       <div class="metric-card"><span>搜索词</span><strong>{{ keyword || '全部商品' }}</strong><small>当前关键词</small></div>
       <div class="metric-card"><span>结果数量</span><strong>{{ products.length }}</strong><small>当前页结果</small></div>
+      <div class="metric-card"><span>搜索模式</span><strong>{{ searchMode === 'exact' ? '精准' : '模糊' }}</strong><small>精准/模糊</small></div>
       <div class="metric-card"><span>排序</span><strong>{{ sort || '默认' }}</strong><small>价格/销量/新品</small></div>
     </div>
     <div class="search-toolbar" v-if="products.length">
@@ -90,8 +96,9 @@ watch(() => route.query.sort, (v) => { sort.value = (v as string) || ''; page.va
   </div>
 </template>
 <style scoped>
-.search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+.search-bar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
 .search-input { flex: 1; height: 44px; padding: 0 16px; border: 2px solid var(--color-primary); border-radius: 8px; font-size: 15px; outline: none; }
+.search-mode-toggle { flex-shrink: 0; }
 .search-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 13px; color: #888; }
 .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .product-card { background: #fff; border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: all 0.2s; }

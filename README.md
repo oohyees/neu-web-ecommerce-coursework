@@ -2,6 +2,42 @@
 
 《Web 开发技术》电商平台大作业。仓库采用团队式 monorepo：当前主演示和评分路径是 Vue 前台/后台 + Spring Cloud Gateway + 微服务栈，覆盖商城、后台、Nacos 注册发现、Redis 鉴权、OpenFeign 下单扣库存和 Docker 容器化；`legacy-web` 保留完整传统 Java Web 技术证据，作为 Servlet/JSP/Listener/Filter/JDBC 验收入口和 fallback。
 
+## 技术栈与核心机制
+
+### 缓存 — Redis
+
+Redis 在本项目中承担两个核心职责：
+
+1. **无状态会话鉴权**：用户/管理员登录后，auth-service 生成 UUID token，以 `session:{token}` → `{userId}:{role}` 的键值对写入 Redis（TTL 12h）。Gateway 的 `AuthGatewayFilter` 在每个请求到达业务服务前，从 `Authorization: Bearer {token}` 头中提取 token 查 Redis；命中则将 `X-User-Id` 和 `X-Role` 注入请求头放行，未命中返回 401。管理员路径额外校验角色，非 ADMIN/SUPER_ADMIN 返回 403。这样 Gateway 完全无状态，水平扩容不需要同步 session。
+2. **邮箱验证码限流**：注册和重置密码时，验证码存入 `verify:{purpose}:{email}`（TTL 10min），同时写入 `verify:throttle:{purpose}:{email}`（TTL 1min）防止频繁发送。
+
+### 微服务 — Spring Cloud Alibaba
+
+四个业务服务 + 一个网关，全部注册到 Nacos：
+
+| 服务 | 端口 | 数据库 | 职责 |
+|------|------|--------|------|
+| gateway-service | 18090 | — | 统一入口、路由转发、Redis 鉴权拦截、CORS |
+| auth-service | 18091 | ecommerce_auth | 用户/管理员登录注册、邮箱验证码、会话管理 |
+| product-service | 18092 | ecommerce_product | 商品/分类/库存/评价/收藏/文件上传 |
+| order-service | 18093 | ecommerce_order | 购物车/订单/支付/退款/物流/地址 |
+| admin-service | 18094 | ecommerce_product | 后台看板/统计/导入导出/客服 |
+
+服务间调用使用 **OpenFeign**：order-service 通过 Feign Client 调 product-service 的 `/internal/products/{id}/order-view` 查商品信息和 `/internal/products/{id}/deduct-stock` 扣库存，Nacos 负责服务发现，Spring Cloud LoadBalancer 做客户端负载均衡。Gateway 通过 `StripPrefix=1` 将 `/api/auth/**` → auth-service `/auth/**`、`/api/products/**` → product-service `/products/**` 等路由规则分发请求。
+
+### 容器化 — Docker Compose
+
+`docker/docker-compose.yml` 一键编排全部组件：
+
+- **MySQL 8.4**：首次启动通过 `docker-entrypoint-initdb.d` 按顺序执行 schema + seed SQL，自动创建 `ecommerce_auth`、`ecommerce_product`、`ecommerce_order` 三个库并灌入种子数据。数据持久化到 `./mysql/data`。
+- **Redis 7 Alpine**：自定义 `redis.conf`，数据持久化到 `./redis/data`。Gateway 和 auth-service 通过容器内网络 `redis:6379` 访问。
+- **Nacos 2.3.2**：单机模式，各服务启动后自动注册，Gateway 通过 `lb://service-name` 做负载均衡路由。
+- **MailHog**：本地 SMTP 陷阱，auth-service 将验证码邮件发送到 `mailhog:1025`，前端通过 `http://localhost:18199` 查收。
+- **5 个 Spring Boot 服务**：各自 Dockerfile 多阶段构建（Maven build → JRE 运行），通过环境变量注入 DB_URL、REDIS_HOST、NACOS_SERVER_ADDR 等连接信息，`depends_on` + `healthcheck` 保证启动顺序。
+- **2 个 Nginx 前端容器**：Vue 构建产物由 Nginx 托管，`/api` 和 `/uploads` 反向代理到 Gateway。
+
+启动命令：`docker compose -f docker/docker-compose.yml up -d --build`
+
 ## 系统总体架构
 
 ```mermaid

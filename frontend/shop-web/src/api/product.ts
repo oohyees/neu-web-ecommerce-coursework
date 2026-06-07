@@ -125,6 +125,14 @@ export function submitReview(data: { productId: number; rating: number; content:
   return request.post('/reviews', data)
 }
 
+export function uploadReviewImage(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post('/files/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
 export function fetchFavorites() {
   return request.get('/favorites')
 }

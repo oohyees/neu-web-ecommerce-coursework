@@ -50,8 +50,10 @@ async function handleAvatarUpload(e: Event) {
     const res: any = await uploadAvatar(file)
     const url = res.data ?? res
     profile.value.avatarUrl = url
+    // 自动持久化到数据库
+    await updateProfile({ avatarUrl: url })
     userStore.setProfile({ avatarUrl: url })
-    ElMessage.success('头像上传成功')
+    ElMessage.success('头像已更新')
   } catch { ElMessage.error('上传失败') }
   finally { uploading.value = false; (e.target as HTMLInputElement).value = '' }
 }
