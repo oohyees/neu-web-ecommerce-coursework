@@ -2,6 +2,254 @@
 
 《Web 开发技术》电商平台大作业。仓库采用团队式 monorepo：当前主演示和评分路径是 Vue 前台/后台 + Spring Cloud Gateway + 微服务栈，覆盖商城、后台、Nacos 注册发现、Redis 鉴权、OpenFeign 下单扣库存和 Docker 容器化；`legacy-web` 保留完整传统 Java Web 技术证据，作为 Servlet/JSP/Listener/Filter/JDBC 验收入口和 fallback。
 
+## 系统总体架构
+
+```mermaid
+flowchart TB
+    subgraph Client["客户端层"]
+        U1["普通用户浏览器"]
+        U2["管理员浏览器"]
+    end
+
+    subgraph Frontend["前端展示层"]
+        Web["Vue3 + Vite 前端应用<br/>Element Plus / Pinia / Vue Router / Axios"]
+        UserPages["用户端页面<br/>首页 / 商品 / 购物车 / 订单 / 个人中心"]
+        AdminPages["管理后台页面<br/>看板 / 用户 / 商品 / 订单 / 系统管理"]
+    end
+
+    subgraph Gateway["网关层"]
+        GW["Spring Cloud Gateway<br/>统一入口 / 路由转发 / 鉴权拦截"]
+    end
+
+    subgraph Services["业务服务层"]
+        Auth["Auth Service<br/>用户认证 / 管理员认证 / Token"]
+        Catalog["Catalog Service<br/>商品 / 分类 / 库存 / 评价"]
+        Order["Order Service<br/>购物车 / 订单 / 支付 / 退款 / 物流"]
+        Admin["Admin Service<br/>后台管理 / 数据统计 / 导入导出"]
+    end
+
+    subgraph Infra["基础设施层"]
+        Nacos["Nacos<br/>服务注册与发现"]
+        Redis["Redis<br/>会话缓存 / 热点数据缓存"]
+        MySQL["MySQL<br/>业务数据持久化"]
+        FileStore["文件存储<br/>商品图 / 评价图 / 轮播图"]
+        MailHog["MailHog / SMTP<br/>邮箱验证码测试"]
+    end
+
+    U1 --> Web
+    U2 --> Web
+    Web --> UserPages
+    Web --> AdminPages
+    Web --> GW
+
+    GW --> Auth
+    GW --> Catalog
+    GW --> Order
+    GW --> Admin
+
+    Auth --> Redis
+    Auth --> MySQL
+    Auth --> MailHog
+
+    Catalog --> MySQL
+    Catalog --> Redis
+    Catalog --> FileStore
+
+    Order --> MySQL
+    Order --> Redis
+    Order --> Catalog
+
+    Admin --> MySQL
+    Admin --> Redis
+    Admin --> FileStore
+
+    Auth -.注册.-> Nacos
+    Catalog -.注册.-> Nacos
+    Order -.注册.-> Nacos
+    Admin -.注册.-> Nacos
+    GW -.服务发现.-> Nacos
+```
+
+## 功能模块总览
+
+```mermaid
+mindmap
+  root((电商平台))
+    客户端
+      用户认证
+        注册 / 邮箱验证码 / 登录 / 找回密码
+      首页
+        轮播广告 / 分类导航 / 热门商品 / 促销商品 / 搜索
+      商品
+        分类浏览 / 搜索排序 / 详情规格 / 收藏 / 评价
+      购物车
+        加购 / 数量修改 / 勾选结算
+      订单
+        确认下单 / 模拟支付 / 取消退款 / 物流查询 / 确认收货
+      其他
+        客服咨询 / 系统公告 / 活动通知 / 用户反馈
+    管理后台
+      数据看板
+        用户/订单/销售额统计 / 销量趋势 / 热销排行
+      商品管理
+        分类 / 上下架 / SKU / 库存 / 评价 / 导入导出
+      订单管理
+        列表筛选 / 发货 / 退款 / 导出 Excel
+      系统管理
+        轮播 / 公告 / 反馈 / 权限 / 管理员
+```
+
+## 核心数据库 ER 图
+
+```mermaid
+erDiagram
+    USER ||--o{ ADDRESS : has
+    USER ||--o{ CART_ITEM : owns
+    USER ||--o{ ORDER : places
+    USER ||--o{ FAVORITE : collects
+    USER ||--o{ REVIEW : writes
+    USER ||--o{ FEEDBACK : submits
+
+    CATEGORY ||--o{ PRODUCT : contains
+    PRODUCT ||--o{ PRODUCT_SKU : has
+    PRODUCT ||--o{ PRODUCT_IMAGE : has
+    PRODUCT ||--o{ REVIEW : receives
+    PRODUCT ||--o{ FAVORITE : collected_by
+    PRODUCT ||--o{ CART_ITEM : added_to
+
+    ORDER ||--o{ ORDER_ITEM : contains
+    ORDER ||--|| ADDRESS : uses
+    ORDER ||--o| LOGISTICS : shipped_by
+    PRODUCT_SKU ||--o{ ORDER_ITEM : sold_as
+
+    COUPON ||--o{ USER_COUPON : issued_as
+    USER ||--o{ USER_COUPON : owns
+    USER_COUPON }o--o| ORDER : used_in
+
+    USER {
+        bigint id PK
+        string username
+        string password
+        string nickname
+        string email
+        string avatar
+    }
+    PRODUCT {
+        bigint id PK
+        bigint category_id FK
+        string name
+        decimal price
+        int stock
+        int sales
+    }
+    ORDER {
+        bigint id PK
+        bigint user_id FK
+        string order_no
+        decimal total_amount
+        string status
+        string payment_status
+    }
+    ORDER_ITEM {
+        bigint id PK
+        bigint order_id FK
+        string product_name
+        decimal unit_price
+        int quantity
+    }
+    ADDRESS {
+        bigint id PK
+        bigint user_id FK
+        string receiver
+        string phone
+        string detail
+    }
+    PRODUCT_SKU {
+        bigint id PK
+        bigint product_id FK
+        string color
+        string size
+        decimal price
+        int stock
+    }
+```
+
+## 用户下单核心流程
+
+```mermaid
+flowchart TD
+    Start([开始]) --> LoginCheck{已登录?}
+    LoginCheck -- 否 --> Login["登录 / 注册"]
+    LoginCheck -- 是 --> Home["进入首页"]
+    Login --> Home
+    Home --> Search["搜索 / 分类浏览"]
+    Search --> Detail["商品详情"]
+    Detail --> SelectSku["选择规格、数量"]
+    SelectSku --> AddCart["加入购物车"]
+    AddCart --> Cart["购物车"]
+    Cart --> ModifyCart["修改数量 / 勾选"]
+    ModifyCart --> Checkout["结算"]
+    Checkout --> Confirm["订单确认"]
+    Confirm --> SelectAddr["选择地址 / 优惠券"]
+    SelectAddr --> Submit["提交订单"]
+    Submit --> StockOK{库存充足?}
+    StockOK -- 否 --> Detail
+    StockOK -- 是 --> CreateOrder["生成订单 / 扣库存"]
+    CreateOrder --> Pay["模拟支付"]
+    Pay --> PayOK{支付成功?}
+    PayOK -- 是 --> Paid["待发货"]
+    PayOK -- 否 --> Unpaid["待支付"]
+    Paid --> Receive["确认收货"]
+    Receive --> Review["评价"]
+    Review --> End([结束])
+    Unpaid --> End
+```
+
+## 微服务容器部署
+
+```mermaid
+flowchart TB
+    subgraph Host["Docker Compose 编排"]
+        WebC["web 容器<br/>Vue3 前端 / Nginx"]
+        GatewayC["gateway 容器<br/>Spring Cloud Gateway"]
+        AuthC["auth-service 容器"]
+        CatalogC["product-service 容器"]
+        OrderC["order-service 容器"]
+        AdminC["admin-service 容器"]
+        MySQLC["mysql 容器"]
+        RedisC["redis 容器"]
+        NacosC["nacos 容器"]
+        MailC["mailhog 容器"]
+    end
+
+    Browser["浏览器"] --> WebC
+    WebC --> GatewayC
+    GatewayC --> AuthC
+    GatewayC --> CatalogC
+    GatewayC --> OrderC
+    GatewayC --> AdminC
+
+    AuthC --> MySQLC
+    AuthC --> RedisC
+    AuthC --> MailC
+    CatalogC --> MySQLC
+    CatalogC --> RedisC
+    OrderC --> MySQLC
+    OrderC --> RedisC
+    OrderC -.Feign.-> CatalogC
+    AdminC --> MySQLC
+    AdminC --> RedisC
+
+    AuthC -.注册.-> NacosC
+    CatalogC -.注册.-> NacosC
+    OrderC -.注册.-> NacosC
+    AdminC -.注册.-> NacosC
+    GatewayC -.发现.-> NacosC
+
+    MySQLC -.持久化.-> V1[(mysql-data)]
+    RedisC -.持久化.-> V2[(redis-data)]
+```
+
 ## Repository Layout
 
 ```text
