@@ -30,6 +30,8 @@ vi.mock('@/api/product', () => ({
 vi.mock('@/api/notice', () => ({
   fetchHomeData: vi.fn(),
   trackSearch: vi.fn(),
+  fetchAnnouncements: vi.fn().mockResolvedValue({ data: [] }),
+  fetchActivityNotices: vi.fn().mockResolvedValue({ data: [] }),
 }))
 
 vi.mock('@/api/cart', () => ({

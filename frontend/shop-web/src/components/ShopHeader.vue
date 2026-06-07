@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
 import { fetchCategories, type Category } from '@/api/product'
+import { fetchAnnouncements, fetchActivityNotices } from '@/api/notice'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +16,16 @@ const userMenuOpen = ref(false)
 const categories = ref<Category[]>([])
 const hoverCatId = ref<number | null>(null)
 const activeNavPopup = ref<string | null>(null)
+const showNoticePopup = ref(false)
+const announcements = ref<any[]>([])
+const activityNotices = ref<any[]>([])
+
+const noticeItems = computed(() => {
+  const items: { id: number; tag: string; title: string }[] = []
+  for (const a of announcements.value) items.push({ id: a.id, tag: '公告', title: a.title })
+  for (const a of activityNotices.value) items.push({ id: a.id, tag: '活动', title: a.title })
+  return items
+})
 
 const topLevelCategories = computed(() =>
   categories.value.filter(c => !c.parentId)
@@ -27,6 +38,17 @@ function goSearch(kw?: string) {
 
 function toggleUserMenu() {
   userMenuOpen.value = !userMenuOpen.value
+}
+
+async function loadNotices() {
+  try {
+    const [annRes, actRes] = await Promise.all([
+      fetchAnnouncements().catch(() => ({ data: [] })),
+      fetchActivityNotices().catch(() => ({ data: [] })),
+    ])
+    announcements.value = (annRes as any)?.data || annRes || []
+    activityNotices.value = (actRes as any)?.data || actRes || []
+  } catch { /* 静默 */ }
 }
 
 function closeUserMenu() {
@@ -114,6 +136,7 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleKeydown)
   loadCategories()
+  loadNotices()
 })
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
@@ -421,10 +444,20 @@ onUnmounted(() => {
         </router-link>
 
         <!-- 公告活动 -->
-        <router-link to="/notices" class="nav-bar-item" :class="{ active: route.path === '/notices' }">
+        <span class="nav-bar-item" :class="{ active: showNoticePopup }" @click="showNoticePopup = !showNoticePopup">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           公告活动
-        </router-link>
+        </span>
+        <!-- 公告弹出面板 -->
+        <transition name="popup-fade">
+          <div v-if="showNoticePopup" class="notice-popup" @mouseleave="showNoticePopup = false">
+            <div v-if="noticeItems.length === 0" class="notice-empty">暂无公告</div>
+            <div v-for="n in noticeItems" :key="n.id" class="notice-popup-item">
+              <span class="notice-popup-tag" :class="n.tag === '活动' ? 'tag-activity' : 'tag-announce'">{{ n.tag }}</span>
+              <span class="notice-popup-title">{{ n.title }}</span>
+            </div>
+          </div>
+        </transition>
       </div>
     </nav>
   </header>
@@ -1041,4 +1074,38 @@ onUnmounted(() => {
   .popup-enter-from { transform: translateY(-8px); }
   .popup-leave-to { transform: translateY(-4px); }
 }
+
+/* ═══ 公告弹出面板 ═══ */
+.notice-popup {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  padding: 12px 0;
+  min-width: 280px;
+  max-width: 360px;
+  z-index: 200;
+}
+.notice-empty { padding: 16px; text-align: center; color: #999; font-size: 13px; }
+.notice-popup-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #333;
+}
+.notice-popup-item:hover { background: #f5f5f5; }
+.notice-popup-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.tag-announce { background: #e6f7ff; color: #1890ff; }
+.tag-activity { background: #fff7e6; color: #fa8c16; }
+.notice-popup-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { fetchHomeData, trackSearch } from '@/api/notice'
+import { Bell } from '@element-plus/icons-vue'
+import { fetchHomeData, trackSearch, fetchAnnouncements, fetchActivityNotices } from '@/api/notice'
 import { type Product, fetchCategories, type Category } from '@/api/product'
 import { normalizeCoupon } from '@/api/coupon'
 import { imageOrPlaceholder } from '@/utils/image'
@@ -18,6 +19,21 @@ const promotions = ref<any[]>([])
 const coupons = ref<any[]>([])
 const reviews = ref<any[]>([])
 const hoverCatId = ref<number | null>(null)
+const showNotice = ref(true)
+const announcements = ref<any[]>([])
+const activityNotices = ref<any[]>([])
+
+// 合并公告+活动为统一列表
+const noticeItems = computed(() => {
+  const items: { id: number; tag: string; title: string }[] = []
+  for (const a of announcements.value) {
+    items.push({ id: a.id, tag: '公告', title: a.title })
+  }
+  for (const a of activityNotices.value) {
+    items.push({ id: a.id, tag: '活动', title: a.title })
+  }
+  return items
+})
 
 // 品牌推荐：从热门商品中提取品牌
 const brands = computed(() => {
@@ -39,9 +55,11 @@ const normalPromotions = computed(() => promotions.value.filter(p => p.promotion
 
 async function loadHome() {
   try {
-    const [homeRes, catRes] = await Promise.all([
+    const [homeRes, catRes, annRes, actRes] = await Promise.all([
       fetchHomeData(),
       fetchCategories(),
+      fetchAnnouncements().catch(() => ({ data: [] })),
+      fetchActivityNotices().catch(() => ({ data: [] })),
     ])
     const data: any = homeRes
     banners.value = data.banners || []
@@ -52,6 +70,8 @@ async function loadHome() {
     coupons.value = (data.coupons || []).map(normalizeCoupon)
     reviews.value = data.reviews || []
     categories.value = catRes
+    announcements.value = (annRes as any)?.data || annRes || []
+    activityNotices.value = (actRes as any)?.data || actRes || []
   } catch { /* 静默降级 */ }
 }
 
@@ -92,6 +112,21 @@ onMounted(() => {
 
 <template>
   <div class="home-page">
+
+    <!-- ═══ 顶部公告横幅 ═══ -->
+    <transition name="notice-slide">
+      <div v-if="showNotice && noticeItems.length" class="top-notice-bar">
+        <div class="notice-scroll">
+          <span v-for="(n, i) in noticeItems" :key="n.id + '-' + i" class="notice-item">
+            <el-icon><Bell /></el-icon>
+            <span class="notice-tag">{{ n.tag }}</span>
+            {{ n.title }}
+            <span v-if="i < noticeItems.length - 1" class="notice-divider">|</span>
+          </span>
+        </div>
+        <span class="notice-close" @click="showNotice = false">&times;</span>
+      </div>
+    </transition>
 
     <!-- ═══ 主体内容 ═══ -->
     <div class="home-body">
@@ -344,6 +379,59 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* ═══ 顶部公告横幅 ═══ */
+.top-notice-bar {
+  background: linear-gradient(90deg, #ff6b35, #ff3860);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  position: relative;
+}
+.notice-scroll {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.notice-scroll::-webkit-scrollbar { display: none; }
+.notice-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.notice-item:hover { text-decoration: underline; }
+.notice-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.3);
+}
+.notice-divider { margin: 0 8px; opacity: 0.5; }
+.notice-close {
+  cursor: pointer;
+  font-size: 20px;
+  margin-left: 16px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+.notice-close:hover { opacity: 1; }
+.notice-slide-enter-active, .notice-slide-leave-active {
+  transition: all 0.3s ease;
+}
+.notice-slide-enter-from, .notice-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 /* ═══ 页面容器 ═══ */
 .home-page {
   min-height: 100vh;

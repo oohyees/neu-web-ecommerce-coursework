@@ -585,7 +585,23 @@ public class ProductController {
     }
 
     private List<Map<String, Object>> getHotSearches() {
-        var dbList = jdbc.queryForList("select keyword, search_count searchCount from hot_search where enabled=1 order by sort_order, id");
+        // 确保 hot_search 表存在
+        try {
+            jdbc.execute("CREATE TABLE IF NOT EXISTS hot_search (id INT AUTO_INCREMENT PRIMARY KEY, keyword VARCHAR(100), search_count INT DEFAULT 0, enabled TINYINT DEFAULT 1, sort_order INT DEFAULT 0)");
+        } catch (Exception ignored) {}
+        // 如果表为空则插入种子数据
+        try {
+            var count = jdbc.queryForObject("SELECT COUNT(*) FROM hot_search", Integer.class);
+            if (count == null || count == 0) {
+                jdbc.execute("INSERT INTO hot_search (keyword, search_count, enabled, sort_order) VALUES ('机械键盘',156,1,1),('无线鼠标',143,1,2),('蓝牙耳机',128,1,3),('显示器',112,1,4),('Type-C数据线',98,1,5)");
+            }
+        } catch (Exception ignored) {}
+
+        List<Map<String, Object>> dbList = List.of();
+        try {
+            dbList = jdbc.queryForList("select keyword, search_count searchCount from hot_search where enabled=1 order by sort_order, id");
+        } catch (Exception ignored) {}
+
         var redisScores = redis.opsForZSet().reverseRangeWithScores("hot:search", 0, -1);
         var result = new ArrayList<Map<String, Object>>();
         if (redisScores != null) {
