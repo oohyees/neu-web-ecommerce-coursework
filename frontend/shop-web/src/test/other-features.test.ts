@@ -409,12 +409,26 @@ describe('CustomerServiceView - 在线客服', () => {
     expect(wrapper.text()).toContain('在线客服')
   })
 
-  it('displays consultation history', async () => {
+  it('has chat mode and form mode tabs', () => {
+    const wrapper = mount(CustomerServiceView, { global: { plugins: [createPinia()], stubs: commonStubs } })
+    expect(wrapper.text()).toContain('对话模式')
+    expect(wrapper.text()).toContain('表单模式')
+  })
+
+  it('shows quick question buttons in chat mode', () => {
+    const wrapper = mount(CustomerServiceView, { global: { plugins: [createPinia()], stubs: commonStubs } })
+    expect(wrapper.text()).toContain('退款问题')
+  })
+
+  it('displays consultation history in form mode', async () => {
     const { fetchMyConsultations } = await import('@/api/cs')
     vi.mocked(fetchMyConsultations).mockResolvedValueOnce({
       data: [{ id: 1, subject: '订单问题', content: '我的订单在哪', reply: '已发货', status: 'REPLIED' }],
     } as any)
     const wrapper = mount(CustomerServiceView, { global: { plugins: [createPinia()], stubs: commonStubs } })
+    const vm = wrapper.vm as any
+    vm.mode = 'form'
+    await wrapper.vm.$nextTick()
     await flushPromises()
     expect(wrapper.text()).toContain('订单问题')
     expect(wrapper.text()).toContain('已发货')
@@ -423,6 +437,7 @@ describe('CustomerServiceView - 在线客服', () => {
   it('shows warning when submitting incomplete form', async () => {
     const wrapper = mount(CustomerServiceView, { global: { plugins: [createPinia()], stubs: commonStubs } })
     const vm = wrapper.vm as any
+    vm.mode = 'form'
     vm.form = { subject: '', content: '' }
     await vm.handleSubmit()
     expect(ElMessage.warning).toHaveBeenCalledWith('请填写完整')
@@ -433,6 +448,7 @@ describe('CustomerServiceView - 在线客服', () => {
     vi.mocked(submitConsultation).mockResolvedValueOnce({} as any)
     const wrapper = mount(CustomerServiceView, { global: { plugins: [createPinia()], stubs: commonStubs } })
     const vm = wrapper.vm as any
+    vm.mode = 'form'
     vm.form = { subject: '订单咨询', content: '我想咨询订单问题' }
     await vm.handleSubmit()
     await flushPromises()
@@ -440,14 +456,17 @@ describe('CustomerServiceView - 在线客服', () => {
     expect(ElMessage.success).toHaveBeenCalledWith('留言已发送，客服会尽快回复')
   })
 
-  it('shows pending status for unanswered consultations', async () => {
+  it('shows pending status for unanswered consultations in form mode', async () => {
     const { fetchMyConsultations } = await import('@/api/cs')
     vi.mocked(fetchMyConsultations).mockResolvedValueOnce({
       data: [{ id: 1, subject: '问题', content: '内容', reply: null, status: 'PENDING' }],
     } as any)
     const wrapper = mount(CustomerServiceView, { global: { plugins: [createPinia()], stubs: commonStubs } })
+    const vm = wrapper.vm as any
+    vm.mode = 'form'
+    await wrapper.vm.$nextTick()
     await flushPromises()
-    expect(wrapper.text()).toContain('等待回复')
+    expect(wrapper.text()).toContain('待回复')
   })
 })
 
