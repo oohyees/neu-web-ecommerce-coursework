@@ -56,7 +56,11 @@ onMounted(load)
           <div class="coupon-cond">{{ c.status === 'USED' ? '已使用' : '未使用' }}</div>
         </div>
       </div>
-      <div v-else class="empty"><el-empty description="暂无优惠券" /></div>
+      <div v-else class="empty">
+        <el-empty description="暂无优惠券">
+          <router-link to="/products" class="empty-link">去挑选可用商品</router-link>
+        </el-empty>
+      </div>
     </div>
   </div>
 </template>
@@ -69,4 +73,5 @@ onMounted(load)
 .coupon-card.used { opacity: 0.5; }
 .coupon-amount { font-size: 24px; font-weight: 700; color: var(--color-price, #ff0036); }
 .coupon-cond { font-size: 13px; color: #888; }
+.empty-link { color: var(--color-primary); font-weight: 700; font-size: 13px; }
 </style>

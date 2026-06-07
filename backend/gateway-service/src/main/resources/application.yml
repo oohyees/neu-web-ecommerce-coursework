@@ -3,6 +3,8 @@ server:
 spring:
   application:
     name: ecommerce-gateway
+  codec:
+    max-in-memory-size: 10MB
   data:
     redis:
       host: ${REDIS_HOST:redis}

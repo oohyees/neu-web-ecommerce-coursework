@@ -9,8 +9,15 @@ USE ecommerce_product;
 -- ============================================================
 
 INSERT INTO banner (title, image_url, link_url, sort_order) VALUES
-('机械键盘限时特惠', '/catalog/B076LRJ528.webp', '/products/1', 1),
-('电竞鼠标办公升级', '/catalog/B08F2Z6RJB.webp', '/products/2', 2);
+('Essence 睫毛膏 限时特惠', 'https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/1.webp', '/products/5000', 1),
+('Dior J''adore 香水 新品上市', 'https://cdn.dummyjson.com/product-images/fragrances/dior-j''adore/thumbnail.webp', '/products/5007', 2),
+('Annibale Colombo 精品沙发', 'https://cdn.dummyjson.com/product-images/furniture/annibale-colombo-sofa/1.webp', '/products/5011', 3),
+('Calvin Klein 经典香水', 'https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/1.webp', '/products/5005', 4),
+('家居相框 畅玩无限', 'https://cdn.dummyjson.com/product-images/home-decoration/family-tree-photo-frame/thumbnail.webp', '/products/5043', 5),
+('Samsung Galaxy S8', 'https://cdn.dummyjson.com/product-images/smartphones/samsung-galaxy-s8/1.webp', '/products/5044', 6),
+('高品质厨房好物', 'https://cdn.dummyjson.com/product-images/kitchen-accessories/silver-pot-with-glass-cap/thumbnail.webp', '/products/5070', 7),
+('Apple iPhone X', 'https://cdn.dummyjson.com/product-images/smartphones/iphone-x/1.webp', '/products/5046', 8),
+('厨房削皮器 创意利器', 'https://cdn.dummyjson.com/product-images/kitchen-accessories/yellow-peeler/thumbnail.webp', '/products/5076', 9);
 
 INSERT INTO announcement (title, content, created_at) VALUES
 ('真实商品目录已更新', '当前目录使用公开商品样本整理，商品图与商品信息均可追溯来源。', NOW());

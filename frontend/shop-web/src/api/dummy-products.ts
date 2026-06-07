@@ -1609,18 +1609,10 @@ export const dummyCategories = [
     "parentId": null,
     "sortOrder": 1,
     "children": [
-      {
-        "id": 11,
-        "name": "美妆彩妆",
-        "parentId": 1,
-        "sortOrder": 1
-      },
-      {
-        "id": 12,
-        "name": "香水香氛",
-        "parentId": 1,
-        "sortOrder": 2
-      }
+      { "id": 11, "name": "美妆彩妆", "parentId": 1, "sortOrder": 1 },
+      { "id": 12, "name": "香水香氛", "parentId": 1, "sortOrder": 2 },
+      { "id": 15, "name": "护肤保养", "parentId": 1, "sortOrder": 3 },
+      { "id": 16, "name": "个人清洁", "parentId": 1, "sortOrder": 4 }
     ]
   },
   {
@@ -1629,12 +1621,10 @@ export const dummyCategories = [
     "parentId": null,
     "sortOrder": 2,
     "children": [
-      {
-        "id": 13,
-        "name": "家具软装",
-        "parentId": 2,
-        "sortOrder": 1
-      }
+      { "id": 13, "name": "家具软装", "parentId": 2, "sortOrder": 1 },
+      { "id": 17, "name": "灯饰照明", "parentId": 2, "sortOrder": 2 },
+      { "id": 18, "name": "收纳整理", "parentId": 2, "sortOrder": 3 },
+      { "id": 19, "name": "家纺床品", "parentId": 2, "sortOrder": 4 }
     ]
   },
   {
@@ -1643,59 +1633,81 @@ export const dummyCategories = [
     "parentId": null,
     "sortOrder": 3,
     "children": [
-      {
-        "id": 14,
-        "name": "groceries",
-        "parentId": 3,
-        "sortOrder": 1
-      }
+      { "id": 14, "name": "食品饮料", "parentId": 3, "sortOrder": 1 },
+      { "id": 20, "name": "生鲜果蔬", "parentId": 3, "sortOrder": 2 },
+      { "id": 21, "name": "进口零食", "parentId": 3, "sortOrder": 3 },
+      { "id": 22, "name": "酒水茶饮", "parentId": 3, "sortOrder": 4 }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "数码家电",
+    "parentId": null,
+    "sortOrder": 4,
+    "children": [
+      { "id": 23, "name": "手机通讯", "parentId": 4, "sortOrder": 1 },
+      { "id": 24, "name": "电脑办公", "parentId": 4, "sortOrder": 2 },
+      { "id": 25, "name": "智能穿戴", "parentId": 4, "sortOrder": 3 },
+      { "id": 26, "name": "影音娱乐", "parentId": 4, "sortOrder": 4 }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "服饰鞋包",
+    "parentId": null,
+    "sortOrder": 5,
+    "children": [
+      { "id": 27, "name": "女装", "parentId": 5, "sortOrder": 1 },
+      { "id": 28, "name": "男装", "parentId": 5, "sortOrder": 2 },
+      { "id": 29, "name": "鞋靴", "parentId": 5, "sortOrder": 3 },
+      { "id": 30, "name": "箱包皮具", "parentId": 5, "sortOrder": 4 }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "运动户外",
+    "parentId": null,
+    "sortOrder": 6,
+    "children": [
+      { "id": 31, "name": "运动鞋服", "parentId": 6, "sortOrder": 1 },
+      { "id": 32, "name": "健身器材", "parentId": 6, "sortOrder": 2 },
+      { "id": 33, "name": "户外装备", "parentId": 6, "sortOrder": 3 },
+      { "id": 34, "name": "骑行运动", "parentId": 6, "sortOrder": 4 }
     ]
   }
 ]
 
 export const dummyFlatCategories = [
-  {
-    "id": 1,
-    "name": "美妆个护",
-    "parentId": null,
-    "sortOrder": 1
-  },
-  {
-    "id": 11,
-    "name": "美妆彩妆",
-    "parentId": 1,
-    "sortOrder": 1
-  },
-  {
-    "id": 12,
-    "name": "香水香氛",
-    "parentId": 1,
-    "sortOrder": 2
-  },
-  {
-    "id": 2,
-    "name": "家居生活",
-    "parentId": null,
-    "sortOrder": 2
-  },
-  {
-    "id": 13,
-    "name": "家具软装",
-    "parentId": 2,
-    "sortOrder": 1
-  },
-  {
-    "id": 3,
-    "name": "全球精选",
-    "parentId": null,
-    "sortOrder": 3
-  },
-  {
-    "id": 14,
-    "name": "groceries",
-    "parentId": 3,
-    "sortOrder": 1
-  }
+  { "id": 1, "name": "美妆个护", "parentId": null, "sortOrder": 1 },
+  { "id": 11, "name": "美妆彩妆", "parentId": 1, "sortOrder": 1 },
+  { "id": 12, "name": "香水香氛", "parentId": 1, "sortOrder": 2 },
+  { "id": 15, "name": "护肤保养", "parentId": 1, "sortOrder": 3 },
+  { "id": 16, "name": "个人清洁", "parentId": 1, "sortOrder": 4 },
+  { "id": 2, "name": "家居生活", "parentId": null, "sortOrder": 2 },
+  { "id": 13, "name": "家具软装", "parentId": 2, "sortOrder": 1 },
+  { "id": 17, "name": "灯饰照明", "parentId": 2, "sortOrder": 2 },
+  { "id": 18, "name": "收纳整理", "parentId": 2, "sortOrder": 3 },
+  { "id": 19, "name": "家纺床品", "parentId": 2, "sortOrder": 4 },
+  { "id": 3, "name": "全球精选", "parentId": null, "sortOrder": 3 },
+  { "id": 14, "name": "食品饮料", "parentId": 3, "sortOrder": 1 },
+  { "id": 20, "name": "生鲜果蔬", "parentId": 3, "sortOrder": 2 },
+  { "id": 21, "name": "进口零食", "parentId": 3, "sortOrder": 3 },
+  { "id": 22, "name": "酒水茶饮", "parentId": 3, "sortOrder": 4 },
+  { "id": 4, "name": "数码家电", "parentId": null, "sortOrder": 4 },
+  { "id": 23, "name": "手机通讯", "parentId": 4, "sortOrder": 1 },
+  { "id": 24, "name": "电脑办公", "parentId": 4, "sortOrder": 2 },
+  { "id": 25, "name": "智能穿戴", "parentId": 4, "sortOrder": 3 },
+  { "id": 26, "name": "影音娱乐", "parentId": 4, "sortOrder": 4 },
+  { "id": 5, "name": "服饰鞋包", "parentId": null, "sortOrder": 5 },
+  { "id": 27, "name": "女装", "parentId": 5, "sortOrder": 1 },
+  { "id": 28, "name": "男装", "parentId": 5, "sortOrder": 2 },
+  { "id": 29, "name": "鞋靴", "parentId": 5, "sortOrder": 3 },
+  { "id": 30, "name": "箱包皮具", "parentId": 5, "sortOrder": 4 },
+  { "id": 6, "name": "运动户外", "parentId": null, "sortOrder": 6 },
+  { "id": 31, "name": "运动鞋服", "parentId": 6, "sortOrder": 1 },
+  { "id": 32, "name": "健身器材", "parentId": 6, "sortOrder": 2 },
+  { "id": 33, "name": "户外装备", "parentId": 6, "sortOrder": 3 },
+  { "id": 34, "name": "骑行运动", "parentId": 6, "sortOrder": 4 }
 ]
 
 export const dummyReviews = [

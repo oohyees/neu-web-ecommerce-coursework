@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Menu } from '@element-plus/icons-vue'
 import AdminSidebar from '@/components/layout/AdminSidebar.vue'
+import AdminBreadcrumb from '@/components/layout/AdminBreadcrumb.vue'
 
 const route = useRoute()
 const isLoginPage = computed(() => route.path === '/login')
@@ -23,6 +24,7 @@ const drawerVisible = ref(false)
         <AdminSidebar mobile @navigate="drawerVisible = false" />
       </el-drawer>
       <main class="admin-main">
+        <AdminBreadcrumb />
         <router-view />
       </main>
     </template>

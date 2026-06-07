@@ -34,6 +34,8 @@ let mockRoute = { query: {} as Record<string, any>, params: {} as Record<string,
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
   useRoute: () => mockRoute,
+  createRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn(), beforeEach: vi.fn(), afterEach: vi.fn() })),
+  createWebHistory: vi.fn(),
 }))
 
 const authStubs = {

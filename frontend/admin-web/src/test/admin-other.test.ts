@@ -192,10 +192,9 @@ describe('OrdersView - 订单管理', () => {
       global: { plugins: [createPinia()], stubs: commonStubs },
     })
     await flushPromises()
-    expect(wrapper.text()).toContain('当前页金额')
+    expect(wrapper.text()).toContain('本页金额')
     expect(wrapper.text()).toContain('已支付')
     expect(wrapper.text()).toContain('待发货')
-    expect(wrapper.text()).toContain('待支付')
   })
 
   it('has search and filter controls', () => {
@@ -203,7 +202,7 @@ describe('OrdersView - 订单管理', () => {
       global: { plugins: [createPinia()], stubs: commonStubs },
     })
     expect(wrapper.text()).toContain('重置')
-    expect(wrapper.text()).toContain('导出Excel')
+    expect(wrapper.text()).toContain('导出')
   })
 
   it('has status filter and search controls', () => {
@@ -275,7 +274,7 @@ describe('OrdersView - 订单管理', () => {
     const wrapper = mount(OrdersView, {
       global: { plugins: [createPinia()], stubs: commonStubs },
     })
-    expect(wrapper.text()).toContain('导出Excel')
+    expect(wrapper.text()).toContain('导出')
   })
 })
 

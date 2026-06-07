@@ -46,6 +46,8 @@ let mockRoute: any = { query: {}, params: {} }
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
   useRoute: () => mockRoute,
+  createRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn(), beforeEach: vi.fn(), afterEach: vi.fn() })),
+  createWebHistory: vi.fn(),
 }))
 
 const commonStubs = {
@@ -72,33 +74,32 @@ describe('HomeView - 首页模块', () => {
     setActivePinia(createPinia())
   })
 
-  it('renders search box and brand', () => {
+  it('renders home shell and brand', () => {
     vi.mocked(noticeApi.fetchHomeData).mockResolvedValueOnce({ banners: [], hotProducts: [], newProducts: [], hotSearches: [], promotions: [], coupons: [], reviews: [] } as any)
     vi.mocked(productApi.fetchCategories).mockResolvedValueOnce([] as any)
     const wrapper = mount(HomeView, { global: { plugins: [createPinia()], stubs: commonStubs } })
     expect(wrapper.text()).toContain('优品')
-    expect(wrapper.find('.search-input').exists()).toBe(true)
-    expect(wrapper.find('.search-btn').exists()).toBe(true)
+    expect(wrapper.text()).toContain('轮播加载中')
   })
 
-  it('displays hot searches when available', async () => {
+  it('displays hot products when available', async () => {
     vi.mocked(noticeApi.fetchHomeData).mockResolvedValueOnce({
-      banners: [], hotProducts: [], newProducts: [],
+      banners: [], hotProducts: [{ id: 1, name: '手机', price: 1999, imageUrl: '/p.jpg' }], newProducts: [],
       hotSearches: ['手机', '电脑', '耳机'], promotions: [], coupons: [], reviews: [],
     } as any)
     vi.mocked(productApi.fetchCategories).mockResolvedValueOnce([] as any)
     const wrapper = mount(HomeView, { global: { plugins: [createPinia()], stubs: commonStubs } })
     await flushPromises()
-    expect(wrapper.text()).toContain('热搜')
+    expect(wrapper.text()).toContain('热门好物')
+    expect(wrapper.text()).toContain('手机')
   })
 
-  it('navigates to search page on search', async () => {
+  it('navigates to search page from brand tag', async () => {
     vi.mocked(noticeApi.fetchHomeData).mockResolvedValueOnce({ banners: [], hotProducts: [], newProducts: [], hotSearches: [], promotions: [], coupons: [], reviews: [] } as any)
     vi.mocked(productApi.fetchCategories).mockResolvedValueOnce([] as any)
     const wrapper = mount(HomeView, { global: { plugins: [createPinia()], stubs: commonStubs } })
     const vm = wrapper.vm as any
-    vm.searchKeyword = '手机'
-    vm.goSearch()
+    vm.goSearchTag('手机')
     expect(mockPush).toHaveBeenCalledWith({ path: '/search', query: { keyword: '手机' } })
   })
 

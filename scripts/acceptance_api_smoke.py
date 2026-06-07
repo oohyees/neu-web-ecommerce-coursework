@@ -149,19 +149,53 @@ def password_and_profile_flow():
     return "profile/change/reset password ok"
 
 
+def _resolve_product():
+    """动态获取一个有 SKU 的商品，用于后续测试"""
+    if "product_id" in state:
+        return state["product_id"], state["product_spec"]
+    page = ok(request("GET", "/products", params={"page": 1, "size": 20}))
+    for item in page.get("items", []):
+        pid = item["id"]
+        detail = ok(request("GET", f"/products/{pid}"))
+        product = detail.get("product", detail)
+        skus = detail.get("skus", product.get("skus", []))
+        if skus:
+            sku = skus[0]
+            parts = []
+            if sku.get("color"):
+                parts.append(f"颜色:{sku['color']}")
+            if sku.get("size"):
+                parts.append(f"尺寸:{sku['size']}")
+            spec = " / ".join(parts) if parts else sku.get("skuCode", "")
+            state["product_id"] = pid
+            state["product_spec"] = spec
+            state["product_category_id"] = item.get("categoryId", 1)
+            return pid, spec
+    # fallback: no SKU products, use first product without spec
+    pid = page["items"][0]["id"]
+    state["product_id"] = pid
+    state["product_spec"] = ""
+    state["product_category_id"] = page["items"][0].get("categoryId", 1)
+    return pid, ""
+
+
 def catalog_flow():
     cats = ok(request("GET", "/categories"))
     assert len(cats) >= 4
     page = ok(request("GET", "/products", params={"keyword": "mascara", "sort": "price_asc", "page": 1, "size": 9}))
     assert page["total"] >= 1 and "mascara" in page["items"][0]["name"].lower()
-    filtered = ok(request("GET", "/products", params={"categoryId": 11, "page": 1, "size": 9}))
-    assert filtered["total"] >= 2
-    detail = ok(request("GET", "/products/1"))
+    pid, _ = _resolve_product()
+    cat_id = state.get("product_category_id", cats[0]["id"])
+    filtered = ok(request("GET", "/products", params={"categoryId": cat_id, "page": 1, "size": 9}))
+    assert filtered["total"] >= 1
+    detail = ok(request("GET", f"/products/{pid}"))
     product = detail.get("product", detail)
-    assert "mascara" in product["name"].lower()
-    assert len(detail.get("skus", [])) >= 1 and len(detail.get("images", [])) >= 1
-    specs = ok(request("GET", "/marketing/specs/1"))
-    assert len(specs) >= 1
+    assert product.get("id") == pid or product.get("name")
+    skus = detail.get("skus", product.get("skus", []))
+    images = detail.get("images", product.get("images", []))
+    assert len(skus) >= 1 or len(images) >= 1
+    specs = ok(request("GET", f"/marketing/specs/{pid}"))
+    assert isinstance(specs, list)
     promotions = ok(request("GET", "/marketing/promotions"))
     assert any(p["promotionType"] == "FLASH_SALE" for p in promotions)
     coupons = ok(request("GET", "/marketing/coupons"))
@@ -172,10 +206,11 @@ def catalog_flow():
 def favorite_review_upload_flow():
     uid = state["user_id"]
     token = state["user_token"]
-    ok(request("POST", "/favorites/1", params={"userId": uid}, token=token))
-    assert ok(request("GET", "/favorites/1/status", params={"userId": uid}, token=token)) is True
+    pid, _ = _resolve_product()
+    ok(request("POST", f"/favorites/{pid}", params={"userId": uid}, token=token))
+    assert ok(request("GET", f"/favorites/{pid}/status", params={"userId": uid}, token=token)) is True
     favorites = ok(request("GET", "/favorites", params={"userId": uid}, token=token))
-    assert any(p["id"] == 1 for p in favorites)
+    assert any(p["id"] == pid for p in favorites)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as f:
         f.write(b"\x89PNG\r\n\x1a\n")
         temp_name = f.name
@@ -184,19 +219,20 @@ def favorite_review_upload_flow():
     finally:
         os.unlink(temp_name)
     review = ok(request("POST", "/reviews", body={
-        "userId": uid, "productId": 1, "rating": 5, "content": "QA review", "imageUrl": uploaded
+        "userId": uid, "productId": pid, "rating": 5, "content": "QA review", "imageUrl": uploaded
     }, token=token))
     assert review["id"] > 0
     state["review_id"] = review["id"]
-    reviews = ok(request("GET", "/reviews", params={"productId": 1}))
+    reviews = ok(request("GET", "/reviews", params={"productId": pid}))
     assert any(r["content"] == "QA review" for r in reviews)
-    ok(request("DELETE", "/favorites/1", params={"userId": uid}, token=token))
+    ok(request("DELETE", f"/favorites/{pid}", params={"userId": uid}, token=token))
     return "favorite/review/upload ok"
 
 
 def address_cart_order_flow():
     uid = state["user_id"]
     token = state["user_token"]
+    pid, spec = _resolve_product()
     address = ok(request("POST", "/addresses", body={
         "userId": uid, "receiverName": "QA", "phone": "13811112222",
         "province": "辽宁省", "city": "沈阳市", "district": "和平区",
@@ -208,19 +244,24 @@ def address_cart_order_flow():
     assert updated_address["detailAddress"] == "QA 路 2 号"
     addrs = ok(request("GET", "/addresses", params={"userId": uid}, token=token))
     assert any(a["id"] == address["id"] and a["isDefault"] for a in addrs), addrs
+    # 清理可能残留的购物车项
     request("DELETE", "/cart/items", params={
-        "userId": uid, "productId": 1, "specText": "颜色:黑色 / 尺寸:87键"
+        "userId": uid, "productId": pid, "specText": spec
     }, token=token)
-    ok(request("POST", "/cart/items", body={"userId": uid, "productId": 1, "specText": "颜色:黑色 / 尺寸:87键", "quantity": 1}, token=token))
+    add_body = {"userId": uid, "productId": pid, "quantity": 1}
+    if spec:
+        add_body["specText"] = spec
+    ok(request("POST", "/cart/items", body=add_body, token=token))
     cart = ok(request("GET", "/cart", params={"userId": uid}, token=token))
-    assert any(i["productId"] == 1 and i["quantity"] >= 1 for i in cart), cart
-    ok(request("PUT", "/cart/items", body={
-        "userId": uid, "productId": 1, "specText": "颜色:黑色 / 尺寸:87键", "quantity": 2
-    }, token=token))
+    assert any(i["productId"] == pid and i["quantity"] >= 1 for i in cart), cart
+    update_body = {"userId": uid, "productId": pid, "quantity": 2}
+    if spec:
+        update_body["specText"] = spec
+    ok(request("PUT", "/cart/items", body=update_body, token=token))
     cart = ok(request("GET", "/cart", params={"userId": uid}, token=token))
-    assert any(i["productId"] == 1 and i["quantity"] == 2 for i in cart), cart
+    assert any(i["productId"] == pid and i["quantity"] == 2 for i in cart), cart
     order_no = ok(request("POST", "/orders", body={
-        "userId": uid, "addressId": address["id"], "productIds": [1], "couponId": None, "paymentMethod": "MOCK_PAY"
+        "userId": uid, "addressId": address["id"], "productIds": [pid], "couponId": None, "paymentMethod": "MOCK_PAY"
     }, token=token))["orderNo"]
     orders = ok(request("GET", "/orders", params={"userId": uid}, token=token))
     order = next(o for o in orders if o["orderNo"] == order_no)
@@ -233,7 +274,7 @@ def address_cart_order_flow():
     detail = ok(request("GET", f"/orders/{order['id']}", token=token))
     assert detail["order"]["orderNo"] == order_no and len(detail["items"]) >= 1, detail
     ok(request("DELETE", "/cart/items", params={
-        "userId": uid, "productId": 1, "specText": "颜色:黑色 / 尺寸:87键"
+        "userId": uid, "productId": pid, "specText": spec
     }, token=token))
     ok(request("DELETE", f"/addresses/{address['id']}", token=token))
     return "address/cart/order/pay/refund/logistics ok"

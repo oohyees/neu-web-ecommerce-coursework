@@ -38,6 +38,11 @@ vi.mock('@/api/coupon', () => ({
   fetchMyCoupons: vi.fn(),
   fetchAvailableCoupons: vi.fn(),
   claimCoupon: vi.fn(),
+  normalizeCoupon: (raw: any) => ({
+    ...raw,
+    value: raw.value ?? raw.discountAmount ?? 0,
+    minAmount: raw.minAmount ?? raw.thresholdAmount ?? 0,
+  }),
 }))
 
 vi.mock('@/api/user', () => ({
@@ -50,6 +55,8 @@ let mockRoute: any = { query: {}, params: {} }
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
   useRoute: () => mockRoute,
+  createRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn(), beforeEach: vi.fn(), afterEach: vi.fn() })),
+  createWebHistory: vi.fn(),
 }))
 
 const commonStubs = {

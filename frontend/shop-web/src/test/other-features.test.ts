@@ -37,6 +37,11 @@ vi.mock('@/api/coupon', () => ({
   fetchMyCoupons: vi.fn(),
   fetchAvailableCoupons: vi.fn(),
   claimCoupon: vi.fn(),
+  normalizeCoupon: (raw: any) => ({
+    ...raw,
+    value: raw.value ?? raw.discountAmount ?? 0,
+    minAmount: raw.minAmount ?? raw.thresholdAmount ?? 0,
+  }),
 }))
 
 vi.mock('@/api/promotion', () => ({
@@ -259,7 +264,17 @@ describe('SeckillView - 限时秒杀', () => {
   it('displays promotion products with name and discount price', async () => {
     const { fetchPromotions } = await import('@/api/promotion')
     vi.mocked(fetchPromotions).mockResolvedValueOnce({
-      data: [{ id: 1, productId: 10, productName: '秒杀商品', discountPrice: 99, type: 'PROMOTION' }],
+      data: [{
+        id: 1,
+        productId: 10,
+        title: '秒杀活动',
+        productName: '秒杀商品',
+        promotionType: 'FLASH_SALE',
+        promotionPrice: 99,
+        promotionStock: 5,
+        imageUrl: '/p.jpg',
+        originalPrice: 129,
+      }],
     } as any)
     const wrapper = mount(SeckillView, { global: { plugins: [createPinia()], stubs: commonStubs } })
     await flushPromises()
@@ -278,7 +293,14 @@ describe('SeckillView - 限时秒杀', () => {
   it('navigates to product detail on click', async () => {
     const { fetchPromotions } = await import('@/api/promotion')
     vi.mocked(fetchPromotions).mockResolvedValueOnce({
-      data: [{ id: 1, productId: 10, productName: '秒杀商品', discountPrice: 99, type: 'PROMOTION' }],
+      data: [{
+        id: 1,
+        productId: 10,
+        title: '秒杀活动',
+        productName: '秒杀商品',
+        promotionType: 'FLASH_SALE',
+        promotionPrice: 99,
+      }],
     } as any)
     const wrapper = mount(SeckillView, { global: { plugins: [createPinia()], stubs: commonStubs } })
     await flushPromises()

@@ -65,6 +65,10 @@ onMounted(load)
         <el-button type="primary" size="large" :loading="paying" @click="handlePay" style="width:100%;margin-top:20px">
           确认支付 ¥{{ orderInfo.totalAmount }}
         </el-button>
+        <div class="pay-actions">
+          <el-button @click="router.push('/orders')">返回订单</el-button>
+          <el-button @click="router.push('/products')">继续购物</el-button>
+        </div>
         <p class="pay-hint">本平台使用模拟支付，点击即完成付款</p>
       </div>
     </template>
@@ -80,5 +84,6 @@ onMounted(load)
 .pay-status { display: block; font-size: 18px; font-weight: 600; margin-top: 8px; color: #f59e0b; }
 .pay-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #666; }
 .pay-row b { color: var(--color-price, #ff0036); font-size: 18px; }
+.pay-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .pay-hint { text-align: center; color: #bbb; font-size: 12px; margin-top: 12px; }
 </style>

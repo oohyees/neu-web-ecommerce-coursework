@@ -78,14 +78,14 @@ INSERT INTO product_category (parent_id, name, sort_order) VALUES
 
 INSERT INTO banner (title, image_url, link_url, sort_order) VALUES
 ('Essence 睫毛膏 限时特惠', 'https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/1.webp', '/products/1', 1),
-('Dior J''adore 香水 新品上市', 'https://cdn.dummyjson.com/product-images/fragrances/dior-jadore/1.webp', '/products/8', 2),
+('Dior J''adore 香水 新品上市', 'https://cdn.dummyjson.com/product-images/fragrances/dior-j''adore/thumbnail.webp', '/products/8', 2),
 ('Annibale Colombo 精品沙发', 'https://cdn.dummyjson.com/product-images/furniture/annibale-colombo-sofa/1.webp', '/products/12', 3),
 ('Calvin Klein 经典香水', 'https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/1.webp', '/products/6', 4),
 ('Razer 游戏鼠标 畅玩无限', 'https://cdn.dummyjson.com/product-images/mens-shoes/nike-air-jordan-1-red/1.webp', '/products/2', 5),
 ('Sony 便携音箱 派对必备', 'https://cdn.dummyjson.com/product-images/mens-watches/brown-leather/1.webp', '/products/11', 6),
-('高品质真皮手提包', 'https://cdn.dummyjson.com/product-images/womens-bags/louis-vuitton/1.webp', '/products/15', 7),
-('Apple iPhone 15 Pro', 'https://cdn.dummyjson.com/product-images/smartphones/iphone-15/1.webp', '/products/16', 8),
-('Seagate 5TB 移动硬盘', 'https://cdn.dummyjson.com/product-images/laptops/macbook-pro/1.webp', '/products/16', 9);
+('高品质厨房好物', 'https://cdn.dummyjson.com/product-images/kitchen-accessories/silver-pot-with-glass-cap/thumbnail.webp', '/products/15', 7),
+('Apple iPhone X', 'https://cdn.dummyjson.com/product-images/smartphones/iphone-x/1.webp', '/products/16', 8),
+('厨房削皮器 创意利器', 'https://cdn.dummyjson.com/product-images/kitchen-accessories/yellow-peeler/thumbnail.webp', '/products/16', 9);
 
 INSERT INTO announcement (title, content, created_at) VALUES
 ('真实商品目录已更新', '当前目录使用公开商品样本整理，商品图与商品信息均可追溯来源。', NOW());

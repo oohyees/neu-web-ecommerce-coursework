@@ -15,6 +15,7 @@ async function load() {
     const res: any = await getProfile()
     const d = res.data ?? res
     profile.value = { nickname: d.nickname || '', email: d.email || '', phone: d.phone || '', avatarUrl: d.avatarUrl || '' }
+    userStore.setProfile({ nickname: d.nickname, avatarUrl: d.avatarUrl, email: d.email, phone: d.phone })
   } catch { /* handled */ }
 }
 
@@ -47,7 +48,9 @@ async function handleAvatarUpload(e: Event) {
   uploading.value = true
   try {
     const res: any = await uploadAvatar(file)
-    profile.value.avatarUrl = res.data ?? res
+    const url = res.data ?? res
+    profile.value.avatarUrl = url
+    userStore.setProfile({ avatarUrl: url })
     ElMessage.success('头像上传成功')
   } catch { ElMessage.error('上传失败') }
   finally { uploading.value = false; (e.target as HTMLInputElement).value = '' }

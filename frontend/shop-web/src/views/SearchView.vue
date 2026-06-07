@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchProducts, type Product } from '@/api/product'
 import { imageOrPlaceholder } from '@/utils/image'
@@ -11,7 +11,8 @@ const products = ref<Product[]>([])
 const total = ref(0)
 const page = ref(1)
 const loading = ref(false)
-const sort = ref('')
+const sort = ref((route.query.sort as string) || '')
+const isProductList = computed(() => route.path === '/products')
 
 async function search() {
   loading.value = true
@@ -34,17 +35,18 @@ function productParam(product: Product, name: string) {
   return item?.split(':').slice(1).join(':').trim() || ''
 }
 
-onMounted(() => { if (keyword.value) search() })
+onMounted(search)
 watch(page, search)
 watch(() => route.query.keyword, (v) => { if (v) { keyword.value = v as string; page.value = 1; search() } })
+watch(() => route.query.sort, (v) => { sort.value = (v as string) || ''; page.value = 1; search() })
 </script>
 
 <template>
   <div class="page-container">
     <div class="page-intro">
       <div>
-        <h2 class="page-title">商品搜索</h2>
-        <p>支持关键词检索和排序筛选，搜索结果保持图片、价格和详情入口一致。</p>
+        <h2 class="page-title">{{ isProductList ? '商品列表' : '商品搜索' }}</h2>
+        <p>{{ isProductList ? '浏览全部上架商品，支持按销量、价格和新品排序。' : '支持关键词检索和排序筛选，搜索结果保持图片、价格和详情入口一致。' }}</p>
       </div>
     </div>
     <div class="search-bar">
@@ -52,7 +54,7 @@ watch(() => route.query.keyword, (v) => { if (v) { keyword.value = v as string; 
       <el-button type="primary" @click="goSearch">搜索</el-button>
     </div>
     <div class="page-metrics">
-      <div class="metric-card"><span>搜索词</span><strong>{{ keyword || '未输入' }}</strong><small>当前关键词</small></div>
+      <div class="metric-card"><span>搜索词</span><strong>{{ keyword || '全部商品' }}</strong><small>当前关键词</small></div>
       <div class="metric-card"><span>结果数量</span><strong>{{ products.length }}</strong><small>当前页结果</small></div>
       <div class="metric-card"><span>排序</span><strong>{{ sort || '默认' }}</strong><small>价格/销量/新品</small></div>
     </div>
@@ -66,7 +68,7 @@ watch(() => route.query.keyword, (v) => { if (v) { keyword.value = v as string; 
       </el-radio-group>
     </div>
     <div v-if="loading"><el-skeleton :rows="4" animated /></div>
-    <div v-else-if="!products.length && keyword" class="empty"><el-empty description="未找到相关商品" /></div>
+    <div v-else-if="!products.length" class="empty"><el-empty description="未找到相关商品" /></div>
     <div v-else class="product-grid">
       <div v-for="p in products" :key="p.id" class="product-card" @click="router.push(`/product/${p.id}`)">
         <div class="product-img-box"><img :src="imageOrPlaceholder(p.imageUrl)" :alt="p.name" /></div>

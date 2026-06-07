@@ -125,13 +125,13 @@ reset_microservices() {
 
 case "$TARGET" in
   monolith)
-    reset_monolith "monolith" 13306 6380 "-" "$MONOLITH_MYSQL_PASSWORD"
+    reset_monolith "monolith" 13306 6380 "docker/docker-compose.legacy.yml" "$MONOLITH_MYSQL_PASSWORD"
     ;;
   microservices)
     reset_microservices
     ;;
   both)
-    reset_monolith "monolith" 13306 6380 "-" "$MONOLITH_MYSQL_PASSWORD"
+    reset_monolith "monolith" 13306 6380 "docker/docker-compose.legacy.yml" "$MONOLITH_MYSQL_PASSWORD"
     reset_microservices
     ;;
   -h|--help|help)

@@ -286,9 +286,13 @@ public class ProductController {
     @GetMapping("/marketing/promotions")
     public ApiResponse<?> promotions() {
         return ApiResponse.ok(jdbc.queryForList("""
-                select id,product_id productId,title,promotion_type promotionType,promotion_price promotionPrice,
-                       promotion_stock promotionStock,start_at startAt,end_at endAt,enabled
-                from promotion where enabled=1 and now() between start_at and end_at order by id desc
+                select promotion.id,promotion.product_id productId,promotion.title,promotion.promotion_type promotionType,
+                       promotion.promotion_price promotionPrice,promotion.promotion_stock promotionStock,
+                       promotion.start_at startAt,promotion.end_at endAt,promotion.enabled,
+                       pr.name productName,pr.image_url imageUrl,pr.price originalPrice
+                from promotion join product pr on pr.id=promotion.product_id
+                where promotion.enabled=1 and now() between promotion.start_at and promotion.end_at
+                order by promotion.id desc
                 """));
     }
 
@@ -339,6 +343,46 @@ public class ProductController {
     @GetMapping("/marketing/coupons")
     public ApiResponse<?> coupons() {
         return ApiResponse.ok(jdbc.queryForList("select id,name,threshold_amount thresholdAmount,discount_amount discountAmount,enabled from coupon where enabled=1 order by threshold_amount"));
+    }
+
+    @GetMapping("/marketing/admin/coupons")
+    public ApiResponse<?> adminCoupons(@RequestParam(required = false) String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return ApiResponse.ok(jdbc.queryForList("""
+                    select id,name,threshold_amount thresholdAmount,discount_amount discountAmount,enabled
+                    from coupon order by threshold_amount,id
+                    """));
+        }
+        return ApiResponse.ok(jdbc.queryForList("""
+                select id,name,threshold_amount thresholdAmount,discount_amount discountAmount,enabled
+                from coupon where name like ? order by threshold_amount,id
+                """, "%" + keyword + "%"));
+    }
+
+    @PostMapping("/marketing/admin/coupons")
+    public ApiResponse<?> createCoupon(@RequestBody Map<String, Object> body) {
+        jdbc.update("""
+                insert into coupon(name,threshold_amount,discount_amount,enabled)
+                values(?,?,?,?)
+                """, stringValue(body.get("name")), decimalValue(body.get("thresholdAmount")),
+                decimalValue(body.get("discountAmount")), boolValue(body.get("enabled")) ? 1 : 0);
+        return ApiResponse.ok(null);
+    }
+
+    @PutMapping("/marketing/admin/coupons")
+    public ApiResponse<?> updateCoupon(@RequestBody Map<String, Object> body) {
+        jdbc.update("""
+                update coupon set name=?,threshold_amount=?,discount_amount=?,enabled=?
+                where id=?
+                """, stringValue(body.get("name")), decimalValue(body.get("thresholdAmount")),
+                decimalValue(body.get("discountAmount")), boolValue(body.get("enabled")) ? 1 : 0, longValue(body.get("id")));
+        return ApiResponse.ok(body);
+    }
+
+    @DeleteMapping("/marketing/admin/coupons/{id}")
+    public ApiResponse<?> deleteCoupon(@PathVariable Long id) {
+        jdbc.update("delete from coupon where id=?", id);
+        return ApiResponse.ok(null);
     }
 
     @GetMapping("/marketing/coupons/user/{ignoredUserId}")

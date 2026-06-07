@@ -4,8 +4,10 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
 import { useFavoriteStore } from '@/stores/favorite'
+import { getProfile } from '@/api/user'
 import ShopHeader from '@/components/ShopHeader.vue'
 import ShopFloatingActions from '@/components/ShopFloatingActions.vue'
+import AccountNav from '@/components/AccountNav.vue'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -13,13 +15,22 @@ const cartStore = useCartStore()
 const favoriteStore = useFavoriteStore()
 
 const isAuthPage = computed(() => route.meta.guest === true)
+const accountPaths = new Set(['/profile', '/orders', '/address', '/favorites', '/coupons', '/feedback', '/service'])
+const showAccountNav = computed(() => accountPaths.has(route.path) || route.path.startsWith('/orders/'))
 
-onMounted(() => {
+async function refreshUserData() {
   if (userStore.isLoggedIn) {
     cartStore.refresh()
     favoriteStore.refresh()
+    try {
+      const res: any = await getProfile()
+      const d = res.data ?? res
+      userStore.setProfile({ nickname: d.nickname, avatarUrl: d.avatarUrl, email: d.email, phone: d.phone })
+    } catch { /* silent */ }
   }
-})
+}
+
+onMounted(refreshUserData)
 
 watch(() => userStore.isLoggedIn, (loggedIn) => {
   if (loggedIn) {
@@ -38,6 +49,7 @@ watch(() => userStore.isLoggedIn, (loggedIn) => {
 
     <!-- 页面主体 -->
     <main class="app-main" :class="{ 'app-main--home': route.path === '/', 'app-main--full': isAuthPage }">
+      <AccountNav v-if="showAccountNav" />
       <router-view />
     </main>
     <ShopFloatingActions />

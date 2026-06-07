@@ -43,7 +43,11 @@ onMounted(load)
       <div class="metric-card"><span>快捷入口</span><strong>详情</strong><small>继续购买</small></div>
     </div>
     <div v-if="loading"><el-skeleton :rows="4" animated /></div>
-    <div v-else-if="!items.length" class="empty"><el-empty description="暂无收藏" /></div>
+    <div v-else-if="!items.length" class="empty">
+      <el-empty description="暂无收藏">
+        <el-button type="primary" @click="router.push('/products')">去浏览商品</el-button>
+      </el-empty>
+    </div>
     <div v-else class="product-grid">
       <div v-for="p in items" :key="p.id" class="product-card" @click="goProduct(p.id)">
         <div class="product-img-box"><img :src="imageOrPlaceholder(p.imageUrl)" :alt="p.name" /></div>

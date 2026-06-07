@@ -94,7 +94,10 @@ onMounted(load)
     </div>
 
     <div v-if="!cartItems.length" class="empty">
-      <el-empty description="没有待结算商品" />
+      <el-empty description="没有待结算商品">
+        <el-button type="primary" @click="router.push('/cart')">返回购物车</el-button>
+        <el-button @click="router.push('/products')">继续购物</el-button>
+      </el-empty>
     </div>
 
     <template v-else>

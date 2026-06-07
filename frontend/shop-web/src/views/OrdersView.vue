@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchMyOrders, cancelOrder, confirmOrder, refundOrder } from '@/api/order'
 
 const router = useRouter()
+const route = useRoute()
 const orders = ref<any[]>([])
 const activeStatus = ref('')
 const loading = ref(true)
@@ -61,7 +62,20 @@ async function handleRefund(order: any) {
 
 function viewDetail(id: number) { router.push(`/orders/${id}`) }
 
-onMounted(load)
+// 支持 ?status= 查询参数自动切换 Tab
+watch(() => route.query.status, (s) => {
+  const status = (s as string) || ''
+  if (status !== activeStatus.value) {
+    activeStatus.value = status
+    currentPage.value = 1
+    load()
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  // 如果没有 query 参数，用默认空状态加载
+  if (!route.query.status) load()
+})
 </script>
 
 <template>
@@ -86,7 +100,11 @@ onMounted(load)
 
     <div v-if="loading"><el-skeleton :rows="5" animated /></div>
 
-    <div v-else-if="!orders.length" class="empty"><el-empty description="暂无订单" /></div>
+    <div v-else-if="!orders.length" class="empty">
+      <el-empty description="暂无订单">
+        <el-button type="primary" @click="router.push('/products')">去购物</el-button>
+      </el-empty>
+    </div>
 
     <template v-else>
       <div v-for="o in orders" :key="o.id" class="order-card">

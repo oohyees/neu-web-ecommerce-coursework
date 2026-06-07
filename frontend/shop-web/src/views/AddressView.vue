@@ -88,7 +88,12 @@ onMounted(load)
         <el-button text size="small" type="danger" @click="handleDelete(a)">删除</el-button>
       </div>
     </div>
-    <div v-if="!addresses.length" class="empty"><el-empty description="暂无收货地址" /></div>
+    <div v-if="!addresses.length" class="empty">
+      <el-empty description="暂无收货地址">
+        <el-button type="primary" @click="openAdd">新增地址</el-button>
+        <router-link to="/checkout" class="empty-link">返回结算</router-link>
+      </el-empty>
+    </div>
 
     <el-dialog v-model="dialogVisible" :title="editing ? '编辑地址' : '新增地址'" width="480px">
       <el-form label-width="80px">
@@ -114,4 +119,5 @@ onMounted(load)
 .addr-detail { font-size: 13px; color: #666; }
 .addr-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .addr-tag { font-size: 11px; color: var(--color-primary); background: #fff0eb; padding: 1px 6px; border-radius: 3px; }
+.empty-link { margin-left: 12px; color: var(--color-primary); font-size: 13px; font-weight: 700; }
 </style>

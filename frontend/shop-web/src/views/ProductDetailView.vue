@@ -194,15 +194,6 @@ watch(() => route.params.id, loadProduct)
   </div>
 
   <div v-else-if="product" class="detail-root">
-    <!-- ═══ 面包屑 ═══ -->
-    <div class="detail-breadcrumb">
-      <router-link to="/">首页</router-link>
-      <span> / </span>
-      <router-link to="/products">商品列表</router-link>
-      <span> / </span>
-      <span>{{ product.name }}</span>
-    </div>
-
     <!-- ═══ 商品主体 ═══ -->
     <div class="detail-main">
       <!-- 图片区 -->
@@ -359,9 +350,6 @@ watch(() => route.params.id, loadProduct)
 <style scoped>
 .detail-root { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
 .detail-loading { max-width: 800px; margin: 40px auto; padding: 0 16px; }
-.detail-breadcrumb { font-size: 13px; color: #999; margin-bottom: 20px; }
-.detail-breadcrumb a { color: #666; }
-.detail-breadcrumb a:hover { color: var(--color-primary); }
 
 /* ═══ 主体 ═══ */
 .detail-main { display: flex; gap: 40px; margin-bottom: 40px; }

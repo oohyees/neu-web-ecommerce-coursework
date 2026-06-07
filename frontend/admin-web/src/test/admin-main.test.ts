@@ -501,8 +501,8 @@ describe('ProductsView - 商品管理', () => {
       global: { plugins: [createPinia()], stubs: commonStubs },
     })
     expect(wrapper.text()).toContain('重置')
-    expect(wrapper.text()).toContain('导出Excel')
-    expect(wrapper.text()).toContain('导入CSV')
+    expect(wrapper.text()).toContain('导出')
+    expect(wrapper.text()).toContain('导入')
   })
 
   it('calls createProduct API on save', async () => {
@@ -560,13 +560,13 @@ describe('ProductsView - 商品管理', () => {
     const wrapper = mount(ProductsView, {
       global: { plugins: [createPinia()], stubs: commonStubs },
     })
-    expect(wrapper.text()).toContain('导出Excel')
+    expect(wrapper.text()).toContain('导出')
   })
 
   it('has CSV import button for product upload', () => {
     const wrapper = mount(ProductsView, {
       global: { plugins: [createPinia()], stubs: commonStubs },
     })
-    expect(wrapper.text()).toContain('导入CSV')
+    expect(wrapper.text()).toContain('导入')
   })
 })

@@ -50,5 +50,9 @@ logs/
 *.iml
 .DS_Store
 
+# ===== Python =====
+__pycache__/
+scripts/_debug_*.py
+
 # ===== Claude Code 本地配置 =====
 .claude/

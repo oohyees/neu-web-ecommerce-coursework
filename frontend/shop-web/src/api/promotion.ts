@@ -3,9 +3,13 @@ import request from './request'
 export interface Promotion {
   id: number
   productId: number
-  productName: string
-  type: string
-  discountPrice: number
+  title: string
+  promotionType: string
+  promotionPrice: number
+  promotionStock?: number | null
+  productName?: string
+  imageUrl?: string
+  originalPrice?: number
   startAt: string
   endAt: string
   enabled: boolean

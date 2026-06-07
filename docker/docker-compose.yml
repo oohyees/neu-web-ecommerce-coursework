@@ -127,6 +127,8 @@ services:
         condition: service_healthy
     ports:
       - "18092:18092"
+    volumes:
+      - product-uploads:/app/uploads
 
   order-service:
     build:
@@ -218,3 +220,6 @@ services:
       - gateway
     ports:
       - "18082:80"
+
+volumes:
+  product-uploads:
